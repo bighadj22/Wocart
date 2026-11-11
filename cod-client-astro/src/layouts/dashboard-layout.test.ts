@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const SRC = new URL("..", import.meta.url).pathname;
+const SRC = fileURLToPath(new URL("..", import.meta.url));
 const layout = readFileSync(join(SRC, "layouts/DashboardLayout.astro"), "utf8");
 
 const OUTSIDE_THE_DASHBOARD = [
@@ -45,7 +46,7 @@ describe("the dashboard frame", () => {
 
   it("is around every dashboard page, so moving between them never drops it", () => {
     const framed = pages(join(SRC, "pages"))
-      .map((path) => relative(SRC, path))
+      .map((path) => relative(SRC, path).replace(/\\/g, "/"))
       .filter((path) => !OUTSIDE_THE_DASHBOARD.includes(path));
     expect(framed.length).toBeGreaterThan(30);
     for (const path of framed) {
@@ -57,7 +58,7 @@ describe("the dashboard frame", () => {
 
   it("shows one loading state on every page: the page skeleton, then the page in its place", () => {
     const gated = pages(join(SRC, "pages"))
-      .map((path) => relative(SRC, path))
+      .map((path) => relative(SRC, path).replace(/\\/g, "/"))
       .filter((path) => !["pages/sign-in/index.astro", "pages/forgot-password/index.astro", "pages/reset-password/index.astro", "pages/delivery/index.astro"].includes(path));
     expect(gated.length).toBeGreaterThan(30);
     for (const path of gated) {

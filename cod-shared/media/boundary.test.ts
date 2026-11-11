@@ -19,7 +19,7 @@ function sourceFiles(dir: string): string[] {
   });
 }
 
-const FILES = SOURCES.flatMap(sourceFiles).map((path) => ({ path: relative(ROOT, path), text: readFileSync(path, "utf8") }));
+const FILES = SOURCES.flatMap(sourceFiles).map((path) => ({ path: relative(ROOT, path).replace(/\\/g, "/"), text: readFileSync(path, "utf8") }));
 
 /** Each line of a file matching `pattern`, as `path:line: text`. */
 function matches(pattern: RegExp, files = FILES): string[] {
