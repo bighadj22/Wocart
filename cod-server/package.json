@@ -28,33 +28,33 @@
     "test:ci": "vitest --run --coverage --reporter=json --reporter=html"
   },
   "dependencies": {
-    "@better-auth/oauth-provider": "^1.7.1",
+    "@better-auth/oauth-provider": "^1.7.18",
     "@cloudflare/workers-oauth-provider": "^0.10.3",
-    "@modelcontextprotocol/client": "2.0.0",
-    "@modelcontextprotocol/server": "2.0.0",
-    "@noble/hashes": "^2.3.0",
-    "agents": "^0.22.0",
-    "ai": "^7.0.70",
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/server": "2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "agents": "^0.33.0",
+    "ai": "^7.0.165",
     "better-auth": "^1.7.1",
-    "drizzle-orm": "^0.45.2",
-    "hono": "^4.13.7",
-    "zod": "^4.4.3"
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.17",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260820.1",
-    "@hono/zod-openapi": "^1.6.1",
+    "@cloudflare/workers-types": "^5.20261108.1",
+    "@hono/zod-openapi": "^1.6.3",
     "@types/better-sqlite3": "^9.6.0",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^5.0.0",
     "@vitest/ui": "^5.0.0",
     "@wocart/storefront": "^3.0.0",
     "better-sqlite3": "^13.0.3",
-    "drizzle-kit": "^0.31.10",
-    "fast-check": "^4.9.0",
+    "drizzle-kit": "^0.31.11",
+    "fast-check": "^4.10.2",
     "miniflare": "^4.20260730.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.0",
+    "vitest": "^5.1.0",
     "vitest-environment-miniflare": "^2.14.4",
-    "wrangler": "^4.125.0"
+    "wrangler": "^4.158.0"
   }
 }
