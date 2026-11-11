@@ -24,8 +24,8 @@
     "validate": "npm run validate:all && npm run build"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^14.3.1",
-    "@astrojs/vercel": "^11.0.10",
+    "@astrojs/cloudflare": "^14.4.6",
+    "@astrojs/vercel": "^11.0.20",
     "@iconify-json/heroicons": "^1.2.3",
     "@wocart/storefront": "4.3.0",
     "@wocart/theme": "4.3.0",
@@ -34,15 +34,15 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
-    "@tailwindcss/vite": "^4.3.3",
-    "@vitest/ui": "^5.0.0",
+    "@astrojs/check": "^0.9.12",
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitest/ui": "^5.1.0",
     "fast-check": "^4.6.0",
     "happy-dom": "^20.9.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^6.0.3",
     "vitest": "^5.0.0",
-    "wrangler": "^4.125.0"
+    "wrangler": "^4.158.0"
   },
   "overrides": {
     "vite": "^8.2.2",
