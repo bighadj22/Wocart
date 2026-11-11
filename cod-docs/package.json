@@ -21,7 +21,7 @@
     "@wocart/theme": "4.3.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "zudoku": "0.93.0"
+    "zudoku": "0.93.2"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",
