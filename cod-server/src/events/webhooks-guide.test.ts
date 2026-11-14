@@ -19,7 +19,7 @@ import { exampleEvent } from "./examples";
 
 const PAGES = resolve(import.meta.dirname, "../../../cod-docs/pages");
 const guides = { en: "webhooks.mdx", fr: "fr/webhooks.mdx", ar: "ar/webhooks.mdx" } as const;
-const read = (locale: keyof typeof guides) => readFileSync(join(PAGES, guides[locale]), "utf8");
+const read = (locale: keyof typeof guides) => readFileSync(join(PAGES, guides[locale]), "utf8").replace(/\r\n/g, "\n");
 
 const blocks = (page: string, language: string) => [...page.matchAll(new RegExp("```" + language + "\\n([\\s\\S]*?)\\n```", "g"))].map((m) => m[1]!);
 /** The rows of the Markdown table that follows a heading, as cells. */

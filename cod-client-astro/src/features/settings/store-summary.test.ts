@@ -73,7 +73,7 @@ describe("the store summary", () => {
     expect(seam.updateMyStore).toHaveBeenCalledWith({ name: "Maysa Shop" });
     expect(seen).toEqual([{ name: "Maysa Shop", domain: "maysashop.online", logo: { key: "products/logo.webp", url: "https://media.example.com/products/logo.webp", width: 512, height: 512 } }]);
 
-    const callers = sourceFiles(SRC).filter((file) => /\bupdateMyStore\(/.test(readFileSync(file, "utf8"))).map((file) => relative(SRC, file));
+    const callers = sourceFiles(SRC).filter((file) => /\bupdateMyStore\(/.test(readFileSync(file, "utf8"))).map((file) => relative(SRC, file).replace(/\\/g, "/"));
     expect(callers.sort()).toEqual(["features/settings/api.ts", "features/settings/store-summary.ts"]);
   });
 });

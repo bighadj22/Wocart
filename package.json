@@ -11,6 +11,19 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "dev": "npm run dev --workspace codflow-server",
+    "dev:server": "npm run dev --workspace codflow-server",
+    "dev:dashboard": "npm run dev --workspace codflow-client-astro",
+    "build:server": "npm run build:ci --workspace codflow-server",
+    "build:dashboard": "npm run build --workspace codflow-client-astro",
+    "test": "npm test --workspace codflow-server && npm test --workspace codflow-client-astro",
+    "test:server": "npm test --workspace codflow-server",
+    "test:dashboard": "npm test --workspace codflow-client-astro",
+    "typecheck": "npm run typecheck --workspace codflow-server && npm run typecheck --workspace codflow-client-astro",
+    "typecheck:server": "npm run typecheck --workspace codflow-server",
+    "typecheck:dashboard": "npm run typecheck --workspace codflow-client-astro",
+    "db:setup:local": "npm run db:setup:local --workspace codflow-server",
+    "seed:admin": "npm run seed:admin --workspace codflow-client-astro",
     "check:lockfile": "node scripts/check-workspace-lock.mjs"
   },
   "overrides": {
