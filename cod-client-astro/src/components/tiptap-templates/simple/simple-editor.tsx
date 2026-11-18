@@ -23,6 +23,7 @@ import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
 import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button"
+import { HtmlPasteButton } from "@/components/tiptap-ui/html-paste-button"
 import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu"
 import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button"
 import {
@@ -61,16 +62,20 @@ export interface SimpleEditorProps {
   onChange: (html: string) => void
   disabled?: boolean
   busy?: boolean
+  /** Offers the HTML-source paste box in the toolbar (product descriptions). */
+  htmlPaste?: boolean
 }
 
 const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
   isMobile,
+  htmlPaste,
 }: {
   onHighlighterClick: () => void
   onLinkClick: () => void
   isMobile: boolean
+  htmlPaste: boolean
 }) => {
   return (
     <>
@@ -120,6 +125,7 @@ const MainToolbarContent = ({
 
       <ToolbarGroup>
         <ImageUploadButton />
+        {htmlPaste && <HtmlPasteButton />}
       </ToolbarGroup>
 
       <Spacer />
@@ -161,7 +167,7 @@ const MobileToolbarContent = ({
  * instead of the demo uploader; h2–h4, no code/code-block, no theme toggle (the
  * dashboard owns light/dark); every string from the dictionaries.
  */
-export function SimpleEditor({ value, onChange, disabled, busy }: SimpleEditorProps) {
+export function SimpleEditor({ value, onChange, disabled, busy, htmlPaste = false }: SimpleEditorProps) {
   const isMobile = useIsMobile()
   const [mobileView, setMobileView] = React.useState<"main" | "highlighter" | "link">("main")
 
@@ -222,6 +228,7 @@ export function SimpleEditor({ value, onChange, disabled, busy }: SimpleEditorPr
               onHighlighterClick={() => setMobileView("highlighter")}
               onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
+              htmlPaste={htmlPaste}
             />
           ) : (
             <MobileToolbarContent

@@ -2,6 +2,7 @@ import { and, eq, notInArray } from "drizzle-orm";
 import { storeContentOverrides, storeLocales, storeThemeSettings, stores } from "../db/schema";
 import type { AppDb } from "../db/client";
 import type { LocaleRow } from "../stores/settings";
+import type { StoreLocale } from "../i18n/locales";
 
 type StoreUpdate = Partial<typeof stores.$inferInsert>;
 type BatchStatement = Parameters<AppDb["batch"]>[0][number];
@@ -91,3 +92,68 @@ export async function getThemeSettings(db: AppDb, storeId: string, themeKey: str
     return {};
   }
 }
+
+/**
+ * Write one theme's whole settings object for a store. The Appearance editor
+ * sends what it read back with the colors it changed, so keys it does not own
+ * (page documents, theme declarations) survive the save.
+ */
+export async function saveThemeSettings(
+  db: AppDb,
+  storeId: string,
+  themeKey: string,
+  values: Record<string, unknown>,
+) {
+  const now = new Date().toISOString();
+  const serialized = JSON.stringify(values);
+  await db
+    .insert(storeThemeSettings)
+    .values({ storeId, themeKey, values: serialized, updatedAt: now })
+    .onConflictDoUpdate({
+      target: [storeThemeSettings.storeId, storeThemeSettings.themeKey],
+      set: { values: serialized, updatedAt: now },
+    });
+}
+
+/**
+ * Save a store's text edits for one theme and language. An empty value deletes
+ * the row so the theme's own copy applies again; everything else is upserted.
+ * Batched, so a save lands whole or not at all.
+ */
+export async function saveContentOverrides(
+  db: AppDb,
+  storeId: string,
+  themeKey: string,
+  locale: StoreLocale,
+  edits: readonly { key: string; value: string }[],
+) {
+  if (edits.length === 0) return;
+  const now = new Date().toISOString();
+  const statements: BatchStatement[] = edits.map(({ key, value }) =>
+    value === ""
+      ? db
+          .delete(storeContentOverrides)
+          .where(
+            and(
+              eq(storeContentOverrides.storeId, storeId),
+              eq(storeContentOverrides.themeKey, themeKey),
+              eq(storeContentOverrides.locale, locale),
+              eq(storeContentOverrides.key, key),
+            ),
+          )
+      : db
+          .insert(storeContentOverrides)
+          .values({ storeId, themeKey, locale, key, value, updatedAt: now })
+          .onConflictDoUpdate({
+            target: [
+              storeContentOverrides.storeId,
+              storeContentOverrides.themeKey,
+              storeContentOverrides.locale,
+              storeContentOverrides.key,
+            ],
+            set: { value, updatedAt: now },
+          }),
+  );
+  await db.batch(statements as [BatchStatement, ...BatchStatement[]]);
+}
+

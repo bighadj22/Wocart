@@ -17,6 +17,7 @@ import * as handlers from "./handlers";
 import { registerTranslationRoutes } from "../translations/routes";
 import { getStore } from "../../../../cod-shared/queries/stores";
 import { updateStoreSchema } from "./validation";
+import { registerAppearanceRoutes } from "./appearance";
 import { StoreSchema, StoreSummarySchema, SuccessResponseSchema } from "@/openapi/schemas";
 
 const jsonContent = <T extends z.ZodType>(schema: T) => ({
@@ -99,6 +100,10 @@ const router = new OpenAPIHono<AppContext>();
 router.openapi(getMyStoreRoute.route, getMyStoreRoute.handler);
 router.openapi(getStoreSummaryRoute.route, getStoreSummaryRoute.handler);
 router.openapi(updateMyStoreRoute.route, updateMyStoreRoute.handler);
+
+// The Appearance tab: colors and theme text, written from the dashboard.
+// Local customization — see `appearance.ts`.
+registerAppearanceRoutes(router);
 
 // The store's own translatable text (SEO, the currency symbol) — ADR 0005.
 registerTranslationRoutes(router, {

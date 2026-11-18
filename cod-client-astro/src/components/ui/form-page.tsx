@@ -22,6 +22,7 @@ export function FormPage({
   saveLabel,
   canSave = true,
   aside,
+  actions,
   children,
 }: {
   title: ReactNode;
@@ -36,12 +37,20 @@ export function FormPage({
   /** False while the form cannot be saved yet (nothing changed, or invalid). */
   canSave?: boolean;
   aside?: ReactNode;
+  /** What the header carries beside the title: a preview, a copy link. */
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   const common = useT("common");
   return (
     <div>
-      <PageHeader title={title} badges={badges} backHref={backHref} backLabel={common("back")} />
+      <PageHeader
+        title={title}
+        badges={badges}
+        backHref={backHref}
+        backLabel={common("back")}
+        actions={actions}
+      />
       {error && (
         <Alert role="alert" tone="critical" className="mb-4">
           <span>{error}</span>
