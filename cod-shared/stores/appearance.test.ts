@@ -11,7 +11,7 @@ import {
   type AppearanceSettings,
 } from "./appearance";
 
-const clone = (settings: AppearanceSettings): AppearanceSettings => JSON.parse(JSON.stringify(settings));
+const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 const valid = (): AppearanceSettings => ({
   colorSchemes: clone(APPEARANCE_DEFAULT_SCHEMES),
@@ -121,7 +121,7 @@ describe("mergeAppearance", () => {
 
 describe("appearanceSettingsOf", () => {
   it("returns the saved settings when the row holds them", () => {
-    expect(appearanceSettingsOf(valid())).toEqual(valid());
+    expect(appearanceSettingsOf({ ...valid() })).toEqual(valid());
   });
 
   it("returns null for an empty row or a row without usable colors", () => {
