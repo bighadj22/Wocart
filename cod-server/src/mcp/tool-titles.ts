@@ -148,4 +148,12 @@ export const TOOL_TITLES: Record<string, string> = {
   listBusinessEvents: "Read the Event Log",
   listEventConsumers: "List event consumers",
   listEventDeliveries: "List event deliveries",
+
+  // ─── Translations ─────────────────────────────────────────────────────────
+  getProductTranslations: "Get product translations",
+  updateProductTranslations: "Update product translations",
+  getProductGroupTranslations: "Get product group translations",
+  updateProductGroupTranslations: "Update product group translations",
+  getOfferTranslations: "Get offer translations",
+  updateOfferTranslations: "Update offer translations",
 };

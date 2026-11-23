@@ -217,6 +217,17 @@ vi.mock("@/endpoints/delivery-companies/ai-tools", () => ({
   getDeliveryCompanyTools: () => toolMap("listDeliveryCompanies"),
 }));
 
+vi.mock("@/endpoints/translations/ai-tools", () => ({
+  getTranslationTools: () => toolMap(
+    "getProductTranslations",
+    "updateProductTranslations",
+    "getProductGroupTranslations",
+    "updateProductGroupTranslations",
+    "getOfferTranslations",
+    "updateOfferTranslations",
+  ),
+}));
+
 // getDb is called by buildToolsForUser but the stub factories ignore it.
 vi.mock("@/db", () => ({
   getDb: () => ({} as never),
@@ -290,11 +301,14 @@ const ALL_TOOLS = [
   "getDriverDetails",
   "getLandingPageDetails",
   "getOfferDetails",
+  "getOfferTranslations",
   "getOrderDetails",
   "getPendingSettlements",
   "getProductDetails",
   "getProductGroupDetails",
+  "getProductGroupTranslations",
   "getProductStockHistory",
+  "getProductTranslations",
   "getShipment",
   "getShippingProfile",
   "getStockAlerts",
@@ -343,11 +357,14 @@ const ALL_TOOLS = [
   "updateDriverStatus",
   "updateLandingPage",
   "updateOffer",
+  "updateOfferTranslations",
   "updateOrderStatus",
   "updateProductDetails",
   "updateProductGroup",
+  "updateProductGroupTranslations",
   "updateProductStatus",
   "updateProductStockThreshold",
+  "updateProductTranslations",
   "updateShippingProfile",
   "updateVariant",
   "updateVariantStockThreshold",
@@ -469,5 +486,34 @@ describe("buildToolsForUser — scope gating", () => {
       env,
       props,
     );
+  });
+
+  it("gates translation tools by each resource's own read and manage scopes", () => {
+    expect(names(makeProps({ scopes: [SCOPES.PRODUCTS_READ] }))).toContain("getProductTranslations");
+    expect(names(makeProps({ scopes: [SCOPES.PRODUCTS_READ] }))).not.toContain("updateProductTranslations");
+    expect(names(makeProps({ scopes: [SCOPES.PRODUCTS_MANAGE] }))).toContain("updateProductTranslations");
+    expect(names(makeProps({ scopes: [SCOPES.PRODUCTS_MANAGE] }))).not.toContain("updateProductGroupTranslations");
+    expect(names(makeProps({ scopes: [SCOPES.PRODUCT_GROUPS_READ] }))).toEqual([
+      "getProductGroupDetails",
+      "getProductGroupTranslations",
+      "listProductGroups",
+    ]);
+    expect(names(makeProps({ scopes: [SCOPES.PRODUCT_GROUPS_MANAGE] }))).toEqual([
+      "createProductGroup",
+      "deleteProductGroup",
+      "updateProductGroup",
+      "updateProductGroupTranslations",
+    ]);
+    expect(names(makeProps({ scopes: [SCOPES.OFFERS_READ] }))).toEqual([
+      "getOfferDetails",
+      "getOfferTranslations",
+      "listOffers",
+    ]);
+    expect(names(makeProps({ scopes: [SCOPES.OFFERS_MANAGE] }))).toEqual([
+      "createOffer",
+      "deleteOffer",
+      "updateOffer",
+      "updateOfferTranslations",
+    ]);
   });
 });

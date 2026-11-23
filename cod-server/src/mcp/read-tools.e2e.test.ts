@@ -48,6 +48,7 @@ beforeAll(async () => {
   for (let i = 0; i < statements.length; i += 50) await d1.raw.batch(statements.slice(i, i + 50).map((s) => d1.raw.prepare(s)));
   const first = async (table: string) => (await d1.raw.prepare(`SELECT id FROM ${table} WHERE id LIKE ?1 LIMIT 1`).bind(`${P}%`).first<{ id: string }>())!.id;
   ids.productId = `${P}product:handbag`;
+  ids.groupId = await first("product_categories");
   ids.variantId = await first("product_variants");
   ids.offerId = await first("offers");
   ids.couponId = await first("coupons");
