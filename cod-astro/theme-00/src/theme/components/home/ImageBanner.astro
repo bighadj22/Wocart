@@ -1,55 +1,28 @@
 ---
-// A promotion: a large photo — the merchant's own, else a product on sale —
-// beside a tag, a title, a few formatted lines, an optional countdown and one
-// action, on a card in the section's colors. On a phone the photo comes first. The rich
-// text is the SDK's escaped HTML, so `set:html` receives nothing a merchant
-// could inject.
+// A promotion band: a tag, a title, a few formatted lines, an optional
+// countdown and one action, centered in a card in the section's colors. The
+// rich text is the SDK's escaped HTML, so `set:html` receives nothing a
+// merchant could inject.
 import type { InferProps } from "@wocart/theme";
 import { richTextToHtml, schemeClass } from "@wocart/theme";
-import { Image } from "astro:assets";
 import type { StoreFrontContent } from "@/theme/content";
 import type { imageBanner } from "@/theme/catalog/home/image-banner.def";
 import Section from "@/theme/components/ui/Section.astro";
 import Countdown from "@/theme/components/ui/Countdown.astro";
 import { countdownTarget } from "@wocart/storefront";
-import { pickedPicture } from "@/theme/utils/images";
-import { homeImageSettingsOf } from "@/theme/runtime/settings";
-import { LAYOUT } from "@/theme/appearance";
 
 type Props = InferProps<typeof imageBanner> & {
   content: StoreFrontContent;
-  lead: { src: string; alt: string } | null;
 };
 
-const { image, imageSide, body, countdown, endsOn, endsAt, ctaHref, scheme, style, content, lead } = Astro.props;
-const { href, config } = Astro.locals.store;
-const { bannerImage } = homeImageSettingsOf(Astro.locals.store);
-const own = pickedPicture(bannerImage ?? image, config.media);
-const photo = own ? { src: own.src, alt: own.alt || content.bannerTitle } : lead;
-const focus = own?.position ?? "50% 50%";
+const { body, countdown, endsOn, endsAt, ctaHref, scheme, style, content } = Astro.props;
+const { href } = Astro.locals.store;
 const ends = countdownTarget(countdown, endsOn, endsAt);
 const units = { days: content.countdownDays, hours: content.countdownHours, minutes: content.countdownMinutes, seconds: content.countdownSeconds };
-const layout = LAYOUT.banner;
 ---
 
 <Section style={style}>
-  <div class:list={["banner", schemeClass(scheme), photo ? "has-photo" : "no-photo", imageSide === "start" && "photo-start"]} style={`--banner-aspect:${layout.imageAspectMobile};--banner-max:${layout.imageMaxMobile};--banner-aspect-wide:${layout.imageAspectDesktop};--banner-max-wide:${layout.imageMaxDesktop};--banner-min:${layout.minHeightDesktop}`}>
-    {photo && (
-      <div class="banner-photo">
-        <Image
-          src={photo.src}
-          alt={photo.alt}
-          width={1200}
-          height={1200}
-          widths={[480, 720, 960, 1200]}
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          quality={84}
-          loading="lazy"
-          decoding="async"
-          style={`object-position: ${focus}`}
-        />
-      </div>
-    )}
+  <div class:list={["banner", schemeClass(scheme)]}>
     <div class="banner-copy">
       {content.bannerTag && <span class="badge badge-offer banner-tag">{content.bannerTag}</span>}
       <h2 class="banner-title">{content.bannerTitle}</h2>
@@ -63,18 +36,19 @@ const layout = LAYOUT.banner;
 
 <style>
   .banner { display: grid; overflow: hidden; border-radius: var(--radius-panel); }
-  .banner-photo { aspect-ratio: var(--banner-aspect, 5 / 4); max-height: var(--banner-max, 20rem); overflow: hidden; background: var(--clr-photo); }
-  .banner-photo :global(img) { width: 100%; height: 100%; object-fit: cover; }
-  .banner-copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-sm, 0.75rem); padding: var(--space-xl, 2rem) var(--space-lg, 1.5rem); }
-  .banner-title { font-size: var(--text-2xl); font-weight: 600; line-height: 1.35; }
-  .banner-body { color: var(--clr-text); }
+  .banner-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm, 0.75rem);
+    padding: 3.5rem var(--space-lg, 1.5rem);
+    text-align: center;
+  }
+  .banner-title { max-width: 28ch; font-size: var(--text-2xl); font-weight: 600; line-height: 1.35; }
+  .banner-body { max-width: 44rem; color: var(--clr-text); }
   .banner-cta { margin-top: 0.75rem; }
-  .no-photo .banner-copy { align-items: center; text-align: center; padding-block: 3.5rem; }
   @media (min-width: 1024px) {
-    .has-photo { grid-template-columns: 1fr 1fr; min-height: var(--banner-min, 28rem); }
-    .banner-photo { aspect-ratio: var(--banner-aspect-wide, 16 / 10); max-height: var(--banner-max-wide, 30rem); order: 2; }
-    .photo-start .banner-photo { order: 0; }
-    .banner-copy { justify-content: center; gap: var(--space-md, 1rem); padding: var(--space-xxl, 3rem); }
+    .banner-copy { gap: var(--space-md, 1rem); padding: var(--space-xxl, 3rem); }
     .banner-title { font-size: var(--text-5xl); }
     .banner-cta { margin-top: 1rem; }
   }

@@ -1,11 +1,11 @@
 /*
  * Theme-00 — the storefront every CodFlow store starts with.
  *
- * Photographs carry the page: they fill tall cards, tiles and banners edge to
- * edge. Around them the page is quiet — warm paper and stone grounds, a deep
- * olive ink for type and the order button, large light headings — with color
- * spent in a few places: the muted sale terracotta, the soft olive of a
- * promotion, the dark ink of the footer. The order form is the store's
+ * Product photographs carry the page: they fill tall product cards and the
+ * gallery edge to edge. Around them the page is quiet — cool neutral grounds,
+ * crisp slate ink and large headings — with color spent in a few places: the
+ * indigo primary on buttons, badges, links and sale prices, the slate
+ * promotion band, the deep navy footer. The order form is the store's
  * checkout: a calm panel whose last line is the amount paid at the door.
  *
  * Every color comes from a color scheme (`colorSchemes` setting). An element
@@ -109,13 +109,13 @@
 
 :root {
   /* The first default scheme: what a page shows when its scheme is missing. */
-  --wc-color-background: #fbfaf7;
-  --wc-color-text: #41483d;
-  --wc-color-heading: #1c241d;
-  --wc-color-accent: #a4422f;
-  --wc-color-button: #25301f;
+  --wc-color-background: #f8fafc;
+  --wc-color-text: #334155;
+  --wc-color-heading: #0f172a;
+  --wc-color-accent: #4f46e5;
+  --wc-color-button: #4f46e5;
   --wc-color-button-text: #ffffff;
-  --wc-color-border: #e7e2d8;
+  --wc-color-border: #cbd5e1;
 
   --font-text: system-ui;
   --font-display: var(--font-text);
@@ -128,19 +128,19 @@
   /* Editable badge colors — hex values; keep each pair high-contrast.
      --clr-highlight / --clr-on-highlight: offer badge bg/text,
      --clr-rating: stars, --clr-sale-soft: sale tint, --clr-success/error: states. */
-  --clr-success: #0f7a4a;
-  --clr-success-bg: #e8f5ee;
-  --clr-error: #b42318;
-  --clr-error-bg: #fdf1f0;
-  --clr-disabled: #9aa0a8;
-  --clr-highlight: #dfe4d6;
-  --clr-on-highlight: #1c241d;
-  --clr-rating: #6b7448;
-  --clr-sale-soft: #f6e8e3;
-  --clr-overlay: color-mix(in oklab, #162018 55%, transparent);
+  --clr-success: #047857;
+  --clr-success-bg: #ecfdf5;
+  --clr-error: #b91c1c;
+  --clr-error-bg: #fef2f2;
+  --clr-disabled: #94a3b8;
+  --clr-highlight: #e0e7ff;
+  --clr-on-highlight: #312e81;
+  --clr-rating: #b45309;
+  --clr-sale-soft: #e0e7ff;
+  --clr-overlay: color-mix(in oklab, #0f172a 55%, transparent);
   --clr-clear: transparent;
   --clr-current: currentColor;
-  --overlay-dark: color-mix(in oklab, #162018 72%, transparent);
+  --overlay-dark: color-mix(in oklab, #0f172a 72%, transparent);
 
   --header-h: 4rem;
 
@@ -170,6 +170,9 @@
   --clr-on-primary: var(--wc-color-button-text);
   --clr-accent: var(--wc-color-accent);
   --clr-on-accent: var(--wc-color-heading);
+  --clr-price: var(--clr-ink);
+  --clr-price-sale: var(--clr-accent);
+  --clr-price-was: var(--clr-muted);
   --clr-nav-bg: color-mix(in oklab, var(--wc-color-background) 94%, transparent);
   /* A photo's ground while it loads, and behind a photo that does not fill. */
   --clr-photo: color-mix(in oklab, var(--wc-color-text) 6%, var(--wc-color-background));
@@ -232,7 +235,7 @@ p { text-wrap: pretty; }
 }
 
 :focus-visible {
-  outline: 2px solid var(--clr-ink);
+  outline: 2px solid var(--clr-primary);
   outline-offset: 3px;
   border-radius: var(--radius-input);
 }
@@ -314,7 +317,7 @@ a { color: inherit; text-underline-offset: 0.25em; }
   min-height: 2.75rem;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--clr-ink);
+  color: var(--clr-primary);
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 0.45em;
@@ -425,14 +428,14 @@ a { color: inherit; text-underline-offset: 0.25em; }
 .price {
   font-variant-numeric: tabular-nums lining-nums;
   font-weight: 600;
-  color: var(--clr-ink);
+  color: var(--clr-price);
   white-space: nowrap;
 }
-.price.is-sale { color: var(--clr-accent); }
+.price.is-sale { color: var(--clr-price-sale); }
 .price-cur { font-size: 0.8em; font-weight: 500; margin-inline-start: 0.2em; }
 .price-was {
   font-variant-numeric: tabular-nums lining-nums;
-  color: var(--clr-muted);
+  color: var(--clr-price-was);
   font-weight: 400;
   text-decoration: line-through;
   text-decoration-thickness: 1px;
@@ -606,7 +609,7 @@ textarea.form-input { min-height: 6rem; padding-block: 0.875rem; resize: vertica
   color: var(--clr-ink);
   border-bottom: 2px solid var(--clr-highlight);
 }
-.cod-total .price { color: inherit; font-family: var(--font-heading); font-size: var(--text-2xl); line-height: 1.15; }
+.cod-total .price { color: var(--clr-price); font-family: var(--font-heading); font-size: var(--text-2xl); line-height: 1.15; }
 @media (min-width: 1024px) { .cod-total .price { font-size: var(--text-3xl); } }
 
 /* ── The phone's tab bar ─────────────────────────────────────────────────── */

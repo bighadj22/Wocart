@@ -1,49 +1,22 @@
 ---
-// The page's first view. A large photo fills one half — the merchant's own,
-// else the first product of a collection — and the store's promise sits on
-// the other, in the section's colors: a headline, a line, two actions. On a
-// phone the photo comes first, square, the words under it. Without any photo
-// the promise stands alone, centered.
-import { Image } from "astro:assets";
+// The page's first view: the store's promise alone, centered in the section's
+// colors — a headline, a line and two actions. No photo competes with it on a
+// phone or on a wide screen.
 import type { InferProps } from "@wocart/theme";
 import type { StoreFrontContent } from "@/theme/content";
 import type { hero } from "@/theme/catalog/home/hero.def";
 import Section from "@/theme/components/ui/Section.astro";
-import { pickedPicture } from "@/theme/utils/images";
-import { homeImageSettingsOf } from "@/theme/runtime/settings";
-import { LAYOUT } from "@/theme/appearance";
 
 type Props = InferProps<typeof hero> & {
   content: StoreFrontContent;
-  lead: { src: string; alt: string } | null;
 };
 
-const { content, ctaPrimaryHref, ctaSecondaryHref, image, photoSide, scheme, style, lead } = Astro.props;
+const { content, ctaPrimaryHref, ctaSecondaryHref, scheme, style } = Astro.props;
 const store = Astro.locals.store;
-const { heroImage } = homeImageSettingsOf(store);
-const own = pickedPicture(heroImage ?? image, store.config.media);
-const photo = own ? { src: own.src, alt: own.alt || content.heroTitle } : lead;
-const focus = own?.position ?? "50% 55%";
-const layout = LAYOUT.hero;
 ---
 
 <Section scheme={scheme} style={style} bleed>
-  <div class:list={["hero-grid", photo ? "has-photo" : "no-photo", photoSide === "start" && "photo-start"]} style={`--hero-aspect:${layout.imageAspectMobile};--hero-max:${layout.imageMaxMobile};--hero-aspect-wide:${layout.imageAspectDesktop};--hero-max-wide:${layout.imageMaxDesktop};--hero-min:${layout.gridMinDesktop}`}>
-    {photo && (
-      <div class="hero-photo">
-        <Image
-          src={photo.src}
-          alt={photo.alt}
-          width={1200}
-          height={1200}
-          widths={[480, 736, 960, 1200, 1600]}
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          priority
-          quality={84}
-          style={`object-position: ${focus}`}
-        />
-      </div>
-    )}
+  <div class="hero-grid">
     <div class="hero-copy">
       <h1 class="hero-title">{content.heroTitle}</h1>
       {content.heroSubtitle && <p class="hero-sub">{content.heroSubtitle}</p>}
@@ -57,47 +30,36 @@ const layout = LAYOUT.hero;
 
 <style>
   .hero-grid { display: grid; }
-  .hero-photo { position: relative; aspect-ratio: var(--hero-aspect, 5 / 4); max-height: var(--hero-max, 20rem); overflow: hidden; background: var(--clr-photo); }
-  .hero-photo :global(img) { width: 100%; height: 100%; object-fit: cover; }
-  .hero-copy { display: flex; flex-direction: column; padding: var(--space-xl, 2rem) var(--space-md, 1rem) var(--space-xxl, 3rem); }
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-xl, 2rem) var(--space-md, 1rem) var(--space-xxl, 3rem);
+    text-align: center;
+  }
   .hero-title {
+    max-width: 28ch;
     font-size: var(--text-3xl);
     line-height: 1.32;
     font-weight: 600;
   }
   .hero-sub { margin-top: var(--space-sm, 0.75rem); max-width: 32rem; font-size: var(--text-md); color: var(--clr-text); }
-  .hero-actions { display: flex; gap: var(--space-sm, 0.75rem); margin-top: var(--space-lg, 1.5rem); }
-  .hero-actions > a { flex: 1; width: auto; padding-inline: 1rem; }
-  .no-photo .hero-copy { align-items: center; text-align: center; padding-block: 4rem; }
-  .no-photo .hero-sub { margin-inline: auto; }
-  .no-photo .hero-actions { justify-content: center; }
-  .no-photo .hero-actions > a { flex: none; padding-inline: 1.75rem; }
+  .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-sm, 0.75rem); margin-top: var(--space-lg, 1.5rem); }
+  .hero-actions > a { flex: none; min-width: 11.25rem; }
   @media (min-width: 640px) {
-    .hero-copy { padding-inline: 1.5rem; }
+    .hero-copy { padding-inline: 1.5rem; padding-block: 5rem; }
     .hero-title { font-size: var(--text-4xl); }
   }
   @media (min-width: 1024px) {
-    .hero-grid.has-photo { grid-template-columns: 1fr 1fr; min-height: var(--hero-min, min(32rem, calc(100svh - 10rem))); }
-    .hero-photo { aspect-ratio: var(--hero-aspect-wide, 16 / 10); max-height: var(--hero-max-wide, 32rem); order: 2; }
-    .photo-start .hero-photo { order: 0; }
-    .hero-copy {
-      justify-content: center;
-      padding-block: 4rem;
-      padding-inline: max(2.5rem, calc((100vw - 85rem) / 2 + 2.5rem)) 4rem;
-    }
-    .photo-start .hero-copy { padding-inline: 4rem max(2.5rem, calc((100vw - 85rem) / 2 + 2.5rem)); }
+    .hero-copy { padding-block: 7rem; }
     .hero-title { font-size: var(--text-6xl); line-height: 1.22; }
     .hero-sub { margin-top: 1.125rem; font-size: var(--text-lg); }
     .hero-actions { margin-top: 2.25rem; }
-    .hero-actions > a { flex: none; min-width: 11.25rem; }
-    .no-photo .hero-copy { padding-block: 7rem; }
   }
   @media (prefers-reduced-motion: no-preference) {
     .hero-title, .hero-sub, .hero-actions { animation: hero-rise 0.9s var(--ease-out-expo) both; }
     .hero-sub { animation-delay: 0.08s; }
     .hero-actions { animation-delay: 0.16s; }
-    .hero-photo :global(img) { animation: hero-settle 1.2s var(--ease-out-expo) both; }
     @keyframes hero-rise { from { opacity: 0; transform: translateY(1rem); } }
-    @keyframes hero-settle { from { transform: scale(1.04); } }
   }
 </style>

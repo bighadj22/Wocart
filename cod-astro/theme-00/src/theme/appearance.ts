@@ -12,41 +12,41 @@ import styleSizes from "./style-sizes.json";
 
 /**
  * MANUAL EDIT — colors + spacing. Change a value here and every scheme,
- * section and frame that reads it follows. The palette is warm paper + deep
- * olive ink + one muted clay accent (no yellow, no competing highlights).
- * `DESIGN.spacing` feeds `--space-*` in `BaseHead.astro`; `LAYOUT` below holds
- * the image limits. Section toggles/order are in `pages/*.json`. The full map
- * is in `pages/PARAMETERS.md`.
+ * section and frame that reads it follows. The palette is cool neutral
+ * surfaces, crisp slate ink and one indigo primary for buttons, badges, links
+ * and sale prices. `DESIGN.spacing` feeds `--space-*` in `BaseHead.astro`;
+ * `LAYOUT` below holds the remaining image limits. Section toggles/order are
+ * in `pages/*.json`. The full map is in `pages/PARAMETERS.md`.
  */
 export const DESIGN = {
   colors: {
-    // Surface = scheme background: page/cards, stone band, sand photo band,
-    // olive promotion band, night footer + announcement.
-    surface: "#fbfaf7",
-    surfaceStone: "#f3f0e9",
-    surfaceSand: "#ece4d7",
-    surfaceOlive: "#dfe4d6",
-    surfaceNight: "#0f1626",
+    // Surface = scheme background: page/cards, stone band, cool sand band,
+    // slate promotion band, night footer + announcement.
+    surface: "#f8fafc",
+    surfaceStone: "#f1f5f9",
+    surfaceSand: "#e7edf3",
+    surfaceOlive: "#dde7ee",
+    surfaceNight: "#0b1220",
     // Ink = headings; body = paragraph text on that background.
-    ink: "#1c241d",
-    body: "#41483d",
-    bodySand: "#49453a",
-    bodyOlive: "#33402f",
-    bodyNight: "#d7dcd4",
+    ink: "#0f172a",
+    body: "#334155",
+    bodySand: "#475569",
+    bodyOlive: "#334155",
+    bodyNight: "#e2e8f0",
     // Accent = the single sale/highlight color; Night is its dark-band counterpart.
-    accent: "#a4422f",
-    accentNight: "#d5a58f",
+    accent: "#4f46e5",
+    accentNight: "#a5b4fc",
     // Button + its label, per light and dark band.
-    button: "#25301f",
-    buttonNight: "#f7f4ee",
+    button: "#4f46e5",
+    buttonNight: "#e2e8f0",
     onButton: "#ffffff",
-    onButtonNight: "#1c241d",
+    onButtonNight: "#0f172a",
     // Border = hairlines, per background.
-    border: "#e7e2d8",
-    borderStone: "#e1dbcf",
-    borderSand: "#dcd2c0",
-    borderOlive: "#c9d2bf",
-    borderNight: "#2a3429",
+    border: "#cbd5e1",
+    borderStone: "#d8e0e8",
+    borderSand: "#c4d0dd",
+    borderOlive: "#c2d0dc",
+    borderNight: "#334155",
   },
   spacing: {
     // xs → xxl become --space-xs → --space-xxl (BaseHead, every page).
@@ -61,9 +61,9 @@ export const DESIGN = {
 
 /**
  * The schemes a store starts with. The first is the page's; the others band
- * sections: a warm stone ground, sand behind photos, a soft olive for a
- * promotion, and the dark ink of the footer and announcement. The accent is
- * the sale color: a saving's tag and a price below its old one. Their ids
+ * sections: a soft stone ground, cool sand, a slate promotion band, and the
+ * deep navy of the footer and announcement. The accent is the primary/sale
+ * color: buttons, badges, links and a price below its old one. Their ids
  * never change, since sections store them.
  */
 const C = DESIGN.colors;
@@ -85,28 +85,14 @@ export const PAGE_SCHEME: SchemeId = "scheme-1";
 
 /**
  * Editable image sizing — CSS lengths / aspect ratios, no UI edits needed.
- * Every value here is passed to a component as a CSS variable: hero and image
- * banner in the home sections, category tiles, product cards and the product
- * gallery. Keep the mobile cap below the viewport's height and the desktop
+ * Category tiles, product cards and the product gallery still use these; the
+ * home hero, promotion band and category banner carry no photo, so they need
+ * no sizes. Keep the mobile cap below the viewport's height and the desktop
  * cap near half the screen so photographs stay balanced in AR, FR and EN.
  * Section toggles + order live in the page files (`hidden: true`, array order);
  * section spacing uses `style.spacing` with steps s0..s12 from style-sizes.json.
  */
 export const LAYOUT = {
-  hero: {
-    imageAspectMobile: "5 / 4",           // phone photo shape
-    imageMaxMobile: "20rem",              // phone photo height cap
-    imageAspectDesktop: "16 / 10",        // desktop photo shape
-    imageMaxDesktop: "32rem",             // desktop photo height cap
-    gridMinDesktop: "min(30rem, calc(100svh - 9rem))", // two-column row's min height
-  },
-  banner: {
-    imageAspectMobile: "5 / 4",           // image-with-text, phone photo shape
-    imageMaxMobile: "20rem",              // image-with-text, phone height cap
-    imageAspectDesktop: "16 / 10",        // image-with-text, desktop photo shape
-    imageMaxDesktop: "30rem",             // image-with-text, desktop height cap
-    minHeightDesktop: "28rem",            // whole band's min height on desktop
-  },
   category: {
     imageAspectMobile: "4 / 5",           // category tile shape on phone
     imageMaxMobile: "21rem",              // category tile height cap on phone
