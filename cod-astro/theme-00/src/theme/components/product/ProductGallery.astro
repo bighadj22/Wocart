@@ -80,10 +80,13 @@ const goTo = (index: number) => message(content, "ariaGoToImage", { n: index + 1
   /* A phone shows the photo edge to edge, under the page's own gutters. */
   .stage {
     aspect-ratio: 1 / 1;
+    max-height: 24rem;
     margin-inline: -1rem;
     border-radius: 0;
   }
-  @media (min-width: 640px) { .stage { margin-inline: 0; border-radius: var(--radius-media); } }
+  @media (min-width: 640px) {
+    .stage { max-height: 30rem; margin-inline: 0; border-radius: var(--radius-media); }
+  }
   .gallery-track {
     display: flex;
     width: 100%;
@@ -152,7 +155,7 @@ const goTo = (index: number) => message(content, "ariaGoToImage", { n: index + 1
   .gallery-thumb.is-active { border-color: var(--clr-ink); opacity: 1; }
 
   @media (min-width: 1024px) {
-    .stage { aspect-ratio: 4 / 5; }
+    .stage { aspect-ratio: 4 / 5; max-height: 38rem; }
     .is-square .stage { aspect-ratio: 1 / 1; }
     .gallery-pips { display: none; }
     .gallery-thumb { width: 5.25rem; }

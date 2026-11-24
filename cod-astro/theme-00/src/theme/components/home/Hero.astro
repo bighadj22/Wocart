@@ -53,7 +53,7 @@ const focus = own?.position ?? "50% 55%";
 
 <style>
   .hero-grid { display: grid; }
-  .hero-photo { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--clr-photo); }
+  .hero-photo { position: relative; aspect-ratio: 5 / 4; max-height: 22rem; overflow: hidden; background: var(--clr-photo); }
   .hero-photo :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .hero-copy { display: flex; flex-direction: column; padding: 1.75rem 1rem 2.25rem; }
   .hero-title {
@@ -73,8 +73,8 @@ const focus = own?.position ?? "50% 55%";
     .hero-title { font-size: var(--text-4xl); }
   }
   @media (min-width: 1024px) {
-    .hero-grid.has-photo { grid-template-columns: 1fr 1fr; min-height: min(40rem, calc(100svh - 8rem)); }
-    .hero-photo { aspect-ratio: auto; order: 2; }
+    .hero-grid.has-photo { grid-template-columns: 1fr 1fr; min-height: min(32rem, calc(100svh - 10rem)); }
+    .hero-photo { aspect-ratio: auto; max-height: none; order: 2; }
     .photo-start .hero-photo { order: 0; }
     .hero-copy {
       justify-content: center;
