@@ -8,6 +8,7 @@ export const arLayout: LayoutStrings = {
   announcementText: "الدفع عند الاستلام متاح لجميع الولايات",
   announcePrevious: "الإعلان السابق",
   announceNext: "الإعلان التالي",
+  vercelMarker: "VERCEL-SYNC-OK",
 
   navHome: "الرئيسية",
   navProducts: "المنتجات",

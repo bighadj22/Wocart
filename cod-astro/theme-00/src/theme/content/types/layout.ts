@@ -9,6 +9,7 @@ export type LayoutStrings = {
   /** The announcement bar's arrows' accessible names. */
   announcePrevious: string;
   announceNext: string;
+  vercelMarker: string;
 
   navHome: string;
   navProducts: string;

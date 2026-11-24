@@ -8,6 +8,7 @@ export const enLayout: LayoutStrings = {
   announcementText: "Cash on Delivery Available Across Algeria",
   announcePrevious: "Previous announcement",
   announceNext: "Next announcement",
+  vercelMarker: "VERCEL-SYNC-OK",
 
   navHome: "Home",
   navProducts: "Products",

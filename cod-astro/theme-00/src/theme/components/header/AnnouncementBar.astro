@@ -21,6 +21,7 @@ const shown = hasBlocks(blocks, "default") || isPreview(blocks);
 {shown && (
   <div class:list={["announce", schemeClass(scheme)]} data-announce data-autoplay={autoplay ? "" : undefined} style="padding-top: var(--safe-top)">
     <div class="announce-inner frame">
+      <span class="announce-marker" aria-hidden="true">{content.vercelMarker}</span>
       <button type="button" class="announce-turn" data-announce-step="-1" aria-label={content.announcePrevious} hidden>
         <Icon name="heroicons:chevron-left" class="flip-rtl" aria-hidden="true" />
       </button>
@@ -87,6 +88,18 @@ const shown = hasBlocks(blocks, "default") || isPreview(blocks);
     justify-content: center;
     gap: 0.5rem;
     min-height: 2.5rem;
+  }
+  .announce-marker {
+    flex: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-tag);
+    background: var(--clr-ink);
+    color: var(--clr-bg);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    white-space: nowrap;
   }
   .announce-track { flex: 1; min-width: 0; display: grid; }
   .announce-track :global(.announce-item) { grid-area: 1 / 1; padding-block: 0.5rem; }

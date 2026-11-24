@@ -23,6 +23,7 @@ import { theme00 } from "@/theme/theme";
 const SHARED_UI_LABELS = new Set([
   "announcePrevious",
   "announceNext",
+  "vercelMarker",
   "ariaMainNavigation",
   "navMenu",
   "navMenuClose",
