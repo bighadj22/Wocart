@@ -50,7 +50,7 @@ export async function quoteCheckout(
   const code = input.couponCode ?? null;
   const lookup = code === null ? null : await findCheckoutCoupon(db, { code, phone: input.phone ?? null, now: input.now });
   const coupon = lookup?.ok ? lookup.coupon : null;
-  const basket = priceCartLines(input.snapshot, input.lines, coupon);
+  const basket = priceCartLines(input.snapshot, input.lines, coupon, input.destination?.deliveryType ?? "home");
   // A code the lookup refused stays refused; one it found is judged by pricing, then by delivery.
   // Named in its stored form when it is one, as an applied code is.
   const refused: CouponOutcome | null = lookup && !lookup.ok ? { code: normalizeCouponCode(code!) ?? code!.trim(), applied: false, refusal: lookup.refusal } : null;

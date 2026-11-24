@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  deliveryTypeFor,
+  eligibleDeliveryMethodsOf,
   filterOffers,
   offerErrorMessage,
   offerRuleLabel,
@@ -22,6 +24,7 @@ const offer = (overrides: Partial<Offer> = {}): Offer => ({
   tiers: [],
   startsAt: null,
   endsAt: null,
+  freeShippingDeliveryType: null,
   createdAt: "2026-08-26T00:00:00.000Z",
   updatedAt: "2026-08-26T00:00:00.000Z",
   triggerProduct: { id: "prod-1", name: "Chips", handle: "chips" },
@@ -75,11 +78,33 @@ const FORM: OfferFormValues = {
   rewardProductId: "p2",
   rewardVariantId: "",
   rewardQuantity: "1",
-  tiers: [{ quantity: "1", price: "", freeShipping: false }],
+  tiers: [{ quantity: "1", price: "", freeShipping: false, eligibleDeliveryMethods: ["home", "stop_desk"] }],
   startsAt: "",
   endsAt: "",
   status: "active",
+  eligibleDeliveryMethods: ["home", "stop_desk"],
 };
+
+describe("eligible delivery methods", () => {
+  it("maps both, one or none of the methods to the stored setting", () => {
+    expect(deliveryTypeFor(["home", "stop_desk"])).toBeNull();
+    expect(deliveryTypeFor(["stop_desk", "home"])).toBeNull();
+    expect(deliveryTypeFor(["home"])).toBe("home");
+    expect(deliveryTypeFor(["stop_desk"])).toBe("stop_desk");
+    expect(deliveryTypeFor([])).toBeNull();
+  });
+
+  it("reads a stored setting back as the merchant's selection", () => {
+    expect(eligibleDeliveryMethodsOf(null)).toEqual(["home", "stop_desk"]);
+    expect(eligibleDeliveryMethodsOf("home")).toEqual(["home"]);
+    expect(eligibleDeliveryMethodsOf("stop_desk")).toEqual(["stop_desk"]);
+  });
+
+  it("sends the selected delivery method with a free-shipping offer", () => {
+    expect(offerBody({ ...FORM, discountType: "free_shipping", eligibleDeliveryMethods: ["stop_desk"] }, true).freeShippingDeliveryType).toBe("stop_desk");
+    expect(offerBody({ ...FORM, discountType: "free_shipping", eligibleDeliveryMethods: ["home", "stop_desk"] }, true).freeShippingDeliveryType).toBeNull();
+  });
+});
 
 describe("offer body: a cleared field is sent as null when editing", () => {
   it("clears an emptied start date, end date and variants when editing", () => {
@@ -120,16 +145,16 @@ describe("quantity pricing in the form", () => {
     ...FORM,
     discountType: "quantity_price",
     tiers: [
-      { quantity: "1", price: "2000", freeShipping: false },
-      { quantity: "2", price: "3500", freeShipping: true },
+      { quantity: "1", price: "2000", freeShipping: false, eligibleDeliveryMethods: ["home", "stop_desk"] },
+      { quantity: "2", price: "3500", freeShipping: true, eligibleDeliveryMethods: ["home", "stop_desk"] },
     ],
   };
 
   it("sends the tiers, and no threshold or reward", () => {
     const body = offerBody(pricing, false);
     expect(body.tiers).toEqual([
-      { quantity: 1, price: 2000, freeShipping: false },
-      { quantity: 2, price: 3500, freeShipping: true },
+      { quantity: 1, price: 2000, freeShipping: false, freeShippingDeliveryType: null },
+      { quantity: 2, price: 3500, freeShipping: true, freeShippingDeliveryType: null },
     ]);
     expect(body).not.toHaveProperty("triggerQuantity");
     expect(body.rewardProductId).toBeUndefined();
@@ -138,8 +163,8 @@ describe("quantity pricing in the form", () => {
 
   it("judges the tiers by the platform's own rule", () => {
     expect(formTiersProblem(pricing)).toBeNull();
-    expect(formTiersProblem({ tiers: [{ quantity: "2", price: "", freeShipping: false }, { quantity: "2", price: "1", freeShipping: false }] })).toBe("duplicate_quantity");
-    expect(formTiersProblem({ tiers: [{ quantity: "1.5", price: "100", freeShipping: false }] })).toBe("invalid_tier");
+    expect(formTiersProblem({ tiers: [{ quantity: "2", price: "", freeShipping: false, eligibleDeliveryMethods: [] }, { quantity: "2", price: "1", freeShipping: false, eligibleDeliveryMethods: [] }] })).toBe("duplicate_quantity");
+    expect(formTiersProblem({ tiers: [{ quantity: "1.5", price: "100", freeShipping: false, eligibleDeliveryMethods: [] }] })).toBe("invalid_tier");
     expect(formTiersProblem({ tiers: [] })).toBe("empty");
   });
 

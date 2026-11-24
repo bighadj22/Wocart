@@ -334,7 +334,7 @@ export function variantRow(overrides: Record<string, unknown> = {}): Record<stri
 
 // Schema: id, name, triggerProductId, triggerVariantId, triggerQuantity,
 //         rewardProductId, rewardVariantId, rewardQuantity, discountType,
-//         startsAt, endsAt, status, createdAt, updatedAt
+//         startsAt, endsAt, status, freeShippingDeliveryType, createdAt, updatedAt
 export function offerRow(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     id: "offer_1",
@@ -349,6 +349,7 @@ export function offerRow(overrides: Record<string, unknown> = {}): Record<string
     starts_at: null,
     ends_at: null,
     status: "active",
+    free_shipping_delivery_type: null,
     created_at: NOW,
     updated_at: NOW,
     ...overrides,

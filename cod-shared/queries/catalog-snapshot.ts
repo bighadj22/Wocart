@@ -123,7 +123,7 @@ export async function loadCatalogSnapshot(
   const offerStatements = chunkIds(productIds).map((chunk) => db.select().from(offers).where(live(chunk)));
   const tierStatements = chunkIds(productIds).map((chunk) =>
     db
-      .select({ offerId: offerPriceTiers.offerId, quantity: offerPriceTiers.quantity, price: offerPriceTiers.price, freeShipping: offerPriceTiers.freeShipping })
+      .select({ offerId: offerPriceTiers.offerId, quantity: offerPriceTiers.quantity, price: offerPriceTiers.price, freeShipping: offerPriceTiers.freeShipping, freeShippingDeliveryType: offerPriceTiers.freeShippingDeliveryType })
       .from(offerPriceTiers)
       .innerJoin(offers, eq(offers.id, offerPriceTiers.offerId))
       .where(live(chunk)),
@@ -169,7 +169,8 @@ export async function loadCatalogSnapshot(
       rewardProductId: row.rewardProductId,
       rewardVariantId: row.rewardVariantId,
       rewardQuantity: row.rewardQuantity,
-      tiers: tiers.filter((tier) => tier.offerId === row.id).map(({ quantity, price, freeShipping }) => ({ quantity, price, freeShipping })),
+      tiers: tiers.filter((tier) => tier.offerId === row.id).map(({ quantity, price, freeShipping, freeShippingDeliveryType }) => ({ quantity, price, freeShipping, freeShippingDeliveryType: freeShippingDeliveryType ?? null })),
+      freeShippingDeliveryType: row.freeShippingDeliveryType as "home" | "stop_desk" | null,
     })),
   };
 
@@ -472,12 +473,13 @@ export interface PricedBasket {
  * A soft-deleted product prices at 0 rather than throwing — the order engine
  * refuses it separately, and pricing is not the place to decide sellability.
  */
-export function priceCartLines(snapshot: CatalogSnapshot, lines: CartLine[], coupon: CheckoutCoupon | null = null): PricedBasket {
+export function priceCartLines(snapshot: CatalogSnapshot, lines: CartLine[], coupon: CheckoutCoupon | null = null, deliveryType: "home" | "stop_desk" = "home"): PricedBasket {
   const atCatalog = catalogPrices(snapshot, lines);
   const applied = applyOffers(
     atCatalog.map((entry) => ({ ...entry.line, unitPrice: entry.unitPrice })),
     snapshot.offers,
     rewardPlacer(snapshot, lines),
+    deliveryType,
   );
   const offered = atCatalog.map((entry, index) => ({ ...entry, ...applied.lines[index]! }));
   const pricing = coupon && priceCoupon(offered.map((entry) => ({ productId: entry.line.productId, quantity: entry.line.quantity, lineTotal: entry.lineTotal, offerId: entry.offerId })), coupon);

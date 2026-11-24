@@ -50,9 +50,18 @@ export interface EngineOffer {
   rewardQuantity: number;
   /** Quantity pricing's tiers; empty for the other kinds. */
   tiers: readonly PriceTier[];
+  /** Delivery method earning free shipping; null or absent means both. */
+  freeShippingDeliveryType?: FreeShippingDeliveryType | null;
 }
 
-/** A basket line as the engine reads it: what is bought, and its catalog unit price. */
+export const FREE_SHIPPING_DELIVERY_TYPES = ["home", "stop_desk"] as const;
+export type FreeShippingDeliveryType = (typeof FREE_SHIPPING_DELIVERY_TYPES)[number];
+
+/** An ineligible delivery method keeps the store's normal shipping rate. */
+export function freeShippingAppliesTo(deliveryType: FreeShippingDeliveryType, setting: FreeShippingDeliveryType | null | undefined): boolean {
+  return setting == null || setting === deliveryType;
+}
+
 export interface OfferLine {
   productId: string;
   variantId: string | null;
@@ -107,7 +116,7 @@ function reached(offer: EngineOffer, quantity: number): number | null {
   return quantity >= offer.triggerQuantity ? offer.triggerQuantity : null;
 }
 
-export function applyOffers<L extends OfferLine>(lines: readonly L[], candidates: readonly EngineOffer[], placeReward: PlaceReward<L>): AppliedOffers<L> {
+export function applyOffers<L extends OfferLine>(lines: readonly L[], candidates: readonly EngineOffer[], placeReward: PlaceReward<L>, deliveryType: FreeShippingDeliveryType): AppliedOffers<L> {
   const priced: PricedOfferLine[] = lines.map((line) => ({ lineTotal: line.unitPrice * line.quantity, offerId: null }));
   const rewards: EarnedReward<L>[] = [];
   let freeShippingOfferId: string | null = null;
@@ -131,10 +140,11 @@ export function applyOffers<L extends OfferLine>(lines: readonly L[], candidates
 
     let reward: EarnedReward<L> | null = null;
     const chosen = ordered.find(({ offer, first, units, atCatalog }) => {
-      if (offer.discountType === "free_shipping") return singleProductBasket;
+      if (offer.discountType === "free_shipping") return singleProductBasket && freeShippingAppliesTo(deliveryType, offer.freeShippingDeliveryType);
       if (offer.discountType === "quantity_price") {
         const tier = tierFor(offer.tiers, units)!;
-        return tieredTotal(tier, units) !== atCatalog || (tier.freeShipping && singleProductBasket);
+        const tierSetting = tier.freeShippingDeliveryType ?? offer.freeShippingDeliveryType;
+        return tieredTotal(tier, units) !== atCatalog || (tier.freeShipping && singleProductBasket && freeShippingAppliesTo(deliveryType, tierSetting));
       }
       if (offer.discountType === "free") {
         const placement = placeReward(offer, first, rewards);
@@ -153,11 +163,12 @@ export function applyOffers<L extends OfferLine>(lines: readonly L[], candidates
       lineIndexes.forEach((index, at) => {
         priced[index] = { lineTotal: shares[at]!, offerId: offer.id };
       });
-      if (tier.freeShipping && singleProductBasket) freeShippingOfferId = offer.id;
+      const tierSetting = tier.freeShippingDeliveryType ?? offer.freeShippingDeliveryType;
+      if (tier.freeShipping && singleProductBasket && freeShippingAppliesTo(deliveryType, tierSetting)) freeShippingOfferId = offer.id;
     } else {
       for (const index of lineIndexes) priced[index] = { ...priced[index]!, offerId: offer.id };
       if (offer.discountType === "free") rewards.push(reward!);
-      else freeShippingOfferId = offer.id;
+      else if (freeShippingAppliesTo(deliveryType, offer.freeShippingDeliveryType)) freeShippingOfferId = offer.id;
     }
   }
 

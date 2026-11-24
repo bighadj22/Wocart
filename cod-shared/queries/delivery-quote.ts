@@ -67,7 +67,7 @@ export async function quoteOrderDelivery(db: AppDb, input: OrderDeliveryInput): 
   });
   if (rate === null) return { available: false };
 
-  const offerId = priceCartLines(snapshot, lines).freeShippingOfferId;
+  const offerId = priceCartLines(snapshot, lines, null, input.deliveryType).freeShippingOfferId;
   if (offerId) {
     const offer = snapshot.offers.find((item) => item.id === offerId);
     return { available: true, rate, fee: 0, free: { by: "offer", offerId, offerName: offer?.name ?? null } };

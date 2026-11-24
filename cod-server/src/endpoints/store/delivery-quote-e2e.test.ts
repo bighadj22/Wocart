@@ -234,6 +234,27 @@ describe("POST /store/cart/validate — the delivery quote is what the order cha
     await expectQuoteIsCharged([{ productId: p, quantity: 2 }], HOME, 0);
   });
 
+  it("charges the normal rate when the chosen delivery method is not eligible for a free-shipping offer", async () => {
+    await seedProfile(true, 600, 300);
+    const p = await seedProduct(2500);
+    await harness.db.insert(schema.offers).values({
+      id: uid("offer"),
+      name: "Home delivery ships free",
+      triggerProductId: p,
+      triggerQuantity: 2,
+      rewardProductId: null,
+      rewardQuantity: 0,
+      discountType: "free_shipping",
+      freeShippingDeliveryType: "home",
+      status: "active",
+      createdAt: NOW(),
+      updatedAt: NOW(),
+    });
+
+    await expectQuoteIsCharged([{ productId: p, quantity: 2 }], HOME, 0);
+    await expectQuoteIsCharged([{ productId: p, quantity: 2 }], { ...HOME, deliveryType: "stop_desk" }, 300);
+  });
+
   it("unavailable where the store does not deliver — and the order is refused", async () => {
     await seedProfile(true, 600, 300);
     const p = await seedProduct(2500);

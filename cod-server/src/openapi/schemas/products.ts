@@ -415,6 +415,10 @@ export const OfferSchema = z
       description: "Where the offer stands now: switched off, not started, ended, or live — the only state shoppers see it in.",
       example: "live",
     }),
+    freeShippingDeliveryType: z.enum(["home", "stop_desk"]).nullable().openapi({
+      description: "Delivery method earning free shipping. null means both home delivery and pickup point.",
+      example: null,
+    }),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })

@@ -3,6 +3,7 @@ import type { OfferKind, OfferState, PriceTier } from "../../../../cod-shared/of
 export type OfferDiscountType = OfferKind;
 export type { OfferState, PriceTier };
 export type OfferStatus = "active" | "inactive";
+export type FreeShippingDeliveryMethod = "home" | "stop_desk";
 
 export interface OfferProduct {
   id: string;
@@ -34,6 +35,8 @@ export interface Offer {
   triggerVariant: OfferVariant | null;
   rewardProduct: OfferProduct | null;
   rewardVariant: OfferVariant | null;
+  /** null means both delivery methods earn free shipping. */
+  freeShippingDeliveryType: FreeShippingDeliveryMethod | null;
 }
 
 export interface OfferFormValues {
@@ -46,15 +49,21 @@ export interface OfferFormValues {
   rewardVariantId: string;
   rewardQuantity: string;
   /** Quantity pricing's tiers as typed: quantity and total price for that many. */
-  tiers: Array<{ quantity: string; price: string; freeShipping: boolean }>;
+  tiers: Array<{
+    quantity: string;
+    price: string;
+    freeShipping: boolean;
+    eligibleDeliveryMethods: FreeShippingDeliveryMethod[];
+  }>;
   startsAt: string;
   endsAt: string;
   status: OfferStatus;
+  eligibleDeliveryMethods: FreeShippingDeliveryMethod[];
 }
 
 export interface CreateOfferData {
   name: string;
-  discountType: OfferDiscountType;
+  discountType: OfferKind;
   triggerProductId: string;
   triggerVariantId?: string | null;
   triggerQuantity?: number;
@@ -65,4 +74,6 @@ export interface CreateOfferData {
   startsAt?: string | null;
   endsAt?: string | null;
   status: OfferStatus;
+  /** null means both delivery methods earn free shipping. */
+  freeShippingDeliveryType?: FreeShippingDeliveryMethod | null;
 }

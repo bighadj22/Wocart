@@ -1571,6 +1571,8 @@ export const offers = sqliteTable("offers", {
     .notNull()
     .default("active"),
 
+  /** Delivery method earning free shipping; null means both. */
+  freeShippingDeliveryType: text("free_shipping_delivery_type", { enum: ["home", "stop_desk"] }),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -1585,6 +1587,8 @@ export const offerPriceTiers = sqliteTable("offer_price_tiers", {
   quantity: integer("quantity").notNull(),
   price: integer("price").notNull(),
   freeShipping: integer("free_shipping", { mode: "boolean" }).notNull().default(false),
+  /** Delivery method earning this tier's free shipping; null inherits the offer's. */
+  freeShippingDeliveryType: text("free_shipping_delivery_type", { enum: ["home", "stop_desk"] }),
 }, (t) => ({
   pk: primaryKey({ columns: [t.offerId, t.quantity] }),
 }));

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Gift, Layers, Plus, Trash2, Truck } from "lucide-react";
+import { Gift, House, Layers, MapPin, Plus, Trash2, Truck } from "lucide-react";
 import {
   canScope,
   RequireAuth,
@@ -11,9 +11,9 @@ import { notify } from "@/lib/notify";
 import { SCOPES } from "../../../../../cod-shared/rbac/scopes";
 import { TranslationsCard } from "@/features/translations/components/TranslationsCard";
 import { createOffer, getOffer, updateOffer } from "@/features/offers/api";
-import { formTiers, formTiersProblem, offerBody, offerErrorMessage, tierSaving } from "@/features/offers/model";
+import { ELIGIBLE_DELIVERY_METHODS, eligibleDeliveryMethodsOf, formTiers, formTiersProblem, offerBody, offerErrorMessage, tierSaving } from "@/features/offers/model";
 import { toLocalInput } from "@/lib/datetime-local";
-import type { OfferFormValues } from "@/features/offers/types";
+import type { FreeShippingDeliveryMethod, OfferFormValues } from "@/features/offers/types";
 import { listProducts } from "@/features/products/api";
 import type { Product, ProductVariant } from "@/features/products/types";
 import { Alert, Button, Card, Field, FormPage, IconButton, InfoTip, Input, Select, Switch } from "@/components/ui";
@@ -29,16 +29,64 @@ const EMPTY_FORM: OfferFormValues = {
   rewardVariantId: "",
   rewardQuantity: "1",
   tiers: [
-    { quantity: "1", price: "", freeShipping: false },
-    { quantity: "2", price: "", freeShipping: false },
+    { quantity: "1", price: "", freeShipping: false, eligibleDeliveryMethods: [...ELIGIBLE_DELIVERY_METHODS] },
+    { quantity: "2", price: "", freeShipping: false, eligibleDeliveryMethods: [...ELIGIBLE_DELIVERY_METHODS] },
   ],
   startsAt: "",
   endsAt: "",
   status: "active",
+  eligibleDeliveryMethods: [...ELIGIBLE_DELIVERY_METHODS],
 };
 
 function variantLabel(variant: ProductVariant) {
   return Object.values(variant.variations).join(" / ");
+}
+
+const DELIVERY_METHOD_ICONS = { home: House, stop_desk: MapPin } as const;
+
+function DeliveryMethodsPicker({
+  name,
+  value,
+  onChange,
+  disabled,
+  compact = false,
+  error,
+}: {
+  name: string;
+  value: readonly FreeShippingDeliveryMethod[];
+  onChange: (methods: FreeShippingDeliveryMethod[]) => void;
+  disabled?: boolean;
+  compact?: boolean;
+  error?: string;
+}) {
+  const t = useT("offers");
+  const toggle = (method: FreeShippingDeliveryMethod) =>
+    onChange(value.includes(method) ? value.filter((entry) => entry !== method) : ELIGIBLE_DELIVERY_METHODS.filter((entry) => value.includes(entry) || entry === method));
+  return (
+    <fieldset disabled={disabled} className={compact ? "col-span-3 space-y-1.5" : "space-y-1.5"}>
+      <legend className="text-sm font-medium text-foreground">{t("form.eligible_delivery_methods_label")}</legend>
+      {!compact && <p className="text-xs text-muted-foreground">{t("form.eligible_delivery_methods_hint")}</p>}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {ELIGIBLE_DELIVERY_METHODS.map((method) => {
+          const Icon = DELIVERY_METHOD_ICONS[method];
+          const selected = value.includes(method);
+          return (
+            <label
+              key={method}
+              className={`flex min-h-10 cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${
+                selected ? "border-primary bg-subtle font-medium text-foreground" : "border-border text-muted-foreground hover:bg-subtle"
+              }`}
+            >
+              <input type="checkbox" name={name} value={method} checked={selected} onChange={() => toggle(method)} className="sr-only" />
+              <Icon size={16} aria-hidden="true" className="shrink-0" />
+              <span>{t(`form.eligible_delivery_${method}`)}</span>
+            </label>
+          );
+        })}
+      </div>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    </fieldset>
+  );
 }
 
 function OfferForm({ offerId }: { offerId?: string }) {
@@ -81,11 +129,12 @@ function OfferForm({ offerId }: { offerId?: string }) {
             rewardVariantId: offer.rewardVariant?.id ?? "",
             rewardQuantity: String(offer.rewardQuantity),
             tiers: offer.tiers.length
-              ? offer.tiers.map((tier) => ({ quantity: String(tier.quantity), price: String(tier.price), freeShipping: tier.freeShipping }))
+              ? offer.tiers.map((tier) => ({ quantity: String(tier.quantity), price: String(tier.price), freeShipping: tier.freeShipping, eligibleDeliveryMethods: eligibleDeliveryMethodsOf(tier.freeShippingDeliveryType) }))
               : EMPTY_FORM.tiers,
             startsAt: toLocalInput(offer.startsAt),
             endsAt: toLocalInput(offer.endsAt),
             status: offer.status,
+            eligibleDeliveryMethods: eligibleDeliveryMethodsOf(offer.freeShippingDeliveryType),
           });
       })
       .catch((cause) => {
@@ -139,12 +188,16 @@ function OfferForm({ offerId }: { offerId?: string }) {
       next.triggerProductId = t("form.error_trigger_product_required");
     if (form.discountType === "free" && !form.rewardProductId)
       next.rewardProductId = t("form.error_reward_product_required");
+    if (form.discountType === "free_shipping" && form.eligibleDeliveryMethods.length === 0)
+      next.eligibleDeliveryMethods = t("form.error_eligible_delivery_methods");
     const triggerQty = parseInt(form.triggerQuantity, 10);
     if (form.discountType !== "quantity_price" && (Number.isNaN(triggerQty) || triggerQty < 1))
       next.triggerQuantity = t("form.error_trigger_qty");
     if (form.discountType === "quantity_price") {
       const problem = formTiersProblem(form);
       if (problem) next.tiers = t(`error_invalid.${problem}`);
+      else if (form.tiers.some((tier) => tier.freeShipping && tier.eligibleDeliveryMethods.length === 0))
+        next.tiers = t("form.error_tier_eligible_delivery_methods");
     }
     if (form.startsAt && form.endsAt && form.endsAt <= form.startsAt)
       next.endsAt = t("error_invalid.schedule_ends_before_start");
@@ -259,6 +312,17 @@ function OfferForm({ offerId }: { offerId?: string }) {
               aria-labelledby="offer-active"
             />
           </div>
+          {form.discountType === "free_shipping" && (
+            <div className="border-t border-border pt-4">
+              <DeliveryMethodsPicker
+                name="eligibleDeliveryMethods"
+                value={form.eligibleDeliveryMethods}
+                onChange={(methods) => update("eligibleDeliveryMethods", methods)}
+                disabled={busy}
+                error={errors.eligibleDeliveryMethods}
+              />
+            </div>
+          )}
         </div>
       </Card>
 
@@ -343,6 +407,15 @@ function OfferForm({ offerId }: { offerId?: string }) {
                     <input type="checkbox" checked={tier.freeShipping} onChange={(event) => set({ freeShipping: event.currentTarget.checked })} disabled={busy} className="size-4 accent-[var(--primary)]" />
                     {t("form.tier_free_shipping")}
                   </label>
+                  {tier.freeShipping && (
+                    <DeliveryMethodsPicker
+                      name={`tierDeliveryMethods-${index}`}
+                      value={tier.eligibleDeliveryMethods}
+                      onChange={(methods) => set({ eligibleDeliveryMethods: methods })}
+                      disabled={busy}
+                      compact
+                    />
+                  )}
                 </div>
               );
             })}
@@ -350,7 +423,7 @@ function OfferForm({ offerId }: { offerId?: string }) {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => update("tiers", [...form.tiers, { quantity: String(Math.max(0, ...form.tiers.map((entry) => Number(entry.quantity) || 0)) + 1), price: "", freeShipping: false }])}
+              onClick={() => update("tiers", [...form.tiers, { quantity: String(Math.max(0, ...form.tiers.map((entry) => Number(entry.quantity) || 0)) + 1), price: "", freeShipping: false, eligibleDeliveryMethods: [...ELIGIBLE_DELIVERY_METHODS] }])}
               disabled={busy || form.tiers.length >= 10}
             >
               <Plus size={14} aria-hidden="true" />

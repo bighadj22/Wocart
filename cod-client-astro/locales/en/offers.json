@@ -81,7 +81,13 @@
     "tier_each": "{perUnit} each",
     "tier_remove": "Remove this tier",
     "tier_add": "Add a tier",
-    "tier_free_shipping": "Free delivery from this tier (when the order holds this product alone)"
+    "tier_free_shipping": "Free delivery from this tier (when the order holds this product alone)",
+    "eligible_delivery_methods_label": "Eligible Delivery Methods",
+    "eligible_delivery_methods_hint": "Free shipping applies only when the shopper chooses a selected delivery method. Select both for all methods.",
+    "eligible_delivery_home": "🏠 Home Delivery",
+    "eligible_delivery_stop_desk": "📍 Pickup Point / Stop Desk",
+    "error_eligible_delivery_methods": "Select at least one delivery method",
+    "error_tier_eligible_delivery_methods": "Select at least one delivery method for each tier that includes free delivery"
   },
   "buy_x_get_y": "Buy {x}, get {y} free",
   "buy_x_free_shipping": "Buy {x}, get free shipping",

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Free-delivery offers now name the delivery methods that earn them
+  (migration 0092): home delivery, pickup point, or both. The dashboard
+  requires at least one selection, existing offers keep applying to both,
+  and checkout keeps the store's normal rate when the shopper chooses a
+  method the offer does not cover. The public product payload exposes the
+  setting for themes.
+
 ### Changed
 
 - What a browser is told about tracking is the pixel only: `/store/config`

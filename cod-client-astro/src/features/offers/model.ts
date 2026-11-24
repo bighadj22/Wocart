@@ -2,7 +2,7 @@ import type { Translate } from "@/i18n/core";
 import { OFFER_KINDS, tiersProblem, type PriceTier } from "../../../../cod-shared/offers/model";
 import { fromLocalInput } from "@/lib/datetime-local";
 import { formatMoney } from "@/features/orders/model";
-import type { CreateOfferData, Offer, OfferDiscountType, OfferFormValues, OfferState } from "./types";
+import type { CreateOfferData, FreeShippingDeliveryMethod, Offer, OfferDiscountType, OfferFormValues, OfferState } from "./types";
 
 export type OfferSortKey = "name" | "state" | "createdAt" | "triggerQuantity";
 
@@ -20,6 +20,16 @@ export interface OfferFilters {
 
 export const OFFER_STATES: readonly OfferState[] = ["live", "scheduled", "expired", "inactive"];
 export const OFFER_TYPES: readonly OfferDiscountType[] = OFFER_KINDS;
+export const ELIGIBLE_DELIVERY_METHODS: readonly FreeShippingDeliveryMethod[] = ["home", "stop_desk"];
+
+export function deliveryTypeFor(methods: readonly FreeShippingDeliveryMethod[]): FreeShippingDeliveryMethod | null {
+  const selected = ELIGIBLE_DELIVERY_METHODS.filter((method) => methods.includes(method));
+  return selected.length === ELIGIBLE_DELIVERY_METHODS.length ? null : (selected[0] ?? null);
+}
+
+export function eligibleDeliveryMethodsOf(setting: FreeShippingDeliveryMethod | null | undefined): FreeShippingDeliveryMethod[] {
+  return setting === "home" || setting === "stop_desk" ? [setting] : [...ELIGIBLE_DELIVERY_METHODS];
+}
 
 export const OFFER_STATE_TONE: Record<OfferState, "success" | "neutral" | "info"> = {
   live: "success",
@@ -101,7 +111,12 @@ export function offerErrorMessage(cause: unknown, t: Translate) {
 
 /** The tiers the form holds, as numbers; null when one is not a whole number. */
 export function formTiers(form: Pick<OfferFormValues, "tiers">): PriceTier[] | null {
-  const tiers = form.tiers.map((tier) => ({ quantity: Number(tier.quantity), price: Number(tier.price), freeShipping: tier.freeShipping }));
+  const tiers = form.tiers.map((tier) => ({
+    quantity: Number(tier.quantity),
+    price: Number(tier.price),
+    freeShipping: tier.freeShipping,
+    freeShippingDeliveryType: tier.freeShipping ? deliveryTypeFor(tier.eligibleDeliveryMethods) : null,
+  }));
   return tiers.every((tier) => Number.isInteger(tier.quantity) && Number.isInteger(tier.price)) ? tiers : null;
 }
 
@@ -139,5 +154,6 @@ export function offerBody(form: OfferFormValues, editing: boolean): CreateOfferD
     startsAt: fromLocalInput(form.startsAt) ?? empty,
     endsAt: fromLocalInput(form.endsAt) ?? empty,
     status: form.status,
+    freeShippingDeliveryType: form.discountType === "free_shipping" ? deliveryTypeFor(form.eligibleDeliveryMethods) : null,
   };
 }

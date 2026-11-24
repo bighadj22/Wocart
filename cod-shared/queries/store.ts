@@ -742,7 +742,7 @@ export async function getStoreProductByHandle(
         offerId: pricingOffer.id,
         name: pricingOffer.name,
         triggerVariantId: pricingOffer.triggerVariantId ?? null,
-        tiers: pricingTiers.map((tier) => ({ quantity: tier.quantity, price: tier.price, freeShipping: tier.freeShipping })),
+        tiers: pricingTiers.map((tier) => ({ quantity: tier.quantity, price: tier.price, freeShipping: tier.freeShipping, freeShippingDeliveryType: tier.freeShippingDeliveryType ?? null })),
       }
     : null;
 
@@ -766,6 +766,7 @@ export async function getStoreProductByHandle(
           : null,
         // What one reward unit is worth: its variant's price, or its product's.
         rewardUnitPrice: rewardVariant?.price ?? rewardProduct?.price ?? null,
+        freeShippingDeliveryType: offer.freeShippingDeliveryType ?? null,
       };
     }),
   );
@@ -1057,7 +1058,7 @@ export async function createStoreOrder(
   // Server-authoritative pricing: the catalog row is the ONLY source of a unit
   // price. The client's pricePerUnit is display-only and NEVER trusted — it
   // arrives over plain HTTP and is trivially editable.
-  const basket = priceCartLines(snapshot, lines, data.coupon ?? null);
+  const basket = priceCartLines(snapshot, lines, data.coupon ?? null, data.deliveryType);
   const { priced, subtotal: price, rewards, freeShippingOfferId } = basket;
   const delivery = settleDelivery(basket, data.deliveryFee);
   const coupon = delivery.coupon;
