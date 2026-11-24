@@ -26,6 +26,6 @@ export const marquee = defineComponent({
       default: "normal",
       display: "segmented",
     },
-    schemeField(SCHEME_OF.saffron),
+    schemeField(SCHEME_OF.olive),
   ],
 });

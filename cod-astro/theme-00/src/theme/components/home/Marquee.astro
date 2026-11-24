@@ -38,15 +38,19 @@ const seconds = { slow: 48, normal: 32, fast: 20 }[speed] ?? 32;
   .marquee-item {
     display: inline-flex;
     align-items: center;
-    gap: 2.25rem;
-    padding-inline-end: 2.25rem;
-    padding-block: 0.875rem;
+    gap: 1.25rem;
+    padding-inline-end: 1.25rem;
+    padding-block: 0.75rem;
     font-size: var(--text-base);
     font-weight: 600;
+    line-height: 1.4;
     white-space: nowrap;
   }
-  .marquee-item :global(svg) { width: 0.875rem; height: 0.875rem; }
-  @media (min-width: 1024px) { .marquee-item { padding-block: 1.125rem; font-size: var(--text-lg); } }
+  .marquee-item :global(svg) { width: 0.875rem; height: 0.875rem; flex: none; }
+  @media (min-width: 640px) { .marquee-item { gap: 1.75rem; padding-inline-end: 1.75rem; } }
+  @media (min-width: 1024px) {
+    .marquee-item { gap: 2rem; padding-inline-end: 2rem; padding-block: 1rem; font-size: var(--text-lg); }
+  }
   @keyframes marquee { to { transform: translateX(-50%); } }
   :global([dir="rtl"]) .marquee-track { animation-name: marquee-rtl; }
   @keyframes marquee-rtl { to { transform: translateX(50%); } }

@@ -12,43 +12,43 @@ import styleSizes from "./style-sizes.json";
 
 /**
  * The schemes a store starts with. The first is the page's; the others band
- * sections: a stone ground, warm sand behind photos, saffron for a promotion,
- * the night of the footer and the announcement. The accent is the sale color:
- * a saving's tag and a price below its old one. Their ids never change, since
- * sections store them.
+ * sections: a warm stone ground, sand behind photos, a soft olive for a
+ * promotion, and the dark ink of the footer and announcement. The accent is
+ * the sale color: a saving's tag and a price below its old one. Their ids
+ * never change, since sections store them.
  */
 export const DEFAULT_SCHEMES = [
   {
     id: "scheme-1",
     name: SCHEME.light,
-    colors: { background: "#ffffff", text: "#3b4250", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e8e8e5" },
+    colors: { background: "#fbfaf7", text: "#41483d", heading: "#1c241d", accent: "#a4422f", button: "#25301f", buttonText: "#ffffff", border: "#e7e2d8" },
   },
   {
     id: "scheme-2",
     name: SCHEME.stone,
-    colors: { background: "#f4f4f1", text: "#3b4250", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e2e2dc" },
+    colors: { background: "#f3f0e9", text: "#41483d", heading: "#1c241d", accent: "#a4422f", button: "#25301f", buttonText: "#ffffff", border: "#e1dbcf" },
   },
   {
     id: "scheme-3",
     name: SCHEME.sand,
-    colors: { background: "#efe4d6", text: "#4a4136", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e0d2bf" },
+    colors: { background: "#ece4d7", text: "#49453a", heading: "#1c241d", accent: "#a4422f", button: "#25301f", buttonText: "#ffffff", border: "#dcd2c0" },
   },
   {
     id: "scheme-4",
-    name: SCHEME.saffron,
-    colors: { background: "#f2c14e", text: "#2a2416", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#d9a93a" },
+    name: SCHEME.olive,
+    colors: { background: "#dfe4d6", text: "#33402f", heading: "#1c241d", accent: "#a4422f", button: "#25301f", buttonText: "#ffffff", border: "#c9d2bf" },
   },
   {
     id: "scheme-5",
     name: SCHEME.night,
-    colors: { background: "#0f1626", text: "#b9c0cd", heading: "#ffffff", accent: "#f2c14e", button: "#ffffff", buttonText: "#0f1626", border: "#26324b" },
+    colors: { background: "#0f1626", text: "#c3c9bd", heading: "#f7f4ee", accent: "#e8dfcf", button: "#f7f4ee", buttonText: "#1c241d", border: "#2a3429" },
   },
 ] as const satisfies readonly ColorScheme[];
 
 export type SchemeId = (typeof DEFAULT_SCHEMES)[number]["id"];
 
 /** The default schemes by role, for the theme's own defaults. */
-export const SCHEME_OF = { light: "scheme-1", stone: "scheme-2", sand: "scheme-3", saffron: "scheme-4", night: "scheme-5" } as const satisfies Record<string, SchemeId>;
+export const SCHEME_OF = { light: "scheme-1", stone: "scheme-2", sand: "scheme-3", olive: "scheme-4", night: "scheme-5" } as const satisfies Record<string, SchemeId>;
 
 /** The page's scheme unless the merchant picks another. */
 export const PAGE_SCHEME: SchemeId = "scheme-1";

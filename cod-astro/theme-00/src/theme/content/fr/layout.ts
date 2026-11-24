@@ -8,7 +8,6 @@ export const frLayout: LayoutStrings = {
   announcementText: "Paiement à la livraison disponible dans toutes les wilayas",
   announcePrevious: "Annonce précédente",
   announceNext: "Annonce suivante",
-  vercelMarker: "VERCEL-SYNC-OK",
 
   navHome: "Accueil",
   navProducts: "Produits",

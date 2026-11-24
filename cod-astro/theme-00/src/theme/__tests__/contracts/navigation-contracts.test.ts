@@ -155,7 +155,6 @@ describe("the layout", () => {
   it("renders the theme's header and footer when the store saved none: the announcement in the theme's words", async () => {
     const html = await render({});
     expect(html).toContain(fr.announcementText);
-    expect(html).toContain(fr.vercelMarker);
     expect(html).toContain('class="site-header');
     expect(html).toContain(fr.footerRights);
   });

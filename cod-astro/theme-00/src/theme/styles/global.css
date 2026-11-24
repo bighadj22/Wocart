@@ -2,11 +2,11 @@
  * Theme-00 — the storefront every CodFlow store starts with.
  *
  * Photographs carry the page: they fill tall cards, tiles and banners edge to
- * edge. Around them the page is quiet — white and stone grounds, a deep ink
- * for type and the order button, large light headings — with color spent in
- * a few places: the sale red, the saffron of a promotion, the night of the
- * footer. The order form is the store's checkout: a calm panel whose last
- * line is the amount paid at the door.
+ * edge. Around them the page is quiet — warm paper and stone grounds, a deep
+ * olive ink for type and the order button, large light headings — with color
+ * spent in a few places: the muted sale terracotta, the soft olive of a
+ * promotion, the dark ink of the footer. The order form is the store's
+ * checkout: a calm panel whose last line is the amount paid at the door.
  *
  * Every color comes from a color scheme (`colorSchemes` setting). An element
  * wearing one carries the SDK's `schemeClass(id)` — `.wc-scheme` and
@@ -109,13 +109,13 @@
 
 :root {
   /* The first default scheme: what a page shows when its scheme is missing. */
-  --wc-color-background: #ffffff;
-  --wc-color-text: #3b4250;
-  --wc-color-heading: #0f1626;
-  --wc-color-accent: #c8102e;
-  --wc-color-button: #0f1626;
+  --wc-color-background: #fbfaf7;
+  --wc-color-text: #41483d;
+  --wc-color-heading: #1c241d;
+  --wc-color-accent: #a4422f;
+  --wc-color-button: #25301f;
   --wc-color-button-text: #ffffff;
-  --wc-color-border: #e8e8e5;
+  --wc-color-border: #e7e2d8;
 
   --font-text: system-ui;
   --font-display: var(--font-text);
@@ -131,14 +131,14 @@
   --clr-error: #b42318;
   --clr-error-bg: #fdf1f0;
   --clr-disabled: #9aa0a8;
-  --clr-highlight: #f2c14e;
-  --clr-on-highlight: #0f1626;
-  --clr-rating: #e8a100;
-  --clr-sale-soft: #fdecee;
-  --clr-overlay: color-mix(in oklab, #0b1220 55%, transparent);
+  --clr-highlight: #dfe4d6;
+  --clr-on-highlight: #1c241d;
+  --clr-rating: #6b7448;
+  --clr-sale-soft: #f6e8e3;
+  --clr-overlay: color-mix(in oklab, #162018 55%, transparent);
   --clr-clear: transparent;
   --clr-current: currentColor;
-  --overlay-dark: color-mix(in oklab, #0b1220 72%, transparent);
+  --overlay-dark: color-mix(in oklab, #162018 72%, transparent);
 
   --header-h: 4rem;
 
@@ -594,13 +594,13 @@ textarea.form-input { min-height: 6rem; padding-block: 0.875rem; resize: vertica
 }
 .perforation { height: 0; border-top: 1px dashed var(--clr-border-strong); }
 
-/* The amount paid at the door, underlined in saffron. */
+/* The amount paid at the door, underlined in soft olive. */
 .cod-total {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  padding-block: 0.75rem;
+  padding-block: 1rem;
   color: var(--clr-ink);
   border-bottom: 2px solid var(--clr-highlight);
 }

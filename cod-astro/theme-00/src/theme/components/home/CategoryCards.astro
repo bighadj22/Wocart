@@ -68,6 +68,7 @@ const tiles = shown.length + (showAll ? 1 : 0);
 
 <style>
   .category-tiles { grid-auto-columns: 62%; list-style: none; }
+  .category-tiles > li { min-width: 0; }
   @media (min-width: 640px) { .category-tiles { grid-auto-columns: 36%; } }
   @media (min-width: 1024px) {
     .category-tiles {
@@ -87,9 +88,14 @@ const tiles = shown.length + (showAll ? 1 : 0);
     height: 100%;
     align-items: center;
     justify-content: center;
+    border: 1px solid var(--clr-border);
+    border-radius: inherit;
+    background: var(--clr-plate);
+    color: var(--clr-ink);
     font-family: var(--font-heading);
     font-size: var(--text-5xl);
-    color: var(--clr-muted);
+    font-weight: 600;
+    line-height: 1;
   }
   .category-chip {
     position: absolute;
@@ -98,12 +104,15 @@ const tiles = shown.length + (showAll ? 1 : 0);
     max-width: calc(100% - 1.75rem);
     padding: 0.5rem 1rem;
     overflow: hidden;
+    border: 1px solid var(--clr-border);
     border-radius: var(--radius-tag);
     background: var(--clr-bg);
     box-shadow: var(--shadow-md);
     color: var(--clr-ink);
     font-size: var(--text-sm);
     font-weight: 600;
+    line-height: 1.4;
+    text-align: start;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -113,8 +122,10 @@ const tiles = shown.length + (showAll ? 1 : 0);
     flex-direction: column;
     justify-content: space-between;
     padding: 1.375rem;
-    border: 1px solid var(--clr-ink);
+    border: 1px solid var(--clr-border-strong);
     border-radius: var(--radius-media);
+    background: var(--clr-plate);
+    text-align: start;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   .category-all:hover { background: var(--clr-ink); color: var(--clr-bg); }
@@ -125,7 +136,7 @@ const tiles = shown.length + (showAll ? 1 : 0);
     height: 3.5rem;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--clr-current);
+    border: 1px solid var(--clr-border-strong);
     border-radius: var(--radius-round);
   }
   .category-all-go :global(svg) { width: 1.375rem; height: 1.375rem; }

@@ -20,6 +20,6 @@
     { "id": "cmp_h4offer", "type": "image-banner", "props": {} },
     { "id": "cmp_h4how", "type": "how-it-works", "props": {} },
     { "id": "cmp_h8reviews", "type": "customer-testimonials", "props": {} },
-    { "id": "cmp_h6feat", "type": "features-bar", "props": {} }
+    { "id": "cmp_h6feat", "type": "features-bar", "props": {}, "hidden": true }
   ]
 }
