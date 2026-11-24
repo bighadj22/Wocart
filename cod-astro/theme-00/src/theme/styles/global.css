@@ -2,11 +2,12 @@
  * Theme-00 — the storefront every CodFlow store starts with.
  *
  * Product photographs carry the page: they fill tall product cards and the
- * gallery edge to edge. Around them the page is warm — ivory and sand grounds,
- * charcoal ink and large headings — with color spent in a few places: the
- * burnt-terracotta primary on buttons, badges, links and sale prices, the sage
- * promotion band, the deep espresso footer. The order form is the store's
- * checkout: a calm panel whose last line is the amount paid at the door.
+ * gallery edge to edge. Around them the page is quiet — cream and parchment
+ * grounds, near-black ink and large headings — with color spent in a few places:
+ * the deep forest-green primary on buttons, badges, links and sale prices,
+ * champagne gold on dark bands, and the near-black forest footer. The order
+ * form is the store's checkout: a calm panel whose last line is the amount paid
+ * at the door.
  *
  * Every color comes from a color scheme (`colorSchemes` setting). An element
  * wearing one carries the SDK's `schemeClass(id)` — `.wc-scheme` and
@@ -109,13 +110,13 @@
 
 :root {
   /* The first default scheme: what a page shows when its scheme is missing. */
-  --wc-color-background: #fffaf3;
-  --wc-color-text: #57534e;
-  --wc-color-heading: #1c1917;
-  --wc-color-accent: #c2410c;
-  --wc-color-button: #c2410c;
+  --wc-color-background: #faf8f3;
+  --wc-color-text: #4b524c;
+  --wc-color-heading: #141815;
+  --wc-color-accent: #14532d;
+  --wc-color-button: #14532d;
   --wc-color-button-text: #ffffff;
-  --wc-color-border: #e7ded1;
+  --wc-color-border: #e2ddd1;
 
   --font-text: system-ui;
   --font-display: var(--font-text);
@@ -132,15 +133,15 @@
   --clr-success-bg: #ecfdf5;
   --clr-error: #b91c1c;
   --clr-error-bg: #fef2f2;
-  --clr-disabled: #a8a29e;
-  --clr-highlight: #ffedd5;
-  --clr-on-highlight: #7c2d12;
-  --clr-rating: #b45309;
-  --clr-sale-soft: #ffedd5;
-  --clr-overlay: color-mix(in oklab, #1c1917 55%, transparent);
+  --clr-disabled: #9a9e94;
+  --clr-highlight: #d9ecdf;
+  --clr-on-highlight: #14532d;
+  --clr-rating: #a16207;
+  --clr-sale-soft: #d9ecdf;
+  --clr-overlay: color-mix(in oklab, #121710 55%, transparent);
   --clr-clear: transparent;
   --clr-current: currentColor;
-  --overlay-dark: color-mix(in oklab, #1c1917 72%, transparent);
+  --overlay-dark: color-mix(in oklab, #121710 72%, transparent);
 
   --header-h: 4rem;
 
@@ -599,7 +600,7 @@ textarea.form-input { min-height: 6rem; padding-block: 0.875rem; resize: vertica
 }
 .perforation { height: 0; border-top: 1px dashed var(--clr-border-strong); }
 
-/* The amount paid at the door, underlined in soft terracotta. */
+/* The amount paid at the door, underlined in soft forest green. */
 .cod-total {
   display: flex;
   align-items: flex-end;

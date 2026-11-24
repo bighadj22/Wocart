@@ -60,9 +60,9 @@ height and desktop caps near half the screen.
 
 - `DESIGN.colors.surface*` — scheme backgrounds (page, stone, sand, olive, night).
 - `DESIGN.colors.ink`, `body*` — headings and paragraph text per background.
-- `DESIGN.colors.accent`, `accentNight` — the burnt-terracotta primary behind
+- `DESIGN.colors.accent`, `accentNight` — the deep forest-green primary behind
   buttons, badges, links, focus rings and sale prices; its night counterpart
-  is a light amber.
+  is champagne gold on the near-black bands.
 - `DESIGN.colors.button*`, `onButton*` — order button and its label.
 - `DESIGN.colors.border*` — hairlines per background.
 - `DESIGN.spacing.xs`, `sm`, `md`, `lg`, `xl`, `xxl` — injected as
