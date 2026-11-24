@@ -12,41 +12,41 @@ import styleSizes from "./style-sizes.json";
 
 /**
  * MANUAL EDIT — colors + spacing. Change a value here and every scheme,
- * section and frame that reads it follows. The palette is cool neutral
- * surfaces, crisp slate ink and one indigo primary for buttons, badges, links
- * and sale prices. `DESIGN.spacing` feeds `--space-*` in `BaseHead.astro`;
+ * section and frame that reads it follows. The palette is warm ivory and sand
+ * surfaces, deep charcoal ink and one burnt-terracotta primary for buttons,
+ * badges, links and sale prices. `DESIGN.spacing` feeds `--space-*` in `BaseHead.astro`;
  * `LAYOUT` below holds the remaining image limits. Section toggles/order are
  * in `pages/*.json`. The full map is in `pages/PARAMETERS.md`.
  */
 export const DESIGN = {
   colors: {
-    // Surface = scheme background: page/cards, stone band, cool sand band,
-    // slate promotion band, night footer + announcement.
-    surface: "#f8fafc",
-    surfaceStone: "#f1f5f9",
-    surfaceSand: "#e7edf3",
-    surfaceOlive: "#dde7ee",
-    surfaceNight: "#0b1220",
+    // Surface = scheme background: page/cards, warm stone, sand band,
+    // sage promotion band, espresso footer + announcement.
+    surface: "#fffaf3",
+    surfaceStone: "#f6efe5",
+    surfaceSand: "#efe4d5",
+    surfaceOlive: "#e9e8d8",
+    surfaceNight: "#17120f",
     // Ink = headings; body = paragraph text on that background.
-    ink: "#0f172a",
-    body: "#334155",
-    bodySand: "#475569",
-    bodyOlive: "#334155",
-    bodyNight: "#e2e8f0",
+    ink: "#1c1917",
+    body: "#57534e",
+    bodySand: "#6b5b4a",
+    bodyOlive: "#4b5140",
+    bodyNight: "#f5ede2",
     // Accent = the single sale/highlight color; Night is its dark-band counterpart.
-    accent: "#4f46e5",
-    accentNight: "#a5b4fc",
+    accent: "#c2410c",
+    accentNight: "#fdba74",
     // Button + its label, per light and dark band.
-    button: "#4f46e5",
-    buttonNight: "#e2e8f0",
+    button: "#c2410c",
+    buttonNight: "#fbbf24",
     onButton: "#ffffff",
-    onButtonNight: "#0f172a",
+    onButtonNight: "#1c1917",
     // Border = hairlines, per background.
-    border: "#cbd5e1",
-    borderStone: "#d8e0e8",
-    borderSand: "#c4d0dd",
-    borderOlive: "#c2d0dc",
-    borderNight: "#334155",
+    border: "#e7ded1",
+    borderStone: "#ded2c2",
+    borderSand: "#d8c8b3",
+    borderOlive: "#d5d6c1",
+    borderNight: "#3a302a",
   },
   spacing: {
     // xs → xxl become --space-xs → --space-xxl (BaseHead, every page).
@@ -61,8 +61,8 @@ export const DESIGN = {
 
 /**
  * The schemes a store starts with. The first is the page's; the others band
- * sections: a soft stone ground, cool sand, a slate promotion band, and the
- * deep navy of the footer and announcement. The accent is the primary/sale
+ * sections: a soft stone ground, sand, a sage promotion band, and the
+ * deep espresso of the footer and announcement. The accent is the primary/sale
  * color: buttons, badges, links and a price below its old one. Their ids
  * never change, since sections store them.
  */
