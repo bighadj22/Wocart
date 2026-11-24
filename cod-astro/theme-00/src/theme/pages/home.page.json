@@ -3,7 +3,7 @@
   "surface": "home",
   "sections": [
     { "id": "cmp_h1hero", "type": "hero", "props": {} },
-    { "id": "cmp_h1strip", "type": "marquee", "props": {} },
+    { "id": "cmp_h1strip", "type": "marquee", "props": {}, "hidden": true },
     { "id": "cmp_h2cats", "type": "category-cards", "props": {} },
     {
       "id": "cmp_h3picks",
