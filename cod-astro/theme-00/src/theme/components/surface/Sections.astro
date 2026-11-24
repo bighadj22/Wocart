@@ -20,16 +20,25 @@ interface Props {
   params?: Readonly<Record<string, string | undefined>>;
   /** The page's read cache, when the route already read what the sections need. */
   reads?: ReadCache;
+  /** Types that render at most once, however many a stale or imported document holds. */
+  unique?: readonly string[];
 }
 
-const { theme, surface, document, preview = false, params = {} } = Astro.props;
+const { theme, surface, document, preview = false, params = {}, unique = [] } = Astro.props;
 const store = Astro.locals.store;
 const resolved = resolveSurfaceDocument(theme, surface, document, { content: store.content, locales: [store.locale, ...store.fallbackLocales] });
 reportSurface(surface, resolved);
 const context = renderContext(store, params);
 const reads = Astro.props.reads ?? createReadCache();
+const seen = new Set<string>();
+const sections = resolved.page.sections.filter((section) => {
+  if (section.hidden === true || !unique.includes(section.type)) return true;
+  if (seen.has(section.type)) return false;
+  seen.add(section.type);
+  return true;
+});
 ---
 
-{resolved.page.sections.map((section) => (
+{sections.map((section) => (
   <InstanceView instance={section} theme={theme} context={context} storefront={store.client} reads={reads} preview={preview} />
 ))}

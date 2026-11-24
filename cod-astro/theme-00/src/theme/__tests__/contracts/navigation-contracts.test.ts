@@ -123,6 +123,19 @@ describe("the layout", () => {
     expect(html).not.toContain(fr.announcementText);
   });
 
+  it("renders exactly one site header when a saved header area holds two", async () => {
+    const header = {
+      version: 1,
+      surface: "area:header",
+      sections: [
+        { id: "one", type: "header", props: { menu: "main-menu" } },
+        { id: "two", type: "header", props: { menu: "main-menu" } },
+      ],
+    };
+    const html = await render({ pageData: { get: async (surface: string) => (surface === "area:header" ? header : null) } });
+    expect(html.match(/class="site-header/g) ?? []).toHaveLength(1);
+  });
+
   it("renders the theme's header and footer when the store saved none: the announcement in the theme's words", async () => {
     const html = await render({});
     expect(html).toContain(fr.announcementText);

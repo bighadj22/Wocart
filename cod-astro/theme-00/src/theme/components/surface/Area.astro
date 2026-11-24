@@ -11,10 +11,11 @@ interface Props {
   area: "header" | "footer";
 }
 
-const surface = areaSurface(Astro.props.area);
+const { area } = Astro.props;
+const surface = areaSurface(area);
 const draft = Astro.locals.preview?.draft;
 const editing = draft?.surface === surface;
 const document = editing && draft?.document !== undefined ? draft.document : await Astro.locals.store.client.pageData.get(surface);
 ---
 
-<Sections theme={shellCatalog} surface={surface} document={document} preview={editing} />
+<Sections theme={shellCatalog} surface={surface} document={document} preview={editing} unique={area === "header" ? ["header"] : undefined} />
