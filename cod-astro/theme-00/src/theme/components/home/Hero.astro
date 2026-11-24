@@ -10,6 +10,7 @@ import type { StoreFrontContent } from "@/theme/content";
 import type { hero } from "@/theme/catalog/home/hero.def";
 import Section from "@/theme/components/ui/Section.astro";
 import { pickedPicture } from "@/theme/utils/images";
+import { homeImageSettingsOf } from "@/theme/runtime/settings";
 import { LAYOUT } from "@/theme/appearance";
 
 type Props = InferProps<typeof hero> & {
@@ -19,14 +20,15 @@ type Props = InferProps<typeof hero> & {
 
 const { content, ctaPrimaryHref, ctaSecondaryHref, image, photoSide, scheme, style, lead } = Astro.props;
 const store = Astro.locals.store;
-const own = pickedPicture(image, store.config.media);
-const photo = own ? { src: own.src, alt: own.alt } : lead;
+const { heroImage } = homeImageSettingsOf(store);
+const own = pickedPicture(heroImage ?? image, store.config.media);
+const photo = own ? { src: own.src, alt: own.alt || content.heroTitle } : lead;
 const focus = own?.position ?? "50% 55%";
 const layout = LAYOUT.hero;
 ---
 
 <Section scheme={scheme} style={style} bleed>
-  <div class:list={["hero-grid", photo ? "has-photo" : "no-photo", photoSide === "start" && "photo-start"]} style={`--hero-aspect:${layout.imageAspectMobile};--hero-max:${layout.imageMaxMobile};--hero-max-wide:${layout.imageMaxDesktop};--hero-min:${layout.gridMinDesktop}`}>
+  <div class:list={["hero-grid", photo ? "has-photo" : "no-photo", photoSide === "start" && "photo-start"]} style={`--hero-aspect:${layout.imageAspectMobile};--hero-max:${layout.imageMaxMobile};--hero-aspect-wide:${layout.imageAspectDesktop};--hero-max-wide:${layout.imageMaxDesktop};--hero-min:${layout.gridMinDesktop}`}>
     {photo && (
       <div class="hero-photo">
         <Image
@@ -55,16 +57,16 @@ const layout = LAYOUT.hero;
 
 <style>
   .hero-grid { display: grid; }
-  .hero-photo { position: relative; aspect-ratio: var(--hero-aspect, 5 / 4); max-height: var(--hero-max, 22rem); overflow: hidden; background: var(--clr-photo); }
+  .hero-photo { position: relative; aspect-ratio: var(--hero-aspect, 5 / 4); max-height: var(--hero-max, 20rem); overflow: hidden; background: var(--clr-photo); }
   .hero-photo :global(img) { width: 100%; height: 100%; object-fit: cover; }
-  .hero-copy { display: flex; flex-direction: column; padding: 1.75rem 1rem 2.25rem; }
+  .hero-copy { display: flex; flex-direction: column; padding: var(--space-xl, 2rem) var(--space-md, 1rem) var(--space-xxl, 3rem); }
   .hero-title {
     font-size: var(--text-3xl);
     line-height: 1.32;
     font-weight: 600;
   }
-  .hero-sub { margin-top: 0.75rem; max-width: 32rem; font-size: var(--text-md); color: var(--clr-text); }
-  .hero-actions { display: flex; gap: 0.625rem; margin-top: 1.5rem; }
+  .hero-sub { margin-top: var(--space-sm, 0.75rem); max-width: 32rem; font-size: var(--text-md); color: var(--clr-text); }
+  .hero-actions { display: flex; gap: var(--space-sm, 0.75rem); margin-top: var(--space-lg, 1.5rem); }
   .hero-actions > a { flex: 1; width: auto; padding-inline: 1rem; }
   .no-photo .hero-copy { align-items: center; text-align: center; padding-block: 4rem; }
   .no-photo .hero-sub { margin-inline: auto; }
@@ -76,7 +78,7 @@ const layout = LAYOUT.hero;
   }
   @media (min-width: 1024px) {
     .hero-grid.has-photo { grid-template-columns: 1fr 1fr; min-height: var(--hero-min, min(32rem, calc(100svh - 10rem))); }
-    .hero-photo { aspect-ratio: auto; max-height: var(--hero-max-wide, 38rem); order: 2; }
+    .hero-photo { aspect-ratio: var(--hero-aspect-wide, 16 / 10); max-height: var(--hero-max-wide, 32rem); order: 2; }
     .photo-start .hero-photo { order: 0; }
     .hero-copy {
       justify-content: center;

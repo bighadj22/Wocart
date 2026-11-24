@@ -11,38 +11,68 @@ import themeFonts from "./fonts.json";
 import styleSizes from "./style-sizes.json";
 
 /**
+ * MANUAL EDIT — colors + spacing. Change a value here and every scheme,
+ * section and frame that reads it follows. The palette is warm paper + deep
+ * olive ink + one muted clay accent (no yellow, no competing highlights).
+ * `DESIGN.spacing` feeds `--space-*` in `BaseHead.astro`; `LAYOUT` below holds
+ * the image limits. Section toggles/order are in `pages/*.json`. The full map
+ * is in `pages/PARAMETERS.md`.
+ */
+export const DESIGN = {
+  colors: {
+    // Surface = scheme background: page/cards, stone band, sand photo band,
+    // olive promotion band, night footer + announcement.
+    surface: "#fbfaf7",
+    surfaceStone: "#f3f0e9",
+    surfaceSand: "#ece4d7",
+    surfaceOlive: "#dfe4d6",
+    surfaceNight: "#0f1626",
+    // Ink = headings; body = paragraph text on that background.
+    ink: "#1c241d",
+    body: "#41483d",
+    bodySand: "#49453a",
+    bodyOlive: "#33402f",
+    bodyNight: "#d7dcd4",
+    // Accent = the single sale/highlight color; Night is its dark-band counterpart.
+    accent: "#a4422f",
+    accentNight: "#d5a58f",
+    // Button + its label, per light and dark band.
+    button: "#25301f",
+    buttonNight: "#f7f4ee",
+    onButton: "#ffffff",
+    onButtonNight: "#1c241d",
+    // Border = hairlines, per background.
+    border: "#e7e2d8",
+    borderStone: "#e1dbcf",
+    borderSand: "#dcd2c0",
+    borderOlive: "#c9d2bf",
+    borderNight: "#2a3429",
+  },
+  spacing: {
+    // xs → xxl become --space-xs → --space-xxl (BaseHead, every page).
+    xs: "0.5rem",
+    sm: "0.75rem",
+    md: "1rem",
+    lg: "1.5rem",
+    xl: "2rem",
+    xxl: "3rem",
+  },
+} as const;
+
+/**
  * The schemes a store starts with. The first is the page's; the others band
  * sections: a warm stone ground, sand behind photos, a soft olive for a
  * promotion, and the dark ink of the footer and announcement. The accent is
  * the sale color: a saving's tag and a price below its old one. Their ids
  * never change, since sections store them.
  */
+const C = DESIGN.colors;
 export const DEFAULT_SCHEMES = [
-  {
-    id: "scheme-1",
-    name: SCHEME.light,
-    colors: { background: "#fbfaf7", text: "#41483d", heading: "#1c241d", accent: "#a4422f", button: "#25301f", buttonText: "#ffffff", border: "#e7e2d8" },
-  },
-  {
-    id: "scheme-2",
-    name: SCHEME.stone,
-    colors: { background: "#f3f0e9", text: "#41483d", heading: "#1c241d", accent: "#a4422f", button: "#25301f", buttonText: "#ffffff", border: "#e1dbcf" },
-  },
-  {
-    id: "scheme-3",
-    name: SCHEME.sand,
-    colors: { background: "#ece4d7", text: "#49453a", heading: "#1c241d", accent: "#a4422f", button: "#25301f", buttonText: "#ffffff", border: "#dcd2c0" },
-  },
-  {
-    id: "scheme-4",
-    name: SCHEME.olive,
-    colors: { background: "#dfe4d6", text: "#33402f", heading: "#1c241d", accent: "#a4422f", button: "#25301f", buttonText: "#ffffff", border: "#c9d2bf" },
-  },
-  {
-    id: "scheme-5",
-    name: SCHEME.night,
-    colors: { background: "#0f1626", text: "#c3c9bd", heading: "#f7f4ee", accent: "#e8dfcf", button: "#f7f4ee", buttonText: "#1c241d", border: "#2a3429" },
-  },
+  { id: "scheme-1", name: SCHEME.light, colors: { background: C.surface, text: C.body, heading: C.ink, accent: C.accent, button: C.button, buttonText: C.onButton, border: C.border } },
+  { id: "scheme-2", name: SCHEME.stone, colors: { background: C.surfaceStone, text: C.body, heading: C.ink, accent: C.accent, button: C.button, buttonText: C.onButton, border: C.borderStone } },
+  { id: "scheme-3", name: SCHEME.sand, colors: { background: C.surfaceSand, text: C.bodySand, heading: C.ink, accent: C.accent, button: C.button, buttonText: C.onButton, border: C.borderSand } },
+  { id: "scheme-4", name: SCHEME.olive, colors: { background: C.surfaceOlive, text: C.bodyOlive, heading: C.ink, accent: C.accent, button: C.button, buttonText: C.onButton, border: C.borderOlive } },
+  { id: "scheme-5", name: SCHEME.night, colors: { background: C.surfaceNight, text: C.bodyNight, heading: C.buttonNight, accent: C.accentNight, button: C.buttonNight, buttonText: C.onButtonNight, border: C.borderNight } },
 ] as const satisfies readonly ColorScheme[];
 
 export type SchemeId = (typeof DEFAULT_SCHEMES)[number]["id"];
@@ -54,32 +84,94 @@ export const SCHEME_OF = { light: "scheme-1", stone: "scheme-2", sand: "scheme-3
 export const PAGE_SCHEME: SchemeId = "scheme-1";
 
 /**
- * Editable layout values — CSS lengths / aspect ratios, no UI edits needed.
- * - LAYOUT.hero.* / gallery.*: image and container sizing; see Hero.astro and
- *   ProductGallery.astro for where each one lands.
- * - Section toggles + order: `hidden: true` and array order in the page files
- *   (src/theme/pages/home.page.json, catalog/category/collection.page.json,
- *   header.area.json). `false`/omitted shows the section.
- * - Section spacing: `style.spacing` per section, tokens s0..s12 in
- *   style-sizes.json (0..128px).
- * - Colors: `DEFAULT_SCHEMES` above (background/text/heading/accent/button/
- *   buttonText/border) and the badge tokens in styles/global.css.
+ * Editable image sizing — CSS lengths / aspect ratios, no UI edits needed.
+ * Every value here is passed to a component as a CSS variable: hero and image
+ * banner in the home sections, category tiles, product cards and the product
+ * gallery. Keep the mobile cap below the viewport's height and the desktop
+ * cap near half the screen so photographs stay balanced in AR, FR and EN.
+ * Section toggles + order live in the page files (`hidden: true`, array order);
+ * section spacing uses `style.spacing` with steps s0..s12 from style-sizes.json.
  */
 export const LAYOUT = {
   hero: {
-    imageAspectMobile: "5 / 4",
-    imageMaxMobile: "22rem",
-    imageMaxDesktop: "38rem",
-    gridMinDesktop: "min(32rem, calc(100svh - 10rem))",
+    imageAspectMobile: "5 / 4",           // phone photo shape
+    imageMaxMobile: "20rem",              // phone photo height cap
+    imageAspectDesktop: "16 / 10",        // desktop photo shape
+    imageMaxDesktop: "32rem",             // desktop photo height cap
+    gridMinDesktop: "min(30rem, calc(100svh - 9rem))", // two-column row's min height
+  },
+  banner: {
+    imageAspectMobile: "5 / 4",           // image-with-text, phone photo shape
+    imageMaxMobile: "20rem",              // image-with-text, phone height cap
+    imageAspectDesktop: "16 / 10",        // image-with-text, desktop photo shape
+    imageMaxDesktop: "30rem",             // image-with-text, desktop height cap
+    minHeightDesktop: "28rem",            // whole band's min height on desktop
+  },
+  category: {
+    imageAspectMobile: "4 / 5",           // category tile shape on phone
+    imageMaxMobile: "21rem",              // category tile height cap on phone
+    imageAspectDesktop: "4 / 5",          // category tile shape on desktop
+    imageMaxDesktop: "17rem",             // category tile height cap on desktop
+  },
+  product: {
+    imageMaxMobile: "24rem",              // product card photo cap on phone
+    imageMaxDesktop: "22rem",             // product card photo cap on desktop
   },
   gallery: {
-    aspectMobile: "1 / 1",
-    maxMobile: "24rem",
-    maxTablet: "30rem",
-    aspectDesktop: "4 / 5",
-    maxDesktop: "38rem",
+    aspectMobile: "1 / 1",                // PDP lead photo shape on phone
+    maxMobile: "22rem",                   // PDP lead photo cap on phone
+    maxTablet: "28rem",                   // PDP lead photo cap from 640px
+    aspectDesktop: "4 / 5",               // PDP lead photo shape on desktop
+    maxDesktop: "34rem",                  // PDP lead photo cap on desktop
   },
 } as const;
+
+/**
+ * MANUAL EDIT — what the shopper actually gets, even when the store has saved
+ * its own page document or brand colors in the dashboard. `sections.*` is the
+ * render order (unknown types keep their saved order, at the end);
+ * `sections.hidden` forces each named section on or off; `enforcePalette`
+ * makes DESIGN.colors win over saved colors. Editor draft previews still
+ * render exactly what the editor sends, so merchants can keep editing there.
+ */
+export const STORE_PARAMETERS = {
+  sections: {
+    home: ["hero", "marquee", "category-cards", "product-tabs", "image-banner", "how-it-works", "customer-testimonials", "features-bar"],
+    "area:header": ["announcement-bar", "header"],
+    hidden: {
+      "announcement-bar": true,
+      marquee: true,
+      "product-tabs": false,
+      "image-banner": false,
+      "how-it-works": false,
+      "customer-testimonials": false,
+      "features-bar": true,
+    },
+  },
+  enforcePalette: true,
+} as const;
+
+/** Apply the section order/visibility parameters to a resolved page document. */
+export function applyStoreSections<T extends { type: string; hidden?: boolean }>(
+  surface: string,
+  sections: readonly T[],
+  dashboardHidden: Readonly<Record<string, boolean>> = {},
+): T[] {
+  const settings = STORE_PARAMETERS.sections as unknown as Record<string, readonly string[] | Record<string, boolean>>;
+  const order = settings[surface];
+  if (!Array.isArray(order)) return [...sections];
+  const hidden = settings.hidden as Record<string, boolean>;
+  const ranked = sections.map((section, index) => ({ section, index }));
+  ranked.sort((a, b) => {
+    const ai = order.indexOf(a.section.type);
+    const bi = order.indexOf(b.section.type);
+    return (ai < 0 ? order.length + a.index : ai) - (bi < 0 ? order.length + b.index : bi);
+  });
+  return ranked.map(({ section }) => {
+    const forced = dashboardHidden[section.type] ?? hidden[section.type];
+    return forced === undefined ? section : ({ ...section, hidden: forced } as T);
+  });
+}
 
 /** The sizes the theme gives the platform's style steps and widths, in pixels. */
 export const THEME_STYLE: ThemeStyle = styleSizes;

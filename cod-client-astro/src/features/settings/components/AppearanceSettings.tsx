@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Loader2, Palette, Type } from "lucide-react";
+import { Eye, Image as ImageIcon, Loader2, Palette, Type } from "lucide-react";
 import { Alert, Badge, Field, Input, Select, Textarea } from "@/components/ui";
 import { useLocale, useT } from "@/i18n/react";
+import { ImageUploader } from "@/features/uploads/components/ImageUploader";
+import type { MediaImage } from "@/features/uploads/api";
 import { getAppearance, saveAppearance } from "@/features/settings/api";
 import { SettingsSection, FieldRow } from "@/features/settings/components/SettingsSection";
 import type { StoreAppearance } from "@/features/settings/types";
@@ -35,6 +37,9 @@ const TEXT_FIELDS: { key: AppearanceTextKey; labelKey: string }[] = [
   { key: "bannerTitle", labelKey: "store.appearance_text_bannerTitle" },
   { key: "bannerSub", labelKey: "store.appearance_text_bannerSub" },
 ];
+
+const visibilityValue = (value: boolean | null) => (value === null ? "" : value ? "show" : "hide");
+const parseVisibility = (value: string): boolean | null => (value === "" ? null : value === "show");
 
 /** A scheme's name is a plain string, or the same name in several languages. */
 function schemeName(name: AppearanceColorScheme["name"], locale: string): string {
@@ -147,6 +152,11 @@ export function AppearanceSettings() {
   const [selected, setSelected] = useState("");
   const [textLocale, setTextLocale] = useState<StoreLocale>("ar");
   const [drafts, setDrafts] = useState<Partial<Record<StoreLocale, Record<string, string>>>>({});
+  const [heroImage, setHeroImage] = useState<MediaImage | null>(null);
+  const [bannerImage, setBannerImage] = useState<MediaImage | null>(null);
+  const [categoryCardsImage, setCategoryCardsImage] = useState<MediaImage | null>(null);
+  const [heroVisible, setHeroVisible] = useState<boolean | null>(null);
+  const [categoryCardsVisible, setCategoryCardsVisible] = useState<boolean | null>(null);
 
   async function load() {
     setLoadError(null);
@@ -158,6 +168,11 @@ export function AppearanceSettings() {
       setSelected(appearance.colorSchemes[0]?.id ?? "");
       setTextLocale(appearance.primaryLocale);
       setDrafts(appearance.texts);
+      setHeroImage(appearance.images.heroImage);
+      setBannerImage(appearance.images.bannerImage);
+      setCategoryCardsImage(appearance.images.categoryCardsImage);
+      setHeroVisible(appearance.visibility.heroVisible);
+      setCategoryCardsVisible(appearance.visibility.categoryCardsVisible);
     } catch (cause) {
       setLoadError(cause);
     }
@@ -222,6 +237,35 @@ export function AppearanceSettings() {
     });
     setData(saved);
     setDrafts((all) => ({ ...all, [textLocale]: saved.texts[textLocale] ?? {} }));
+  }
+
+  async function saveImages() {
+    const ref = (image: MediaImage | null) =>
+      image ? { key: image.key, width: image.width ?? undefined, height: image.height ?? undefined } : null;
+    const saved = await saveAppearance({
+      colorSchemes: data!.colorSchemes,
+      pageScheme: data!.pageScheme,
+      images: {
+        heroImage: ref(heroImage),
+        bannerImage: ref(bannerImage),
+        categoryCardsImage: ref(categoryCardsImage),
+      },
+    });
+    setData(saved);
+    setHeroImage(saved.images.heroImage);
+    setBannerImage(saved.images.bannerImage);
+    setCategoryCardsImage(saved.images.categoryCardsImage);
+  }
+
+  async function saveVisibility() {
+    const saved = await saveAppearance({
+      colorSchemes: data!.colorSchemes,
+      pageScheme: data!.pageScheme,
+      visibility: { heroVisible, categoryCardsVisible },
+    });
+    setData(saved);
+    setHeroVisible(saved.visibility.heroVisible);
+    setCategoryCardsVisible(saved.visibility.categoryCardsVisible);
   }
 
   function updateText(key: AppearanceTextKey, value: string) {
@@ -378,6 +422,49 @@ export function AppearanceSettings() {
           subtitle={previewSubtitle}
           cta={previewCta}
         />
+      </SettingsSection>
+
+      <SettingsSection
+        icon={Eye}
+        title={t("store.appearance_sections_title")}
+        subtitle={t("store.appearance_sections_subtitle")}
+        onSave={saveVisibility}
+      >
+        <div className="grid gap-5 xl:grid-cols-2">
+          <FieldRow label={t("store.appearance_section_heroVisible")} help={t("store.appearance_visibility_hint")}>
+            <Select value={visibilityValue(heroVisible)} onChange={(event) => setHeroVisible(parseVisibility(event.target.value))}>
+              <option value="">{t("store.appearance_visibility_default")}</option>
+              <option value="show">{t("store.appearance_visibility_show")}</option>
+              <option value="hide">{t("store.appearance_visibility_hide")}</option>
+            </Select>
+          </FieldRow>
+          <FieldRow label={t("store.appearance_section_categoryCardsVisible")} help={t("store.appearance_visibility_hint")}>
+            <Select value={visibilityValue(categoryCardsVisible)} onChange={(event) => setCategoryCardsVisible(parseVisibility(event.target.value))}>
+              <option value="">{t("store.appearance_visibility_default")}</option>
+              <option value="show">{t("store.appearance_visibility_show")}</option>
+              <option value="hide">{t("store.appearance_visibility_hide")}</option>
+            </Select>
+          </FieldRow>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        icon={ImageIcon}
+        title={t("store.appearance_images_title")}
+        subtitle={t("store.appearance_images_subtitle")}
+        onSave={saveImages}
+      >
+        <div className="grid gap-5 xl:grid-cols-2">
+          <FieldRow label={t("store.appearance_image_heroImage")} help={t("store.appearance_image_hint")}>
+            <ImageUploader value={heroImage} onChange={setHeroImage} alt={t("store.appearance_image_heroImage")} />
+          </FieldRow>
+          <FieldRow label={t("store.appearance_image_bannerImage")} help={t("store.appearance_image_hint")}>
+            <ImageUploader value={bannerImage} onChange={setBannerImage} alt={t("store.appearance_image_bannerImage")} />
+          </FieldRow>
+          <FieldRow label={t("store.appearance_image_categoryCardsImage")} help={t("store.appearance_image_hint")}>
+            <ImageUploader value={categoryCardsImage} onChange={setCategoryCardsImage} alt={t("store.appearance_image_categoryCardsImage")} />
+          </FieldRow>
+        </div>
       </SettingsSection>
 
       <p className="text-xs text-muted-foreground">

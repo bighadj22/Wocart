@@ -62,4 +62,21 @@ export const THEME_SETTINGS = [
       { key: "cardButton", kind: "boolean", label: SETTING.cardButton, default: true },
     ],
   },
+  {
+    key: "home-media",
+    label: SETTINGS_GROUP.homeMedia,
+    fields: [
+      { key: "heroImage", kind: "image", label: SETTING.heroImage },
+      { key: "bannerImage", kind: "image", label: SETTING.bannerImage },
+      { key: "categoryCardsImage", kind: "image", label: SETTING.categoryCardsImage },
+    ],
+  },
+  {
+    key: "home-sections",
+    label: SETTINGS_GROUP.homeSections,
+    fields: [
+      { key: "heroVisible", kind: "boolean", label: SETTING.heroVisible },
+      { key: "categoryCardsVisible", kind: "boolean", label: SETTING.categoryCardsVisible },
+    ],
+  },
 ] as const satisfies readonly SettingsGroup[];

@@ -23,6 +23,7 @@ export type AppearanceColorRole = (typeof APPEARANCE_COLOR_ROLES)[number];
 export const APPEARANCE_MAX_SCHEMES = 12;
 export const APPEARANCE_SCHEME_ID = /^[a-z0-9-]+$/;
 export const APPEARANCE_HEX = /^#[0-9a-f]{6}$/i;
+export const APPEARANCE_MEDIA_KEY = /^[A-Za-z0-9_-]+\/[A-Za-z0-9._-]+$/;
 
 export type AppearanceSchemeName = string | Record<string, string>;
 
@@ -88,6 +89,89 @@ export const APPEARANCE_TEXT_LIMITS: Record<AppearanceTextKey, { max: number; mu
   bannerTitle: { max: 120, multiline: false },
   bannerSub: { max: 400, multiline: true },
 };
+
+export const APPEARANCE_IMAGE_KEYS = ["heroImage", "bannerImage", "categoryCardsImage"] as const;
+
+export type AppearanceImageKey = (typeof APPEARANCE_IMAGE_KEYS)[number];
+
+export interface AppearanceImage {
+  key: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  focal?: { x: number; y: number };
+}
+
+export type AppearanceImages = Partial<Record<AppearanceImageKey, AppearanceImage | null>>;
+
+export function appearanceImageProblem(value: unknown): string | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return "must be an image reference";
+  const image = value as Record<string, unknown>;
+  const unknown = Object.keys(image).find((key) => !["key", "alt", "width", "height", "focal"].includes(key));
+  if (unknown !== undefined) return `has an unknown key "${unknown}"`;
+  if (typeof image.key !== "string" || !APPEARANCE_MEDIA_KEY.test(image.key)) return "needs a media key";
+  if (image.alt !== undefined && typeof image.alt !== "string") return "needs a string alt";
+  for (const dimension of ["width", "height"] as const) {
+    const size = image[dimension];
+    if (size !== undefined && !(typeof size === "number" && Number.isInteger(size) && size > 0)) return `needs a whole-number ${dimension}`;
+  }
+  if (image.focal !== undefined) {
+    const focal = image.focal as Record<string, unknown>;
+    if (typeof focal !== "object" || focal === null || Array.isArray(focal)) return "needs a focal point";
+    for (const axis of ["x", "y"] as const) {
+      const point = focal[axis];
+      if (typeof point !== "number" || !Number.isFinite(point) || point < 0 || point > 1) return `needs a focal ${axis} between 0 and 1`;
+    }
+  }
+  return null;
+}
+
+export function appearanceImagesOf(stored: Record<string, unknown> | null | undefined): AppearanceImages {
+  const images: AppearanceImages = {};
+  if (!stored) return images;
+  for (const key of APPEARANCE_IMAGE_KEYS) {
+    const value = stored[key];
+    if (appearanceImageProblem(value) === null) images[key] = value as AppearanceImage;
+  }
+  return images;
+}
+
+export function mergeAppearanceImages(current: AppearanceImages, next: AppearanceImages): AppearanceImages {
+  const merged: AppearanceImages = { ...current };
+  for (const key of APPEARANCE_IMAGE_KEYS) {
+    const value = next[key];
+    if (value === undefined) continue;
+    if (value === null) delete merged[key];
+    else merged[key] = value;
+  }
+  return merged;
+}
+
+export const APPEARANCE_VISIBILITY_KEYS = ["heroVisible", "categoryCardsVisible"] as const;
+
+export type AppearanceVisibilityKey = (typeof APPEARANCE_VISIBILITY_KEYS)[number];
+
+export type AppearanceVisibility = Partial<Record<AppearanceVisibilityKey, boolean | null>>;
+
+export function appearanceVisibilityOf(stored: Record<string, unknown> | null | undefined): AppearanceVisibility {
+  const values: AppearanceVisibility = {};
+  if (!stored) return values;
+  for (const key of APPEARANCE_VISIBILITY_KEYS) {
+    if (typeof stored[key] === "boolean") values[key] = stored[key] as boolean;
+  }
+  return values;
+}
+
+export function mergeAppearanceVisibility(current: AppearanceVisibility, next: AppearanceVisibility): AppearanceVisibility {
+  const merged: AppearanceVisibility = { ...current };
+  for (const key of APPEARANCE_VISIBILITY_KEYS) {
+    const value = next[key];
+    if (value === undefined) continue;
+    if (value === null) delete merged[key];
+    else merged[key] = value;
+  }
+  return merged;
+}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);

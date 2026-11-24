@@ -11,6 +11,9 @@ import { isPreview, type BlocksHandle } from "@wocart/theme/astro";
 import { Icon } from "astro-icon/components";
 import type { StoreFrontContent } from "@/theme/content";
 import type { categoryCards } from "@/theme/catalog/home/category-cards.def";
+import { LAYOUT } from "@/theme/appearance";
+import { pickedPicture } from "@/theme/utils/images";
+import { homeImageSettingsOf } from "@/theme/runtime/settings";
 import Section from "@/theme/components/ui/Section.astro";
 import SectionHead from "@/theme/components/ui/SectionHead.astro";
 
@@ -22,6 +25,9 @@ type Props = InferProps<typeof categoryCards> & {
 
 const { blocks, categories, content, limit, showAll, headingAlign, scheme, style } = Astro.props;
 const store = Astro.locals.store;
+const layout = LAYOUT.category;
+const { categoryCardsImage } = homeImageSettingsOf(store);
+const banner = pickedPicture(categoryCardsImage, store.config.media);
 
 const photoFor = (category: Category) => category.image?.url ?? null;
 
@@ -33,8 +39,13 @@ const tiles = shown.length + (showAll ? 1 : 0);
 
 {(shown.length > 0 || isPreview(blocks)) && (
   <Section scheme={scheme} style={style}>
+    {banner && (
+      <div class="category-banner">
+        <Image src={banner.src} alt={banner.alt || content.categoriesSection} width={1200} height={480} widths={[480, 960, 1200]} sizes="100vw" quality={82} loading="lazy" decoding="async" />
+      </div>
+    )}
     <SectionHead title={content.categoriesSection} center={headingAlign === "center"} />
-    <ul class="category-tiles swipe-row" style={`--tiles: ${Math.min(tiles, 5)}`}>
+    <ul class="category-tiles swipe-row" style={`--tiles: ${Math.min(tiles, 5)};--cat-aspect:${layout.imageAspectMobile};--cat-max:${layout.imageMaxMobile};--cat-aspect-wide:${layout.imageAspectDesktop};--cat-max-wide:${layout.imageMaxDesktop}`}>
       {shown.map((category) => {
         const photo = photoFor(category);
         return (
@@ -67,6 +78,8 @@ const tiles = shown.length + (showAll ? 1 : 0);
 )}
 
 <style>
+  .category-banner { aspect-ratio: 5 / 2; overflow: hidden; border-radius: var(--radius-media); background: var(--clr-plate); }
+  .category-banner :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .category-tiles { grid-auto-columns: 62%; list-style: none; }
   .category-tiles > li { min-width: 0; }
   @media (min-width: 640px) { .category-tiles { grid-auto-columns: 36%; } }
@@ -74,13 +87,16 @@ const tiles = shown.length + (showAll ? 1 : 0);
     .category-tiles {
       grid-auto-flow: row;
       grid-template-columns: repeat(var(--tiles), minmax(0, 1fr));
-      gap: 1.25rem;
+      gap: var(--space-lg, 1.5rem);
       margin: 0;
       padding: 0;
       overflow: visible;
     }
   }
-  .category-tile { display: block; aspect-ratio: 4 / 5; color: var(--clr-ink); text-decoration: none; }
+  .category-tile { display: block; aspect-ratio: var(--cat-aspect, 4 / 5); max-height: var(--cat-max, 21rem); color: var(--clr-ink); text-decoration: none; }
+  @media (min-width: 1024px) {
+    .category-tile { aspect-ratio: var(--cat-aspect-wide, 4 / 5); max-height: var(--cat-max-wide, 17rem); }
+  }
   .category-tile :global(img) { transition: transform 0.8s var(--ease-out-expo); }
   @media (hover: hover) { .category-tile:hover :global(img) { transform: scale(1.05); } }
   .category-initial {

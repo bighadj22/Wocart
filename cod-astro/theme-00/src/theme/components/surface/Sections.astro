@@ -9,6 +9,8 @@ import { createReadCache } from "@wocart/theme/astro";
 import { resolveSurfaceDocument, type ReadCache, type ThemeDefinition } from "@wocart/theme";
 import { renderContext } from "@/theme/runtime/render-context";
 import { reportSurface } from "@/theme/pages/surface-report";
+import { applyStoreSections } from "@/theme/appearance";
+import { homeVisibilityOf } from "@/theme/runtime/settings";
 
 interface Props {
   /** The catalog this surface renders from: the route's own, never the full theme. */
@@ -31,7 +33,12 @@ reportSurface(surface, resolved);
 const context = renderContext(store, params);
 const reads = Astro.props.reads ?? createReadCache();
 const seen = new Set<string>();
-const sections = resolved.page.sections.filter((section) => {
+const visibility = homeVisibilityOf(store);
+const dashboardHidden: Record<string, boolean> = {};
+if (visibility.heroVisible !== undefined) dashboardHidden.hero = !visibility.heroVisible;
+if (visibility.categoryCardsVisible !== undefined) dashboardHidden["category-cards"] = !visibility.categoryCardsVisible;
+const ordered = preview ? [...resolved.page.sections] : applyStoreSections(surface, resolved.page.sections, dashboardHidden);
+const sections = ordered.filter((section) => {
   if (section.hidden === true || !unique.includes(section.type)) return true;
   if (seen.has(section.type)) return false;
   seen.add(section.type);

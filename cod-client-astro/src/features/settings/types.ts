@@ -66,4 +66,8 @@ export interface StoreAppearance {
   pageScheme: string;
   /** Saved text edits, `{ ar: { heroTitle: "…" } }`. */
   texts: Partial<Record<StoreLocale, Record<string, string>>>;
+  /** Store-wide photo overrides for the home hero, offer banner and category tiles. */
+  images: { heroImage: MediaImage | null; bannerImage: MediaImage | null; categoryCardsImage: MediaImage | null };
+  /** Store-wide section visibility; null keeps the theme's own default. */
+  visibility: { heroVisible: boolean | null; categoryCardsVisible: boolean | null };
 }

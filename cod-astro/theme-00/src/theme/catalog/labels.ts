@@ -248,6 +248,8 @@ export const SETTINGS_GROUP = {
   typography: text("الخطوط", "Typographie", "Typography"),
   shape: text("الأشكال", "Formes", "Shape"),
   productCards: text("بطاقات المنتجات", "Cartes produit", "Product cards"),
+  homeMedia: text("صور الصفحة الرئيسية", "Photos de la page d'accueil", "Home photos"),
+  homeSections: text("أقسام الصفحة الرئيسية", "Sections de la page d'accueil", "Home sections"),
 };
 
 export const SETTING = {
@@ -258,6 +260,11 @@ export const SETTING = {
   corners: text("الزوايا", "Coins", "Corners"),
   cardButton: text("زر الطلب السريع على الصورة", "Bouton de commande sur la photo", "Quick order button on the photo"),
   cardImageRatio: text("شكل صورة المنتج", "Format de l'image produit", "Product image shape"),
+  heroImage: text("صورة الواجهة العلوية", "Photo du héros", "Hero photo"),
+  bannerImage: text("صورة شريط العرض", "Photo de la bannière d'offre", "Offer banner photo"),
+  categoryCardsImage: text("صورة قسم التصنيفات", "Photo de la section catégories", "Category section photo"),
+  heroVisible: text("إظهار الواجهة العلوية", "Afficher le héros", "Show hero"),
+  categoryCardsVisible: text("إظهار قسم التصنيفات", "Afficher la section catégories", "Show category section"),
 };
 
 /** The theme's default color schemes, as the editor names them. */

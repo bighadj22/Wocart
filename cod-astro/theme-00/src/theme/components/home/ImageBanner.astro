@@ -13,6 +13,8 @@ import Section from "@/theme/components/ui/Section.astro";
 import Countdown from "@/theme/components/ui/Countdown.astro";
 import { countdownTarget } from "@wocart/storefront";
 import { pickedPicture } from "@/theme/utils/images";
+import { homeImageSettingsOf } from "@/theme/runtime/settings";
+import { LAYOUT } from "@/theme/appearance";
 
 type Props = InferProps<typeof imageBanner> & {
   content: StoreFrontContent;
@@ -21,15 +23,17 @@ type Props = InferProps<typeof imageBanner> & {
 
 const { image, imageSide, body, countdown, endsOn, endsAt, ctaHref, scheme, style, content, lead } = Astro.props;
 const { href, config } = Astro.locals.store;
-const own = pickedPicture(image, config.media);
-const photo = own ? { src: own.src, alt: own.alt } : lead;
+const { bannerImage } = homeImageSettingsOf(Astro.locals.store);
+const own = pickedPicture(bannerImage ?? image, config.media);
+const photo = own ? { src: own.src, alt: own.alt || content.bannerTitle } : lead;
 const focus = own?.position ?? "50% 50%";
 const ends = countdownTarget(countdown, endsOn, endsAt);
 const units = { days: content.countdownDays, hours: content.countdownHours, minutes: content.countdownMinutes, seconds: content.countdownSeconds };
+const layout = LAYOUT.banner;
 ---
 
 <Section style={style}>
-  <div class:list={["banner", schemeClass(scheme), photo ? "has-photo" : "no-photo", imageSide === "start" && "photo-start"]}>
+  <div class:list={["banner", schemeClass(scheme), photo ? "has-photo" : "no-photo", imageSide === "start" && "photo-start"]} style={`--banner-aspect:${layout.imageAspectMobile};--banner-max:${layout.imageMaxMobile};--banner-aspect-wide:${layout.imageAspectDesktop};--banner-max-wide:${layout.imageMaxDesktop};--banner-min:${layout.minHeightDesktop}`}>
     {photo && (
       <div class="banner-photo">
         <Image
@@ -59,18 +63,18 @@ const units = { days: content.countdownDays, hours: content.countdownHours, minu
 
 <style>
   .banner { display: grid; overflow: hidden; border-radius: var(--radius-panel); }
-  .banner-photo { aspect-ratio: 1 / 1; overflow: hidden; background: var(--clr-photo); }
+  .banner-photo { aspect-ratio: var(--banner-aspect, 5 / 4); max-height: var(--banner-max, 20rem); overflow: hidden; background: var(--clr-photo); }
   .banner-photo :global(img) { width: 100%; height: 100%; object-fit: cover; }
-  .banner-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 0.875rem; padding: 1.75rem 1.375rem 2rem; }
+  .banner-copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-sm, 0.75rem); padding: var(--space-xl, 2rem) var(--space-lg, 1.5rem); }
   .banner-title { font-size: var(--text-2xl); font-weight: 600; line-height: 1.35; }
   .banner-body { color: var(--clr-text); }
   .banner-cta { margin-top: 0.75rem; }
   .no-photo .banner-copy { align-items: center; text-align: center; padding-block: 3.5rem; }
   @media (min-width: 1024px) {
-    .has-photo { grid-template-columns: 1fr 1fr; min-height: 32rem; }
-    .banner-photo { aspect-ratio: auto; order: 2; }
+    .has-photo { grid-template-columns: 1fr 1fr; min-height: var(--banner-min, 28rem); }
+    .banner-photo { aspect-ratio: var(--banner-aspect-wide, 16 / 10); max-height: var(--banner-max-wide, 30rem); order: 2; }
     .photo-start .banner-photo { order: 0; }
-    .banner-copy { justify-content: center; gap: 1rem; padding: 4rem; }
+    .banner-copy { justify-content: center; gap: var(--space-md, 1rem); padding: var(--space-xxl, 3rem); }
     .banner-title { font-size: var(--text-5xl); }
     .banner-cta { margin-top: 1rem; }
   }
