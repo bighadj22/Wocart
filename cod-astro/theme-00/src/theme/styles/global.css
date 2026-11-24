@@ -125,7 +125,9 @@
   --r-button: 0.625rem;
   --r-tag: 62.5rem;
 
-  /* Meanings that keep their color on every scheme. */
+  /* Editable badge colors — hex values; keep each pair high-contrast.
+     --clr-highlight / --clr-on-highlight: offer badge bg/text,
+     --clr-rating: stars, --clr-sale-soft: sale tint, --clr-success/error: states. */
   --clr-success: #0f7a4a;
   --clr-success-bg: #e8f5ee;
   --clr-error: #b42318;

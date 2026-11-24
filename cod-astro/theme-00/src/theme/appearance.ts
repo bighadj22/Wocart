@@ -53,6 +53,34 @@ export const SCHEME_OF = { light: "scheme-1", stone: "scheme-2", sand: "scheme-3
 /** The page's scheme unless the merchant picks another. */
 export const PAGE_SCHEME: SchemeId = "scheme-1";
 
+/**
+ * Editable layout values — CSS lengths / aspect ratios, no UI edits needed.
+ * - LAYOUT.hero.* / gallery.*: image and container sizing; see Hero.astro and
+ *   ProductGallery.astro for where each one lands.
+ * - Section toggles + order: `hidden: true` and array order in the page files
+ *   (src/theme/pages/home.page.json, catalog/category/collection.page.json,
+ *   header.area.json). `false`/omitted shows the section.
+ * - Section spacing: `style.spacing` per section, tokens s0..s12 in
+ *   style-sizes.json (0..128px).
+ * - Colors: `DEFAULT_SCHEMES` above (background/text/heading/accent/button/
+ *   buttonText/border) and the badge tokens in styles/global.css.
+ */
+export const LAYOUT = {
+  hero: {
+    imageAspectMobile: "5 / 4",
+    imageMaxMobile: "22rem",
+    imageMaxDesktop: "38rem",
+    gridMinDesktop: "min(32rem, calc(100svh - 10rem))",
+  },
+  gallery: {
+    aspectMobile: "1 / 1",
+    maxMobile: "24rem",
+    maxTablet: "30rem",
+    aspectDesktop: "4 / 5",
+    maxDesktop: "38rem",
+  },
+} as const;
+
 /** The sizes the theme gives the platform's style steps and widths, in pixels. */
 export const THEME_STYLE: ThemeStyle = styleSizes;
 

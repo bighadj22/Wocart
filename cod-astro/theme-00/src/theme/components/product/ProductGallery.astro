@@ -9,6 +9,7 @@ import { Image } from "astro:assets";
 import type { ProductDetail } from "@wocart/storefront";
 import type { StoreFrontContent } from "@/theme/content";
 import { Icon } from "astro-icon/components";
+import { LAYOUT } from "@/theme/appearance";
 
 interface Props {
   product: ProductDetail;
@@ -23,9 +24,10 @@ const { product, hasDiscount, discountPct, content, thumbnails = "side", shape =
 const locale = Astro.locals.store.locale;
 const total = product.images.length;
 const goTo = (index: number) => message(content, "ariaGoToImage", { n: index + 1, total }, locale);
+const layout = LAYOUT.gallery;
 ---
 
-<div class:list={["gallery", total > 1 && thumbnails === "side" && "has-side-thumbs", shape === "square" && "is-square"]}>
+<div class:list={["gallery", total > 1 && thumbnails === "side" && "has-side-thumbs", shape === "square" && "is-square"]} style={`--gallery-aspect:${layout.aspectMobile};--gallery-max:${layout.maxMobile};--gallery-max-md:${layout.maxTablet};--gallery-aspect-wide:${layout.aspectDesktop};--gallery-max-wide:${layout.maxDesktop}`}>
   <div class="stage plate">
     <div class="gallery-track" id="gallery">
       {total > 0 ? product.images.map((img, index) => (
@@ -79,13 +81,13 @@ const goTo = (index: number) => message(content, "ariaGoToImage", { n: index + 1
   .gallery { display: grid; gap: 0.625rem; }
   /* A phone shows the photo edge to edge, under the page's own gutters. */
   .stage {
-    aspect-ratio: 1 / 1;
-    max-height: 24rem;
+    aspect-ratio: var(--gallery-aspect, 1 / 1);
+    max-height: var(--gallery-max, 24rem);
     margin-inline: -1rem;
     border-radius: 0;
   }
   @media (min-width: 640px) {
-    .stage { max-height: 30rem; margin-inline: 0; border-radius: var(--radius-media); }
+    .stage { max-height: var(--gallery-max-md, 30rem); margin-inline: 0; border-radius: var(--radius-media); }
   }
   .gallery-track {
     display: flex;
@@ -155,7 +157,7 @@ const goTo = (index: number) => message(content, "ariaGoToImage", { n: index + 1
   .gallery-thumb.is-active { border-color: var(--clr-ink); opacity: 1; }
 
   @media (min-width: 1024px) {
-    .stage { aspect-ratio: 4 / 5; max-height: 38rem; }
+    .stage { aspect-ratio: var(--gallery-aspect-wide, 4 / 5); max-height: var(--gallery-max-wide, 38rem); }
     .is-square .stage { aspect-ratio: 1 / 1; }
     .gallery-pips { display: none; }
     .gallery-thumb { width: 5.25rem; }
