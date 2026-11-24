@@ -1,10 +1,10 @@
 ---
 // The store's categories as tall photo tiles, each named on a white chip; a
 // last tile leads to every product. A row a phone swipes, a grid on a wide
-// screen. A category without a photo of its own shows one of its products.
+// screen. A category without a photo of its own shows its initial.
 import { message } from "@/theme/content/messages";
 import { Image } from "astro:assets";
-import type { Category, ProductList } from "@wocart/storefront";
+import type { Category } from "@wocart/storefront";
 import { storefrontPath } from "@wocart/storefront";
 import type { InferProps } from "@wocart/theme";
 import { isPreview, type BlocksHandle } from "@wocart/theme/astro";
@@ -17,16 +17,13 @@ import SectionHead from "@/theme/components/ui/SectionHead.astro";
 type Props = InferProps<typeof categoryCards> & {
   blocks: BlocksHandle;
   categories: Category[];
-  /** The catalog, shared with the other sections: a category with no photo of its own shows one of its products. */
-  products?: ProductList[];
   content: StoreFrontContent;
 };
 
-const { blocks, categories, products = [], content, limit, showAll, headingAlign, scheme, style } = Astro.props;
+const { blocks, categories, content, limit, showAll, headingAlign, scheme, style } = Astro.props;
 const store = Astro.locals.store;
 
-const photoFor = (category: Category) =>
-  category.image?.url ?? products.find((product) => product.categoryId === category.id && product.coverImage)?.coverImage?.url ?? null;
+const photoFor = (category: Category) => category.image?.url ?? null;
 
 // A copy: the page shares this array with other sections, so sorting in place
 // would reorder their reads too.

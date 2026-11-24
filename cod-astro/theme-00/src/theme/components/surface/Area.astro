@@ -18,4 +18,4 @@ const editing = draft?.surface === surface;
 const document = editing && draft?.document !== undefined ? draft.document : await Astro.locals.store.client.pageData.get(surface);
 ---
 
-<Sections theme={shellCatalog} surface={surface} document={document} preview={editing} unique={area === "header" ? ["header"] : undefined} />
+<Sections theme={shellCatalog} surface={surface} document={document} preview={editing} unique={area === "header" ? ["header", "announcement-bar"] : undefined} />

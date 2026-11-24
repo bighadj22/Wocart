@@ -1,7 +1,7 @@
 ---
-// A band of short promises scrolling across the page. The messages repeat
-// enough to fill the widest screen, and the track loops on its second half,
-// so the motion never jumps. Screen readers hear the messages once.
+// A band of short promises scrolling across the page. Two identical runs make
+// the loop seamless; each promise appears once per run. Screen readers hear
+// the messages once.
 import type { InferProps } from "@wocart/theme";
 import { schemeClass } from "@wocart/theme";
 import { isPreview, type BlocksHandle } from "@wocart/theme/astro";
@@ -13,7 +13,6 @@ type Props = InferProps<typeof marquee> & { blocks: BlocksHandle };
 const { message1, message2, message3, message4, speed, scheme, blocks } = Astro.props;
 const messages = [message1, message2, message3, message4].filter((message): message is string => Boolean(message && message.trim()));
 const seconds = { slow: 48, normal: 32, fast: 20 }[speed] ?? 32;
-const run = Array.from({ length: Math.max(2, Math.ceil(8 / Math.max(1, messages.length))) }, () => messages).flat();
 ---
 
 {(messages.length > 0 || isPreview(blocks)) && (
@@ -22,7 +21,7 @@ const run = Array.from({ length: Math.max(2, Math.ceil(8 / Math.max(1, messages.
     <div class="marquee-track" aria-hidden="true">
       {[0, 1].map(() => (
         <div class="marquee-run">
-          {run.map((message) => (
+          {messages.map((message) => (
             <span class="marquee-item">{message}<Icon name="heroicons:sparkles-solid" /></span>
           ))}
         </div>
@@ -35,7 +34,7 @@ const run = Array.from({ length: Math.max(2, Math.ceil(8 / Math.max(1, messages.
   .marquee { overflow: hidden; color: var(--clr-ink); }
   .marquee-track { display: flex; width: max-content; animation: marquee var(--marquee-time) linear infinite; }
   .marquee:hover .marquee-track { animation-play-state: paused; }
-  .marquee-run { display: flex; flex: none; }
+  .marquee-run { display: flex; flex: none; min-width: 100vw; justify-content: space-around; }
   .marquee-item {
     display: inline-flex;
     align-items: center;

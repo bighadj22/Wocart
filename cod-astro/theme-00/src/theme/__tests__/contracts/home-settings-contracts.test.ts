@@ -27,6 +27,28 @@ const storefront = fakeStorefront(products, categories);
 
 const countOf = (html: string, text: string) => html.split(text).length - 1;
 
+describe("the scrolling promises", () => {
+  it("shows each message once per loop half, not crowded into repeated copies", async () => {
+    const html = await renderSections([{ id: "m", type: "marquee" }], storefront);
+    expect(html.match(/<span class="marquee-item/g) ?? []).toHaveLength(6);
+    expect(countOf(html, `>${en.trust1Title}<`)).toBe(2);
+  });
+});
+
+describe("category cards without a photo", () => {
+  const cover = "https://media.boutique.test/products/cover.webp";
+  const client = fakeStorefront(
+    [makeProduct({ id: "prod_covered", categoryId: "cat_1", coverImage: { id: "img_1", key: "products/cover.webp", url: cover, width: 600, height: 750, altText: null, position: 0 } })],
+    [{ id: "cat_1", name: "Watches", slug: "watches", position: 0, image: null } as unknown as Category],
+  );
+
+  it("shows the category's initial instead of borrowing another product's photo", async () => {
+    const html = await renderSections([{ id: "c", type: "category-cards" }], client);
+    expect(html).not.toContain(cover);
+    expect(html).toContain('class="category-initial');
+  });
+});
+
 describe("hero and promo links", () => {
   it("keep the shipped targets when nothing is saved", async () => {
     const html = await renderSections(
