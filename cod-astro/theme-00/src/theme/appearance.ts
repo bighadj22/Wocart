@@ -115,12 +115,11 @@ export const LAYOUT = {
 } as const;
 
 /**
- * MANUAL EDIT — what the shopper actually gets, even when the store has saved
- * its own page document or brand colors in the dashboard. `sections.*` is the
- * render order (unknown types keep their saved order, at the end);
- * `sections.hidden` forces each named section on or off; `enforcePalette`
- * makes DESIGN.colors win over saved colors. Editor draft previews still
- * render exactly what the editor sends, so merchants can keep editing there.
+ * MANUAL EDIT — what the shopper gets until a merchant changes it.
+ * `sections.*` is the render order (unknown types keep their saved order, at
+ * the end); `sections.hidden` forces each named section on or off. A store's
+ * own `themeSettings` supplies the colors and page scheme, so editing them in
+ * the dashboard is enough; the shipped palette is only the default.
  */
 export const STORE_PARAMETERS = {
   sections: {
@@ -136,7 +135,6 @@ export const STORE_PARAMETERS = {
       "features-bar": true,
     },
   },
-  enforcePalette: true,
 } as const;
 
 /** Apply the section order/visibility parameters to a resolved page document. */

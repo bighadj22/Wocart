@@ -210,6 +210,24 @@ export function AppearanceSettings() {
   const current = schemes.find((scheme) => scheme.id === selected) ?? schemes[0];
   const localeDrafts = drafts[textLocale] ?? {};
 
+  function appearanceBase() {
+    return { colorSchemes: schemes, pageScheme };
+  }
+
+  function applySaved(saved: StoreAppearance) {
+    setData(saved);
+    setSchemes(cloneSchemes(saved.colorSchemes));
+    setPageScheme(saved.pageScheme);
+    setSelected((id) =>
+      saved.colorSchemes.some((scheme) => scheme.id === id) ? id : saved.colorSchemes[0]?.id ?? "",
+    );
+    setHeroImage(saved.images.heroImage);
+    setBannerImage(saved.images.bannerImage);
+    setCategoryCardsImage(saved.images.categoryCardsImage);
+    setHeroVisible(saved.visibility.heroVisible);
+    setCategoryCardsVisible(saved.visibility.categoryCardsVisible);
+  }
+
   function updateColor(role: AppearanceColorRole, value: string) {
     if (!current) return;
     setSchemes((list) =>
@@ -220,22 +238,17 @@ export function AppearanceSettings() {
   }
 
   async function saveColors() {
-    const saved = await saveAppearance({ colorSchemes: schemes, pageScheme });
-    setData(saved);
-    setSchemes(cloneSchemes(saved.colorSchemes));
-    setPageScheme(saved.pageScheme);
-    setSelected((id) => (saved.colorSchemes.some((scheme) => scheme.id === id) ? id : saved.colorSchemes[0]?.id ?? ""));
+    applySaved(await saveAppearance(appearanceBase()));
   }
 
   async function saveTexts() {
     const values: Record<string, string> = {};
     for (const key of APPEARANCE_TEXT_KEYS) values[key] = localeDrafts[key] ?? "";
     const saved = await saveAppearance({
-      colorSchemes: data!.colorSchemes,
-      pageScheme: data!.pageScheme,
+      ...appearanceBase(),
       texts: { locale: textLocale, values },
     });
-    setData(saved);
+    applySaved(saved);
     setDrafts((all) => ({ ...all, [textLocale]: saved.texts[textLocale] ?? {} }));
   }
 
@@ -243,29 +256,22 @@ export function AppearanceSettings() {
     const ref = (image: MediaImage | null) =>
       image ? { key: image.key, width: image.width ?? undefined, height: image.height ?? undefined } : null;
     const saved = await saveAppearance({
-      colorSchemes: data!.colorSchemes,
-      pageScheme: data!.pageScheme,
+      ...appearanceBase(),
       images: {
         heroImage: ref(heroImage),
         bannerImage: ref(bannerImage),
         categoryCardsImage: ref(categoryCardsImage),
       },
     });
-    setData(saved);
-    setHeroImage(saved.images.heroImage);
-    setBannerImage(saved.images.bannerImage);
-    setCategoryCardsImage(saved.images.categoryCardsImage);
+    applySaved(saved);
   }
 
   async function saveVisibility() {
     const saved = await saveAppearance({
-      colorSchemes: data!.colorSchemes,
-      pageScheme: data!.pageScheme,
+      ...appearanceBase(),
       visibility: { heroVisible, categoryCardsVisible },
     });
-    setData(saved);
-    setHeroVisible(saved.visibility.heroVisible);
-    setCategoryCardsVisible(saved.visibility.categoryCardsVisible);
+    applySaved(saved);
   }
 
   function updateText(key: AppearanceTextKey, value: string) {

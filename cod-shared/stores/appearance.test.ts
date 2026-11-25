@@ -18,6 +18,41 @@ const valid = (): AppearanceSettings => ({
   pageScheme: "scheme-1",
 });
 
+describe("APPEARANCE_DEFAULT_SCHEMES", () => {
+  it("starts from Theme-00's forest-and-champagne palette", () => {
+    expect(APPEARANCE_DEFAULT_SCHEMES.map((scheme) => scheme.id)).toEqual([
+      "scheme-1",
+      "scheme-2",
+      "scheme-3",
+      "scheme-4",
+      "scheme-5",
+    ]);
+    expect(APPEARANCE_DEFAULT_SCHEMES.map((scheme) => scheme.name)).toEqual([
+      { ar: "فاتح", fr: "Clair", en: "Light" },
+      { ar: "حجري", fr: "Pierre", en: "Stone" },
+      { ar: "رملي", fr: "Sable", en: "Sand" },
+      { ar: "زيتوني", fr: "Olive", en: "Olive" },
+      { ar: "ليلي", fr: "Nuit", en: "Night" },
+    ]);
+    expect(APPEARANCE_DEFAULT_SCHEMES.map((scheme) => scheme.colors.background)).toEqual([
+      "#faf8f3",
+      "#f1ede4",
+      "#e7e1d4",
+      "#e3e6db",
+      "#121710",
+    ]);
+    expect(APPEARANCE_DEFAULT_SCHEMES[4]!.colors).toEqual({
+      background: "#121710",
+      text: "#ece9df",
+      heading: "#e3c77d",
+      accent: "#e3c77d",
+      button: "#e3c77d",
+      buttonText: "#121710",
+      border: "#2f372c",
+    });
+  });
+});
+
 describe("colorSchemesProblem", () => {
   it("accepts the theme's shipped schemes", () => {
     expect(colorSchemesProblem(APPEARANCE_DEFAULT_SCHEMES)).toBeNull();

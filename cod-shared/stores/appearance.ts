@@ -42,28 +42,28 @@ export interface AppearanceSettings {
 export const APPEARANCE_DEFAULT_SCHEMES: AppearanceColorScheme[] = [
   {
     id: "scheme-1",
-    name: "Light",
-    colors: { background: "#ffffff", text: "#3b4250", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e8e8e5" },
+    name: { ar: "فاتح", fr: "Clair", en: "Light" },
+    colors: { background: "#faf8f3", text: "#4b524c", heading: "#141815", accent: "#14532d", button: "#14532d", buttonText: "#ffffff", border: "#e2ddd1" },
   },
   {
     id: "scheme-2",
-    name: "Stone",
-    colors: { background: "#f4f4f1", text: "#3b4250", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e2e2dc" },
+    name: { ar: "حجري", fr: "Pierre", en: "Stone" },
+    colors: { background: "#f1ede4", text: "#4b524c", heading: "#141815", accent: "#14532d", button: "#14532d", buttonText: "#ffffff", border: "#d8d2c4" },
   },
   {
     id: "scheme-3",
-    name: "Sand",
-    colors: { background: "#efe4d6", text: "#4a4136", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e0d2bf" },
+    name: { ar: "رملي", fr: "Sable", en: "Sand" },
+    colors: { background: "#e7e1d4", text: "#5b6055", heading: "#141815", accent: "#14532d", button: "#14532d", buttonText: "#ffffff", border: "#cdc6b5" },
   },
   {
     id: "scheme-4",
-    name: "Saffron",
-    colors: { background: "#f2c14e", text: "#2a2416", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#d9a93a" },
+    name: { ar: "زيتوني", fr: "Olive", en: "Olive" },
+    colors: { background: "#e3e6db", text: "#444b3d", heading: "#141815", accent: "#14532d", button: "#14532d", buttonText: "#ffffff", border: "#c9cdbb" },
   },
   {
     id: "scheme-5",
-    name: "Night",
-    colors: { background: "#0f1626", text: "#b9c0cd", heading: "#ffffff", accent: "#f2c14e", button: "#ffffff", buttonText: "#0f1626", border: "#26324b" },
+    name: { ar: "ليلي", fr: "Nuit", en: "Night" },
+    colors: { background: "#121710", text: "#ece9df", heading: "#e3c77d", accent: "#e3c77d", button: "#e3c77d", buttonText: "#121710", border: "#2f372c" },
   },
 ];
 

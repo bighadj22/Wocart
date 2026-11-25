@@ -1,9 +1,10 @@
 # Manual customization parameters
 
 Edit these values directly, save, rebuild. No other file needs to change.
-They are applied at render time, so they also win over a store's **saved**
-page document and **saved** brand colors — that is why editing only the
-shipped JSON had no effect on a store that already saved a layout in Studio.
+The section parameters are applied at render time and win over a store's
+**saved** page document — that is why editing only the shipped JSON had no
+effect on a store that already saved a layout in Studio. Colors are the
+exception: a store's saved palette wins over the shipped one.
 
 ## 1. Sections — visibility and order
 
@@ -68,11 +69,10 @@ height and desktop caps near half the screen.
 - `DESIGN.spacing.xs`, `sm`, `md`, `lg`, `xl`, `xxl` — injected as
   `--space-*` by `BaseHead.astro` and used by section copy/padding.
 
-These feed `DEFAULT_SCHEMES`. With `STORE_PARAMETERS.enforcePalette = true`,
-`BaseHead.astro` writes those roles into every `.wc-scheme-*` class after the
-SDK stylesheet, so saved yellow/clashing brand colors cannot reach shoppers.
-Set `enforcePalette = false` to let the dashboard's saved colors win.
-No hex value lives in a section component.
+These feed `DEFAULT_SCHEMES`, the palette a store gets before it saves its own
+colors. The dashboard's saved `colorSchemes` and `pageScheme` win on shopper
+pages: `BaseHead.astro` passes them to the SDK stylesheet and does not rewrite
+the scheme classes. No hex value lives in a section component.
 
 ## 4. RTL (AR) and LTR (FR/EN)
 

@@ -66,6 +66,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Settings → Appearance saves every edit the merchant sees. Colors, the scheme
+  the page wears, texts, images and section visibility are sent from the
+  editor's current state, so clicking "Save changes" in one section no longer
+  silently discards unsaved edits made in another.
+- The storefront now shows the palette saved in Settings → Appearance.
+  Theme-00 no longer writes its shipped colors over the page's schemes, and
+  the editor starts from the same forest-and-champagne palette as the theme,
+  so saving without touching colors does not change the store's look.
 - MCP tools take any record id. Seeded and imported rows carry ids such as
   `store-1:starter:product:handbag`, and 73 tool inputs accepted only UUIDs,
   so an AI agent could not read, change or delete those rows.
