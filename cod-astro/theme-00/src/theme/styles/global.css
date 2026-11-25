@@ -171,9 +171,9 @@
   --clr-on-primary: var(--wc-color-button-text);
   --clr-accent: var(--wc-color-accent);
   --clr-on-accent: var(--wc-color-heading);
-  --clr-price: var(--clr-ink);
+  --clr-price: var(--wc-color-accent);
   --clr-price-sale: var(--clr-accent);
-  --clr-price-was: var(--clr-muted);
+  --clr-price-was: #8b6f43;
   --clr-nav-bg: color-mix(in oklab, var(--wc-color-background) 94%, transparent);
   /* A photo's ground while it loads, and behind a photo that does not fill. */
   --clr-photo: color-mix(in oklab, var(--wc-color-text) 6%, var(--wc-color-background));
