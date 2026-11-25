@@ -8,7 +8,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SCHEME_MARKER_CLASS } from "@wocart/theme";
-import { STORE_PARAMETERS } from "@/theme/appearance";
 import { themeSourceFiles } from "./theme-source";
 
 describe("color schemes", () => {
@@ -26,12 +25,5 @@ describe("color schemes", () => {
     expect(files.filter((file) => /\bschemeClass\(/.test(file.content)).length).toBeGreaterThanOrEqual(8);
     const ownMarker = files.filter((file) => /class:list=\{\["[^"]*\bscheme\b[^"]*"|"scheme",\s*schemeClass/.test(file.content)).map((file) => file.relPath);
     expect(ownMarker).toEqual([]);
-  });
-
-  it("let the store's saved schemes reach the page", () => {
-    expect(STORE_PARAMETERS).not.toHaveProperty("enforcePalette");
-    const head = readFileSync(resolve(process.cwd(), "src/theme/components/layout/BaseHead.astro"), "utf8");
-    expect(head).toContain("schemes={schemes}");
-    expect(head).not.toContain("wc-scheme-");
   });
 });

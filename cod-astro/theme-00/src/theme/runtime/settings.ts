@@ -22,17 +22,3 @@ export function settingsOf(store: StoreContext): ThemeSettings {
   }
   return values;
 }
-
-export type HomeImageSettings = Pick<ThemeSettings, "heroImage" | "bannerImage" | "categoryCardsImage">;
-
-export function homeImageSettingsOf(store: StoreContext): HomeImageSettings {
-  const { heroImage, bannerImage, categoryCardsImage } = settingsOf(store);
-  return { heroImage, bannerImage, categoryCardsImage };
-}
-
-export type HomeVisibilitySettings = Pick<ThemeSettings, "heroVisible" | "categoryCardsVisible">;
-
-export function homeVisibilityOf(store: StoreContext): HomeVisibilitySettings {
-  const { heroVisible, categoryCardsVisible } = settingsOf(store);
-  return { heroVisible, categoryCardsVisible };
-}

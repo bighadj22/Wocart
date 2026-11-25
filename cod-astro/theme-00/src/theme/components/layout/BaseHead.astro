@@ -12,7 +12,7 @@ import { ClientRouter } from "astro:transitions";
 import { openGraphLocale } from "@/theme/utils/seo";
 import ThemeStyles from "@wocart/theme/astro/ThemeStyles.astro";
 import type { ColorScheme } from "@wocart/theme";
-import { DESIGN, type ThemeFont } from "@/theme/appearance";
+import type { ThemeFont } from "@/theme/appearance";
 
 interface Props {
   title: string;
@@ -113,7 +113,6 @@ const subset = isRTL ? "arabic" : "latin";
       --r-input: ${radii.input};
       --r-button: ${radii.button};
       --r-tag: ${radii.tag};
-      ${Object.entries(DESIGN.spacing).map(([name, value]) => `--space-${name}: ${value};`).join("\n      ")}
     }
   `} />
 </head>

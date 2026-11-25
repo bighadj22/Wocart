@@ -13,8 +13,6 @@ import type { Context } from "hono";
 import type { AppContext } from "@/types";
 import { defineRoute } from "@/lib/route-builder";
 import { getDb } from "@/db";
-import { mediaDeliveryOf } from "@/lib/media";
-import { imageOf } from "../../../../cod-shared/media/views";
 import * as queries from "./queries";
 import {
   getThemeSettings,
@@ -28,21 +26,13 @@ import { ERROR_CODES } from "../../../../cod-shared/errors/codes";
 import {
   APPEARANCE_DEFAULT_SCHEMES,
   APPEARANCE_HEX,
-  APPEARANCE_IMAGE_KEYS,
   APPEARANCE_MAX_SCHEMES,
-  APPEARANCE_MEDIA_KEY,
   APPEARANCE_SCHEME_ID,
   APPEARANCE_TEXT_KEYS,
-  APPEARANCE_VISIBILITY_KEYS,
-  appearanceImageProblem,
-  appearanceImagesOf,
   appearanceLocaleProblem,
   appearanceSettingsOf,
   appearanceTextProblem,
-  appearanceVisibilityOf,
   mergeAppearance,
-  mergeAppearanceImages,
-  mergeAppearanceVisibility,
   type AppearanceColorScheme,
 } from "../../../../cod-shared/stores/appearance";
 import { SuccessResponseSchema } from "@/openapi/schemas";
@@ -65,43 +55,6 @@ const colorSchemeSchema = z.object({
   }),
 });
 
-const appearanceImageSchema = z.object({
-  key: z.string().regex(APPEARANCE_MEDIA_KEY),
-  alt: z.string().max(160).optional(),
-  width: z.number().int().positive().optional(),
-  height: z.number().int().positive().optional(),
-  focal: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).optional(),
-});
-
-const appearanceImageViewSchema = z.object({
-  key: z.string(),
-  url: z.string(),
-  width: z.number().nullable(),
-  height: z.number().nullable(),
-});
-
-const appearanceImagesSchema = z.object({
-  heroImage: appearanceImageViewSchema.nullable(),
-  bannerImage: appearanceImageViewSchema.nullable(),
-  categoryCardsImage: appearanceImageViewSchema.nullable(),
-});
-
-const saveAppearanceImagesSchema = z.object({
-  heroImage: appearanceImageSchema.nullable().optional(),
-  bannerImage: appearanceImageSchema.nullable().optional(),
-  categoryCardsImage: appearanceImageSchema.nullable().optional(),
-});
-
-const appearanceVisibilitySchema = z.object({
-  heroVisible: z.boolean().nullable(),
-  categoryCardsVisible: z.boolean().nullable(),
-});
-
-const saveAppearanceVisibilitySchema = z.object({
-  heroVisible: z.boolean().nullable().optional(),
-  categoryCardsVisible: z.boolean().nullable().optional(),
-});
-
 const appearanceSchema = z.object({
   themeKey: z.string(),
   primaryLocale: z.enum(STORE_LOCALES),
@@ -109,8 +62,6 @@ const appearanceSchema = z.object({
   colorSchemes: z.array(colorSchemeSchema),
   pageScheme: z.string(),
   texts: z.record(z.string(), z.record(z.string(), z.string())),
-  images: appearanceImagesSchema,
-  visibility: appearanceVisibilitySchema,
 });
 
 const saveAppearanceSchema = z.object({
@@ -122,13 +73,11 @@ const saveAppearanceSchema = z.object({
       values: z.record(z.string(), z.string().max(400)),
     })
     .optional(),
-  images: saveAppearanceImagesSchema.optional(),
-  visibility: saveAppearanceVisibilitySchema.optional(),
 });
 
 type StoreRow = NonNullable<Awaited<ReturnType<typeof queries.getStore>>>;
 
-async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow, delivery: ReturnType<typeof mediaDeliveryOf>) {
+async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow) {
   const stored = await getThemeSettings(db, store.id, store.themeId);
   const saved = appearanceSettingsOf(stored);
   const colorSchemes = saved?.colorSchemes ?? APPEARANCE_DEFAULT_SCHEMES;
@@ -144,10 +93,6 @@ async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow, deliv
     if (!(APPEARANCE_TEXT_KEYS as readonly string[]).includes(row.key)) continue;
     (texts[row.locale] ??= {})[row.key] = row.value;
   }
-  const images = appearanceImagesOf(stored);
-  const visibility = appearanceVisibilityOf(stored);
-  const view = (key: (typeof APPEARANCE_IMAGE_KEYS)[number]) =>
-    images[key] ? imageOf(images[key]!.key, delivery, { width: images[key]!.width, height: images[key]!.height }) : null;
   return {
     themeKey: store.themeId,
     primaryLocale: store.lang,
@@ -155,15 +100,6 @@ async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow, deliv
     colorSchemes,
     pageScheme,
     texts,
-    images: {
-      heroImage: view("heroImage"),
-      bannerImage: view("bannerImage"),
-      categoryCardsImage: view("categoryCardsImage"),
-    },
-    visibility: {
-      heroVisible: visibility.heroVisible ?? null,
-      categoryCardsVisible: visibility.categoryCardsVisible ?? null,
-    },
   };
 }
 
@@ -171,7 +107,7 @@ export async function getAppearance(c: Context<AppContext>) {
   const db = getDb(c.env.DB);
   const store = await queries.getStore(db);
   if (!store) throw new NotFoundError("Store");
-  return c.json({ success: true, data: await appearanceOf(db, store, mediaDeliveryOf(c.env)) }, 200);
+  return c.json({ success: true, data: await appearanceOf(db, store) }, 200);
 }
 
 export async function saveAppearance(c: Context<AppContext>) {
@@ -202,31 +138,12 @@ export async function saveAppearance(c: Context<AppContext>) {
       if (problem) throw new ValidationError(problem, ERROR_CODES.VALIDATION_FAILED);
     }
   }
-  if (body.images) {
-    for (const key of APPEARANCE_IMAGE_KEYS) {
-      const image = body.images[key];
-      if (image === undefined || image === null) continue;
-      const problem = appearanceImageProblem(image);
-      if (problem) throw new ValidationError(`"${key}" ${problem}`, ERROR_CODES.VALIDATION_FAILED);
-    }
-  }
 
-  const images = mergeAppearanceImages(appearanceImagesOf(stored), body.images ?? {});
-  const visibility = mergeAppearanceVisibility(appearanceVisibilityOf(stored), body.visibility ?? {});
-  const settings: Record<string, unknown> = {
+  await saveThemeSettings(db, store.id, store.themeId, {
     ...stored,
     colorSchemes: merged.settings.colorSchemes,
     pageScheme: merged.settings.pageScheme,
-    ...images,
-    ...visibility,
-  };
-  for (const key of APPEARANCE_IMAGE_KEYS) {
-    if (body.images?.[key] === null) delete settings[key];
-  }
-  for (const key of APPEARANCE_VISIBILITY_KEYS) {
-    if (body.visibility?.[key] === null) delete settings[key];
-  }
-  await saveThemeSettings(db, store.id, store.themeId, settings);
+  });
   if (body.texts) {
     await saveContentOverrides(
       db,
@@ -237,7 +154,7 @@ export async function saveAppearance(c: Context<AppContext>) {
     );
   }
 
-  return c.json({ success: true, data: await appearanceOf(db, store, mediaDeliveryOf(c.env)) }, 200);
+  return c.json({ success: true, data: await appearanceOf(db, store) }, 200);
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────

@@ -23,7 +23,6 @@ export type AppearanceColorRole = (typeof APPEARANCE_COLOR_ROLES)[number];
 export const APPEARANCE_MAX_SCHEMES = 12;
 export const APPEARANCE_SCHEME_ID = /^[a-z0-9-]+$/;
 export const APPEARANCE_HEX = /^#[0-9a-f]{6}$/i;
-export const APPEARANCE_MEDIA_KEY = /^[A-Za-z0-9_-]+\/[A-Za-z0-9._-]+$/;
 
 export type AppearanceSchemeName = string | Record<string, string>;
 
@@ -42,28 +41,28 @@ export interface AppearanceSettings {
 export const APPEARANCE_DEFAULT_SCHEMES: AppearanceColorScheme[] = [
   {
     id: "scheme-1",
-    name: { ar: "فاتح", fr: "Clair", en: "Light" },
-    colors: { background: "#faf8f3", text: "#4b524c", heading: "#141815", accent: "#14532d", button: "#14532d", buttonText: "#ffffff", border: "#e2ddd1" },
+    name: "Light",
+    colors: { background: "#ffffff", text: "#3b4250", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e8e8e5" },
   },
   {
     id: "scheme-2",
-    name: { ar: "حجري", fr: "Pierre", en: "Stone" },
-    colors: { background: "#f1ede4", text: "#4b524c", heading: "#141815", accent: "#14532d", button: "#14532d", buttonText: "#ffffff", border: "#d8d2c4" },
+    name: "Stone",
+    colors: { background: "#f4f4f1", text: "#3b4250", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e2e2dc" },
   },
   {
     id: "scheme-3",
-    name: { ar: "رملي", fr: "Sable", en: "Sand" },
-    colors: { background: "#e7e1d4", text: "#5b6055", heading: "#141815", accent: "#14532d", button: "#14532d", buttonText: "#ffffff", border: "#cdc6b5" },
+    name: "Sand",
+    colors: { background: "#efe4d6", text: "#4a4136", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#e0d2bf" },
   },
   {
     id: "scheme-4",
-    name: { ar: "زيتوني", fr: "Olive", en: "Olive" },
-    colors: { background: "#e3e6db", text: "#444b3d", heading: "#141815", accent: "#14532d", button: "#14532d", buttonText: "#ffffff", border: "#c9cdbb" },
+    name: "Saffron",
+    colors: { background: "#f2c14e", text: "#2a2416", heading: "#0f1626", accent: "#c8102e", button: "#0f1626", buttonText: "#ffffff", border: "#d9a93a" },
   },
   {
     id: "scheme-5",
-    name: { ar: "ليلي", fr: "Nuit", en: "Night" },
-    colors: { background: "#121710", text: "#ece9df", heading: "#e3c77d", accent: "#e3c77d", button: "#e3c77d", buttonText: "#121710", border: "#2f372c" },
+    name: "Night",
+    colors: { background: "#0f1626", text: "#b9c0cd", heading: "#ffffff", accent: "#f2c14e", button: "#ffffff", buttonText: "#0f1626", border: "#26324b" },
   },
 ];
 
@@ -89,89 +88,6 @@ export const APPEARANCE_TEXT_LIMITS: Record<AppearanceTextKey, { max: number; mu
   bannerTitle: { max: 120, multiline: false },
   bannerSub: { max: 400, multiline: true },
 };
-
-export const APPEARANCE_IMAGE_KEYS = ["heroImage", "bannerImage", "categoryCardsImage"] as const;
-
-export type AppearanceImageKey = (typeof APPEARANCE_IMAGE_KEYS)[number];
-
-export interface AppearanceImage {
-  key: string;
-  alt?: string;
-  width?: number;
-  height?: number;
-  focal?: { x: number; y: number };
-}
-
-export type AppearanceImages = Partial<Record<AppearanceImageKey, AppearanceImage | null>>;
-
-export function appearanceImageProblem(value: unknown): string | null {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return "must be an image reference";
-  const image = value as Record<string, unknown>;
-  const unknown = Object.keys(image).find((key) => !["key", "alt", "width", "height", "focal"].includes(key));
-  if (unknown !== undefined) return `has an unknown key "${unknown}"`;
-  if (typeof image.key !== "string" || !APPEARANCE_MEDIA_KEY.test(image.key)) return "needs a media key";
-  if (image.alt !== undefined && typeof image.alt !== "string") return "needs a string alt";
-  for (const dimension of ["width", "height"] as const) {
-    const size = image[dimension];
-    if (size !== undefined && !(typeof size === "number" && Number.isInteger(size) && size > 0)) return `needs a whole-number ${dimension}`;
-  }
-  if (image.focal !== undefined) {
-    const focal = image.focal as Record<string, unknown>;
-    if (typeof focal !== "object" || focal === null || Array.isArray(focal)) return "needs a focal point";
-    for (const axis of ["x", "y"] as const) {
-      const point = focal[axis];
-      if (typeof point !== "number" || !Number.isFinite(point) || point < 0 || point > 1) return `needs a focal ${axis} between 0 and 1`;
-    }
-  }
-  return null;
-}
-
-export function appearanceImagesOf(stored: Record<string, unknown> | null | undefined): AppearanceImages {
-  const images: AppearanceImages = {};
-  if (!stored) return images;
-  for (const key of APPEARANCE_IMAGE_KEYS) {
-    const value = stored[key];
-    if (appearanceImageProblem(value) === null) images[key] = value as AppearanceImage;
-  }
-  return images;
-}
-
-export function mergeAppearanceImages(current: AppearanceImages, next: AppearanceImages): AppearanceImages {
-  const merged: AppearanceImages = { ...current };
-  for (const key of APPEARANCE_IMAGE_KEYS) {
-    const value = next[key];
-    if (value === undefined) continue;
-    if (value === null) delete merged[key];
-    else merged[key] = value;
-  }
-  return merged;
-}
-
-export const APPEARANCE_VISIBILITY_KEYS = ["heroVisible", "categoryCardsVisible"] as const;
-
-export type AppearanceVisibilityKey = (typeof APPEARANCE_VISIBILITY_KEYS)[number];
-
-export type AppearanceVisibility = Partial<Record<AppearanceVisibilityKey, boolean | null>>;
-
-export function appearanceVisibilityOf(stored: Record<string, unknown> | null | undefined): AppearanceVisibility {
-  const values: AppearanceVisibility = {};
-  if (!stored) return values;
-  for (const key of APPEARANCE_VISIBILITY_KEYS) {
-    if (typeof stored[key] === "boolean") values[key] = stored[key] as boolean;
-  }
-  return values;
-}
-
-export function mergeAppearanceVisibility(current: AppearanceVisibility, next: AppearanceVisibility): AppearanceVisibility {
-  const merged: AppearanceVisibility = { ...current };
-  for (const key of APPEARANCE_VISIBILITY_KEYS) {
-    const value = next[key];
-    if (value === undefined) continue;
-    if (value === null) delete merged[key];
-    else merged[key] = value;
-  }
-  return merged;
-}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);

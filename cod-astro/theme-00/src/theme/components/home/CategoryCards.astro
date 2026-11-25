@@ -1,35 +1,32 @@
 ---
 // The store's categories as tall photo tiles, each named on a white chip; a
 // last tile leads to every product. A row a phone swipes, a grid on a wide
-// screen. A category without a photo of its own shows its initial.
+// screen. A category without a photo of its own shows one of its products.
 import { message } from "@/theme/content/messages";
 import { Image } from "astro:assets";
-import type { Category } from "@wocart/storefront";
+import type { Category, ProductList } from "@wocart/storefront";
 import { storefrontPath } from "@wocart/storefront";
 import type { InferProps } from "@wocart/theme";
 import { isPreview, type BlocksHandle } from "@wocart/theme/astro";
 import { Icon } from "astro-icon/components";
 import type { StoreFrontContent } from "@/theme/content";
 import type { categoryCards } from "@/theme/catalog/home/category-cards.def";
-import { LAYOUT } from "@/theme/appearance";
-import { pickedPicture } from "@/theme/utils/images";
-import { homeImageSettingsOf } from "@/theme/runtime/settings";
 import Section from "@/theme/components/ui/Section.astro";
 import SectionHead from "@/theme/components/ui/SectionHead.astro";
 
 type Props = InferProps<typeof categoryCards> & {
   blocks: BlocksHandle;
   categories: Category[];
+  /** The catalog, shared with the other sections: a category with no photo of its own shows one of its products. */
+  products?: ProductList[];
   content: StoreFrontContent;
 };
 
-const { blocks, categories, content, limit, showAll, headingAlign, scheme, style } = Astro.props;
+const { blocks, categories, products = [], content, limit, showAll, headingAlign, scheme, style } = Astro.props;
 const store = Astro.locals.store;
-const layout = LAYOUT.category;
-const { categoryCardsImage } = homeImageSettingsOf(store);
-const banner = pickedPicture(categoryCardsImage, store.config.media);
 
-const photoFor = (category: Category) => category.image?.url ?? null;
+const photoFor = (category: Category) =>
+  category.image?.url ?? products.find((product) => product.categoryId === category.id && product.coverImage)?.coverImage?.url ?? null;
 
 // A copy: the page shares this array with other sections, so sorting in place
 // would reorder their reads too.
@@ -39,13 +36,8 @@ const tiles = shown.length + (showAll ? 1 : 0);
 
 {(shown.length > 0 || isPreview(blocks)) && (
   <Section scheme={scheme} style={style}>
-    {banner && (
-      <div class="category-banner">
-        <Image src={banner.src} alt={banner.alt || content.categoriesSection} width={1200} height={480} widths={[480, 960, 1200]} sizes="100vw" quality={82} loading="lazy" decoding="async" />
-      </div>
-    )}
     <SectionHead title={content.categoriesSection} center={headingAlign === "center"} />
-    <ul class="category-tiles swipe-row" style={`--tiles: ${Math.min(tiles, 5)};--cat-aspect:${layout.imageAspectMobile};--cat-max:${layout.imageMaxMobile};--cat-aspect-wide:${layout.imageAspectDesktop};--cat-max-wide:${layout.imageMaxDesktop}`}>
+    <ul class="category-tiles swipe-row" style={`--tiles: ${Math.min(tiles, 5)}`}>
       {shown.map((category) => {
         const photo = photoFor(category);
         return (
@@ -78,25 +70,19 @@ const tiles = shown.length + (showAll ? 1 : 0);
 )}
 
 <style>
-  .category-banner { aspect-ratio: 5 / 2; overflow: hidden; border-radius: var(--radius-media); background: var(--clr-plate); }
-  .category-banner :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .category-tiles { grid-auto-columns: 62%; list-style: none; }
-  .category-tiles > li { min-width: 0; }
   @media (min-width: 640px) { .category-tiles { grid-auto-columns: 36%; } }
   @media (min-width: 1024px) {
     .category-tiles {
       grid-auto-flow: row;
       grid-template-columns: repeat(var(--tiles), minmax(0, 1fr));
-      gap: var(--space-lg, 1.5rem);
+      gap: 1.25rem;
       margin: 0;
       padding: 0;
       overflow: visible;
     }
   }
-  .category-tile { display: block; aspect-ratio: var(--cat-aspect, 4 / 5); max-height: var(--cat-max, 21rem); color: var(--clr-ink); text-decoration: none; }
-  @media (min-width: 1024px) {
-    .category-tile { aspect-ratio: var(--cat-aspect-wide, 4 / 5); max-height: var(--cat-max-wide, 17rem); }
-  }
+  .category-tile { display: block; aspect-ratio: 4 / 5; color: var(--clr-ink); text-decoration: none; }
   .category-tile :global(img) { transition: transform 0.8s var(--ease-out-expo); }
   @media (hover: hover) { .category-tile:hover :global(img) { transform: scale(1.05); } }
   .category-initial {
@@ -104,14 +90,9 @@ const tiles = shown.length + (showAll ? 1 : 0);
     height: 100%;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--clr-border);
-    border-radius: inherit;
-    background: var(--clr-plate);
-    color: var(--clr-ink);
     font-family: var(--font-heading);
     font-size: var(--text-5xl);
-    font-weight: 600;
-    line-height: 1;
+    color: var(--clr-muted);
   }
   .category-chip {
     position: absolute;
@@ -120,15 +101,12 @@ const tiles = shown.length + (showAll ? 1 : 0);
     max-width: calc(100% - 1.75rem);
     padding: 0.5rem 1rem;
     overflow: hidden;
-    border: 1px solid var(--clr-border);
     border-radius: var(--radius-tag);
     background: var(--clr-bg);
     box-shadow: var(--shadow-md);
     color: var(--clr-ink);
     font-size: var(--text-sm);
     font-weight: 600;
-    line-height: 1.4;
-    text-align: start;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -138,10 +116,8 @@ const tiles = shown.length + (showAll ? 1 : 0);
     flex-direction: column;
     justify-content: space-between;
     padding: 1.375rem;
-    border: 1px solid var(--clr-border-strong);
+    border: 1px solid var(--clr-ink);
     border-radius: var(--radius-media);
-    background: var(--clr-plate);
-    text-align: start;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   .category-all:hover { background: var(--clr-ink); color: var(--clr-bg); }
@@ -152,10 +128,9 @@ const tiles = shown.length + (showAll ? 1 : 0);
     height: 3.5rem;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--clr-border-strong);
+    border: 1px solid var(--clr-current);
     border-radius: var(--radius-round);
   }
-  .category-all-go :global(svg) { width: 1.75rem; height: 1.75rem; }
-  @media (min-width: 1024px) { .category-all-go :global(svg) { width: 2rem; height: 2rem; } }
+  .category-all-go :global(svg) { width: 1.375rem; height: 1.375rem; }
   :global([dir="ltr"]) .category-all-go :global(svg) { transform: scaleX(-1); }
 </style>

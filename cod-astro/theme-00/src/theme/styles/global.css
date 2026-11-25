@@ -1,13 +1,12 @@
 /*
  * Theme-00 — the storefront every CodFlow store starts with.
  *
- * Product photographs carry the page: they fill tall product cards and the
- * gallery edge to edge. Around them the page is quiet — cream and parchment
- * grounds, near-black ink and large headings — with color spent in a few places:
- * the deep forest-green primary on buttons, badges, links and sale prices,
- * champagne gold on dark bands, and the near-black forest footer. The order
- * form is the store's checkout: a calm panel whose last line is the amount paid
- * at the door.
+ * Photographs carry the page: they fill tall cards, tiles and banners edge to
+ * edge. Around them the page is quiet — white and stone grounds, a deep ink
+ * for type and the order button, large light headings — with color spent in
+ * a few places: the sale red, the saffron of a promotion, the night of the
+ * footer. The order form is the store's checkout: a calm panel whose last
+ * line is the amount paid at the door.
  *
  * Every color comes from a color scheme (`colorSchemes` setting). An element
  * wearing one carries the SDK's `schemeClass(id)` — `.wc-scheme` and
@@ -110,13 +109,13 @@
 
 :root {
   /* The first default scheme: what a page shows when its scheme is missing. */
-  --wc-color-background: #faf8f3;
-  --wc-color-text: #4b524c;
-  --wc-color-heading: #141815;
-  --wc-color-accent: #14532d;
-  --wc-color-button: #14532d;
+  --wc-color-background: #ffffff;
+  --wc-color-text: #3b4250;
+  --wc-color-heading: #0f1626;
+  --wc-color-accent: #c8102e;
+  --wc-color-button: #0f1626;
   --wc-color-button-text: #ffffff;
-  --wc-color-border: #e2ddd1;
+  --wc-color-border: #e8e8e5;
 
   --font-text: system-ui;
   --font-display: var(--font-text);
@@ -126,22 +125,20 @@
   --r-button: 0.625rem;
   --r-tag: 62.5rem;
 
-  /* Editable badge colors — hex values; keep each pair high-contrast.
-     --clr-highlight / --clr-on-highlight: offer badge bg/text,
-     --clr-rating: stars, --clr-sale-soft: sale tint, --clr-success/error: states. */
-  --clr-success: #047857;
-  --clr-success-bg: #ecfdf5;
-  --clr-error: #b91c1c;
-  --clr-error-bg: #fef2f2;
-  --clr-disabled: #9a9e94;
-  --clr-highlight: #d9ecdf;
-  --clr-on-highlight: #14532d;
-  --clr-rating: #a16207;
-  --clr-sale-soft: #d9ecdf;
-  --clr-overlay: color-mix(in oklab, #121710 55%, transparent);
+  /* Meanings that keep their color on every scheme. */
+  --clr-success: #0f7a4a;
+  --clr-success-bg: #e8f5ee;
+  --clr-error: #b42318;
+  --clr-error-bg: #fdf1f0;
+  --clr-disabled: #9aa0a8;
+  --clr-highlight: #f2c14e;
+  --clr-on-highlight: #0f1626;
+  --clr-rating: #e8a100;
+  --clr-sale-soft: #fdecee;
+  --clr-overlay: color-mix(in oklab, #0b1220 55%, transparent);
   --clr-clear: transparent;
   --clr-current: currentColor;
-  --overlay-dark: color-mix(in oklab, #121710 72%, transparent);
+  --overlay-dark: color-mix(in oklab, #0b1220 72%, transparent);
 
   --header-h: 4rem;
 
@@ -171,9 +168,6 @@
   --clr-on-primary: var(--wc-color-button-text);
   --clr-accent: var(--wc-color-accent);
   --clr-on-accent: var(--wc-color-heading);
-  --clr-price: var(--wc-color-accent);
-  --clr-price-sale: var(--clr-accent);
-  --clr-price-was: #8b6f43;
   --clr-nav-bg: color-mix(in oklab, var(--wc-color-background) 94%, transparent);
   /* A photo's ground while it loads, and behind a photo that does not fill. */
   --clr-photo: color-mix(in oklab, var(--wc-color-text) 6%, var(--wc-color-background));
@@ -236,7 +230,7 @@ p { text-wrap: pretty; }
 }
 
 :focus-visible {
-  outline: 2px solid var(--clr-primary);
+  outline: 2px solid var(--clr-ink);
   outline-offset: 3px;
   border-radius: var(--radius-input);
 }
@@ -318,7 +312,7 @@ a { color: inherit; text-underline-offset: 0.25em; }
   min-height: 2.75rem;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--clr-primary);
+  color: var(--clr-ink);
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 0.45em;
@@ -429,14 +423,14 @@ a { color: inherit; text-underline-offset: 0.25em; }
 .price {
   font-variant-numeric: tabular-nums lining-nums;
   font-weight: 600;
-  color: var(--clr-price);
+  color: var(--clr-ink);
   white-space: nowrap;
 }
-.price.is-sale { color: var(--clr-price-sale); }
+.price.is-sale { color: var(--clr-accent); }
 .price-cur { font-size: 0.8em; font-weight: 500; margin-inline-start: 0.2em; }
 .price-was {
   font-variant-numeric: tabular-nums lining-nums;
-  color: var(--clr-price-was);
+  color: var(--clr-muted);
   font-weight: 400;
   text-decoration: line-through;
   text-decoration-thickness: 1px;
@@ -600,17 +594,17 @@ textarea.form-input { min-height: 6rem; padding-block: 0.875rem; resize: vertica
 }
 .perforation { height: 0; border-top: 1px dashed var(--clr-border-strong); }
 
-/* The amount paid at the door, underlined in soft forest green. */
+/* The amount paid at the door, underlined in saffron. */
 .cod-total {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  padding-block: 1rem;
+  padding-block: 0.75rem;
   color: var(--clr-ink);
   border-bottom: 2px solid var(--clr-highlight);
 }
-.cod-total .price { color: var(--clr-price); font-family: var(--font-heading); font-size: var(--text-2xl); line-height: 1.15; }
+.cod-total .price { color: inherit; font-family: var(--font-heading); font-size: var(--text-2xl); line-height: 1.15; }
 @media (min-width: 1024px) { .cod-total .price { font-size: var(--text-3xl); } }
 
 /* ── The phone's tab bar ─────────────────────────────────────────────────── */

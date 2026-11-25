@@ -2,7 +2,7 @@
   "version": 1,
   "surface": "area:header",
   "sections": [
-    { "id": "announcement", "type": "announcement-bar", "hidden": true, "slots": { "default": [{ "id": "announcement-1", "type": "announcement" }] } },
-    { "id": "header", "type": "header", "hidden": false }
+    { "id": "announcement", "type": "announcement-bar", "slots": { "default": [{ "id": "announcement-1", "type": "announcement" }] } },
+    { "id": "header", "type": "header" }
   ]
 }

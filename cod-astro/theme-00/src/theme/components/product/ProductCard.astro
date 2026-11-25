@@ -11,7 +11,6 @@ import type { ProductCardCopy } from "@/theme/bridges/island-props";
 import { Icon } from "astro-icon/components";
 import { formatAmount, formatCurrency } from "@/theme/utils/money";
 import { storefrontPath } from "@wocart/storefront";
-import { LAYOUT } from "@/theme/appearance";
 
 interface Props {
   /** A product as a list gives it, or whole (a product the merchant picked). */
@@ -39,7 +38,6 @@ const {
   sizes = "(min-width: 1280px) 300px, (min-width: 1024px) 23vw, (min-width: 640px) 31vw, 46vw",
 } = Astro.props;
 const locale = Astro.locals.store.locale;
-const layout = LAYOUT.product;
 
 const image = ("coverImage" in product ? product.coverImage : product.images[0]) ?? null;
 const view = "variants" in product ? getProductView(product) : getProductListView(product);
@@ -60,7 +58,7 @@ const filled = rating ? Math.round(rating.avgRating) : 0;
   class:list={["product-card", isOutOfStock && "is-sold-out"]}
   aria-label={cardStatus ? message(copy, "ariaProductCardAction", { card: cardLabel, action: cardStatus }, locale) : cardLabel}
 >
-  <div class="plate card-photo" style={`--card-max:${layout.imageMaxMobile};--card-max-wide:${layout.imageMaxDesktop}`}>
+  <div class="plate card-photo">
     {image ? (
       <Image
         src={image.url}
@@ -126,7 +124,7 @@ const filled = rating ? Math.round(rating.avgRating) : 0;
     color: var(--clr-ink);
     text-decoration: none;
   }
-  .card-photo { aspect-ratio: var(--card-aspect, 3 / 4); max-height: var(--card-max, 24rem); }
+  .card-photo { aspect-ratio: var(--card-aspect, 3 / 4); }
   .card-photo :global(img) { transition: transform 0.8s var(--ease-out-expo), opacity 0.3s ease; }
   @media (hover: hover) {
     .product-card:hover .card-photo :global(img) { transform: scale(1.05); }
@@ -197,10 +195,7 @@ const filled = rating ? Math.round(rating.avgRating) : 0;
     line-height: 1.55;
     color: var(--clr-ink);
   }
-  @media (min-width: 1024px) {
-    .card-photo { max-height: var(--card-max-wide, 22rem); }
-    .card-name { font-size: var(--text-base); }
-  }
+  @media (min-width: 1024px) { .card-name { font-size: var(--text-base); } }
   .card-price {
     display: flex;
     flex-wrap: wrap;

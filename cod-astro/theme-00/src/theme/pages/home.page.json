@@ -2,14 +2,13 @@
   "version": 1,
   "surface": "home",
   "sections": [
-    { "id": "cmp_h1hero", "type": "hero", "props": {}, "hidden": false },
-    { "id": "cmp_h1strip", "type": "marquee", "props": {}, "hidden": true },
-    { "id": "cmp_h2cats", "type": "category-cards", "props": {}, "hidden": false },
+    { "id": "cmp_h1hero", "type": "hero", "props": {} },
+    { "id": "cmp_h1strip", "type": "marquee", "props": {} },
+    { "id": "cmp_h2cats", "type": "category-cards", "props": {} },
     {
       "id": "cmp_h3picks",
       "type": "product-tabs",
       "props": {},
-      "hidden": false,
       "slots": {
         "tabs": [
           { "id": "cmp_h3tab1", "type": "product-tab", "props": { "collection": "best-sellers" } },
@@ -18,9 +17,9 @@
         ]
       }
     },
-    { "id": "cmp_h4offer", "type": "image-banner", "props": {}, "hidden": true },
-    { "id": "cmp_h4how", "type": "how-it-works", "props": {}, "hidden": false },
-    { "id": "cmp_h8reviews", "type": "customer-testimonials", "props": {}, "hidden": false },
-    { "id": "cmp_h6feat", "type": "features-bar", "props": {}, "hidden": true }
+    { "id": "cmp_h4offer", "type": "image-banner", "props": {} },
+    { "id": "cmp_h4how", "type": "how-it-works", "props": {} },
+    { "id": "cmp_h8reviews", "type": "customer-testimonials", "props": {} },
+    { "id": "cmp_h6feat", "type": "features-bar", "props": {} }
   ]
 }

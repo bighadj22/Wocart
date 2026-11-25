@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api";
-import type { AppearanceColorScheme, AppearanceImage } from "../../../../cod-shared/stores/appearance";
+import type { AppearanceColorScheme } from "../../../../cod-shared/stores/appearance";
 import type { StoreLocale } from "../../../../cod-shared/i18n/locales";
 import type { StoreAppearance, StoreConfig, UpdateStoreData } from "./types";
 import type { StoreSummary } from "./store-summary";
@@ -35,14 +35,6 @@ export interface SaveAppearanceInput {
   pageScheme: string;
   /** One language's text edits; an empty string removes that edit. */
   texts?: { locale: StoreLocale; values: Record<string, string> };
-  /** Store-wide home photos; null removes the override. */
-  images?: {
-    heroImage?: AppearanceImage | null;
-    bannerImage?: AppearanceImage | null;
-    categoryCardsImage?: AppearanceImage | null;
-  };
-  /** Section visibility; null removes the override and restores the theme's default. */
-  visibility?: { heroVisible?: boolean | null; categoryCardsVisible?: boolean | null };
 }
 
 export async function getAppearance() {
