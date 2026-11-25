@@ -26,9 +26,9 @@ import {
   validateUploadFile,
 } from "./api";
 
-function makeFile(input: { type?: string; size?: number } = {}): File {
-  const { type = "image/jpeg", size = 100 } = input;
-  return new File([new Uint8Array(size)], "img.jpg", { type });
+function makeFile(input: { type?: string; size?: number; name?: string } = {}): File {
+  const { type = "image/jpeg", size = 100, name = "img.jpg" } = input;
+  return new File([new Uint8Array(size)], name, { type });
 }
 
 const FORM: UploadSend = {
@@ -61,6 +61,15 @@ describe("requestUpload", () => {
     expect(path).toBe("/api/media/uploads");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body as string)).toEqual({ folder: "landing", contentType: "image/png", bytes: 321 });
+  });
+
+  it("asks for a WebP ticket from the extension when the browser gives no MIME type", async () => {
+    seam.apiFetch.mockResolvedValue({ success: true, data: ticket(FORM) });
+    const file = makeFile({ type: "", name: "logo.webp", size: 321 });
+
+    await expect(requestUpload(file, "products")).resolves.toEqual(ticket(FORM));
+    const [, init] = seam.apiFetch.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({ folder: "products", contentType: "image/webp", bytes: 321 });
   });
 });
 
@@ -183,6 +192,12 @@ describe("uploadFailure", () => {
 describe("file validation", () => {
   it("accepts every image type the server takes", () => {
     for (const type of ACCEPTED_IMAGE_TYPES) expect(() => validateUploadFile(makeFile({ type }))).not.toThrow();
+  });
+
+  it("accepts an image the browser sends without a MIME type, using its extension", () => {
+    const webp = makeFile({ type: "", name: "logo.webp" });
+    expect(() => validateUploadFile(webp)).not.toThrow();
+    expect(partitionUploadFiles([webp])).toEqual({ accepted: [webp], unsupportedCount: 0, tooLargeCount: 0 });
   });
 
   it("refuses an unsupported type", () => {

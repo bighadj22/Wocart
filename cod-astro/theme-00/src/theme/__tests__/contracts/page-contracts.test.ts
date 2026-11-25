@@ -105,7 +105,7 @@ function checkoutPages(): Array<{ file: string; files: Set<string>; scripts: Set
 
 describe("pages that take an order", () => {
   it("there are some, so this suite is actually checking something", () => {
-    const pages = checkoutPages().map((page) => relative(SRC_DIR, page.file));
+    const pages = checkoutPages().map((page) => relative(SRC_DIR, page.file).replace(/\\/g, "/"));
     expect(pages.length).toBeGreaterThanOrEqual(3);
     expect(pages).toEqual(expect.arrayContaining(["pages/checkout.astro", "pages/lp/[slug].astro", "theme/pages/ProductSurface.astro"]));
   });

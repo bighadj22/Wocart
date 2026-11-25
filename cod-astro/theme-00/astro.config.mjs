@@ -32,15 +32,16 @@ export default defineConfig({
   cache: {
     provider: cacheProvider,
   },
-  // Every cached page carries "pages": a publish (theme pages, settings or
-  // text) changes them all, and src/pages/wocart-revalidate.ts drops that tag.
+  // Pages render on every request: a dashboard Appearance save must show on
+  // the storefront immediately. The tag stays so a publish can still drop any
+  // copy an edge cache made before this rule applied.
   routeRules: {
-    "/": { maxAge: 60, swr: 3600, tags: ["home", PAGES_CACHE_TAG] },
-    "/products": { maxAge: 60, swr: 3600, tags: ["products", PAGES_CACHE_TAG] },
-    "/products/[slug]": { maxAge: 60, swr: 86400, tags: ["products", PAGES_CACHE_TAG] },
-    "/category/[slug]": { maxAge: 60, swr: 86400, tags: ["categories", PAGES_CACHE_TAG] },
-    "/lp/[slug]": { maxAge: 60, swr: 86400, tags: ["landing-pages", PAGES_CACHE_TAG] },
-    "/pages/[slug]": { maxAge: 3600, swr: 604800, tags: ["legal-pages", PAGES_CACHE_TAG] },
+    "/": { maxAge: 0, swr: 0, tags: ["home", PAGES_CACHE_TAG] },
+    "/products": { maxAge: 0, swr: 0, tags: ["products", PAGES_CACHE_TAG] },
+    "/products/[slug]": { maxAge: 0, swr: 0, tags: ["products", PAGES_CACHE_TAG] },
+    "/category/[slug]": { maxAge: 0, swr: 0, tags: ["categories", PAGES_CACHE_TAG] },
+    "/lp/[slug]": { maxAge: 0, swr: 0, tags: ["landing-pages", PAGES_CACHE_TAG] },
+    "/pages/[slug]": { maxAge: 0, swr: 0, tags: ["legal-pages", PAGES_CACHE_TAG] },
     "/api/communes/[wilayaId]": { maxAge: 31536000, swr: 31536000, tags: ["communes"] },
   },
   env: {

@@ -8,7 +8,6 @@ describe("settings model", () => {
   it("exposes the categories in sidebar order", () => {
     expect(SETTINGS_CATEGORIES.map((category) => category.id)).toEqual([
       "general",
-      "appearance",
       "languages",
       "seo",
       "cart",
@@ -23,7 +22,6 @@ describe("settings model", () => {
     );
     expect(labelById).toMatchObject({
       general: "general_title",
-      appearance: "appearance_title",
       cart: "cart_title",
       delivery: "delivery_pricing_title",
     });

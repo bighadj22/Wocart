@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Loader2, RefreshCw, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui";
-import { ACCEPTED_IMAGE_TYPES, MAX_UPLOAD_MB, partitionUploadFiles, uploadFailure, type MediaImage } from "@/features/uploads/api";
+import { IMAGE_ACCEPT, MAX_UPLOAD_MB, partitionUploadFiles, uploadFailure, type MediaImage } from "@/features/uploads/api";
 import { useImageUpload } from "@/features/uploads/useImageUpload";
 import { useT } from "@/i18n/react";
 import { notify } from "@/lib/notify";
@@ -59,7 +59,7 @@ export function ImageUploader({
     <input
       ref={inputRef}
       type="file"
-      accept={ACCEPTED_IMAGE_TYPES.join(",")}
+      accept={IMAGE_ACCEPT}
       className="hidden"
       onChange={(event) => {
         const file = event.currentTarget.files?.[0];
