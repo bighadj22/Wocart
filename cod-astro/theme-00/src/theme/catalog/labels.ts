@@ -248,6 +248,7 @@ export const SETTINGS_GROUP = {
   typography: text("الخطوط", "Typographie", "Typography"),
   shape: text("الأشكال", "Formes", "Shape"),
   productCards: text("بطاقات المنتجات", "Cartes produit", "Product cards"),
+  storefront: text("الرأس والمتجر", "En-tête et boutique", "Header & storefront"),
 };
 
 export const SETTING = {
@@ -258,6 +259,10 @@ export const SETTING = {
   corners: text("الزوايا", "Coins", "Corners"),
   cardButton: text("زر الطلب السريع على الصورة", "Bouton de commande sur la photo", "Quick order button on the photo"),
   cardImageRatio: text("شكل صورة المنتج", "Format de l'image produit", "Product image shape"),
+  hideLogo: text("إخفاء شعار المتجر", "Masquer le logo", "Hide the store logo"),
+  searchEnabled: text("تفعيل البحث", "Activer la recherche", "Enable search"),
+  hideHeroImages: text("إخفاء صور البانر", "Masquer les photos des bannières", "Hide hero & banner photos"),
+  headerHtml: text("HTML أعلى الرأس", "HTML au-dessus de l’en-tête", "Header HTML"),
 };
 
 /** The theme's default color schemes, as the editor names them. */
@@ -267,4 +272,5 @@ export const SCHEME = {
   sand: text("رملي", "Sable", "Sand"),
   saffron: text("زعفراني", "Safran", "Saffron"),
   night: text("ليلي", "Nuit", "Night"),
+  olive: text("زيتوني", "Olive", "Olive"),
 };

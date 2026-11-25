@@ -25,6 +25,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors/classes";
 import { ERROR_CODES } from "../../../../cod-shared/errors/codes";
 import {
   APPEARANCE_DEFAULT_SCHEMES,
+  APPEARANCE_HEADER_HTML_MAX,
   APPEARANCE_HEX,
   APPEARANCE_MAX_SCHEMES,
   APPEARANCE_SCHEME_ID,
@@ -33,6 +34,7 @@ import {
   appearanceSettingsOf,
   appearanceTextProblem,
   mergeAppearance,
+  sanitizeHeaderHtml,
   type AppearanceColorScheme,
 } from "../../../../cod-shared/stores/appearance";
 import { SuccessResponseSchema } from "@/openapi/schemas";
@@ -61,12 +63,20 @@ const appearanceSchema = z.object({
   locales: z.array(z.enum(STORE_LOCALES)),
   colorSchemes: z.array(colorSchemeSchema),
   pageScheme: z.string(),
+  hideLogo: z.boolean(),
+  searchEnabled: z.boolean(),
+  hideHeroImages: z.boolean(),
+  headerHtml: z.string(),
   texts: z.record(z.string(), z.record(z.string(), z.string())),
 });
 
 const saveAppearanceSchema = z.object({
   colorSchemes: z.array(colorSchemeSchema).min(1).max(APPEARANCE_MAX_SCHEMES),
   pageScheme: z.string(),
+  hideLogo: z.boolean().optional(),
+  searchEnabled: z.boolean().optional(),
+  hideHeroImages: z.boolean().optional(),
+  headerHtml: z.string().max(APPEARANCE_HEADER_HTML_MAX).optional(),
   texts: z
     .object({
       locale: z.enum(STORE_LOCALES),
@@ -99,6 +109,10 @@ async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow) {
     locales,
     colorSchemes,
     pageScheme,
+    hideLogo: saved?.hideLogo ?? false,
+    searchEnabled: saved?.searchEnabled ?? true,
+    hideHeroImages: saved?.hideHeroImages ?? false,
+    headerHtml: saved?.headerHtml ?? "",
     texts,
   };
 }
@@ -118,9 +132,14 @@ export async function saveAppearance(c: Context<AppContext>) {
   const body = ((c.req as any).valid?.("json") ??
     saveAppearanceSchema.parse(await c.req.json())) as z.infer<typeof saveAppearanceSchema>;
   const stored = await getThemeSettings(db, store.id, store.themeId);
-  const merged = mergeAppearance(appearanceSettingsOf(stored), {
+  const saved = appearanceSettingsOf(stored);
+  const merged = mergeAppearance(saved, {
     colorSchemes: body.colorSchemes as AppearanceColorScheme[],
     pageScheme: body.pageScheme,
+    hideLogo: body.hideLogo ?? saved?.hideLogo ?? false,
+    searchEnabled: body.searchEnabled ?? saved?.searchEnabled ?? true,
+    hideHeroImages: body.hideHeroImages ?? saved?.hideHeroImages ?? false,
+    headerHtml: sanitizeHeaderHtml(body.headerHtml ?? saved?.headerHtml ?? ""),
   });
   if (merged.error || !merged.settings) {
     throw new ValidationError(merged.error ?? "The colors cannot be saved", ERROR_CODES.VALIDATION_FAILED);
@@ -141,8 +160,7 @@ export async function saveAppearance(c: Context<AppContext>) {
 
   await saveThemeSettings(db, store.id, store.themeId, {
     ...stored,
-    colorSchemes: merged.settings.colorSchemes,
-    pageScheme: merged.settings.pageScheme,
+    ...merged.settings,
   });
   if (body.texts) {
     await saveContentOverrides(
@@ -166,7 +184,7 @@ const getAppearanceRoute = defineRoute({
   tags: ["Store Settings"],
   summary: "Get the storefront's appearance",
   description:
-    "Returns the store's color schemes, the scheme its page wears, and the theme text it edited, per language.",
+    "Returns the store's color schemes, the scheme its page wears, its storefront switches and a safe header HTML strip, and the theme text it edited, per language.",
   operationId: "getStoreAppearance",
   responses: {
     200: {
@@ -184,7 +202,7 @@ const saveAppearanceRoute = defineRoute({
   tags: ["Store Settings"],
   summary: "Save the storefront's appearance",
   description:
-    "Replaces the colors of the store's existing schemes, the scheme the page wears, and (optionally) one language's theme text edits. An empty text deletes the edit.",
+    "Replaces the colors of the store's existing schemes, the scheme the page wears, its storefront switches and a safe header HTML strip, and (optionally) one language's theme text edits. An empty text deletes the edit.",
   operationId: "saveStoreAppearance",
   body: saveAppearanceSchema,
   responses: {

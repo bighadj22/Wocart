@@ -43,12 +43,17 @@ export const DEFAULT_SCHEMES = [
     name: SCHEME.night,
     colors: { background: "#0f1626", text: "#b9c0cd", heading: "#ffffff", accent: "#f2c14e", button: "#ffffff", buttonText: "#0f1626", border: "#26324b" },
   },
+  {
+    id: "scheme-6",
+    name: SCHEME.olive,
+    colors: { background: "#f3f2e7", text: "#343a29", heading: "#1f2716", accent: "#66763b", button: "#4b5b2c", buttonText: "#ffffff", border: "#d6d9bd" },
+  },
 ] as const satisfies readonly ColorScheme[];
 
 export type SchemeId = (typeof DEFAULT_SCHEMES)[number]["id"];
 
 /** The default schemes by role, for the theme's own defaults. */
-export const SCHEME_OF = { light: "scheme-1", stone: "scheme-2", sand: "scheme-3", saffron: "scheme-4", night: "scheme-5" } as const satisfies Record<string, SchemeId>;
+export const SCHEME_OF = { light: "scheme-1", stone: "scheme-2", sand: "scheme-3", saffron: "scheme-4", night: "scheme-5", olive: "scheme-6" } as const satisfies Record<string, SchemeId>;
 
 /** The page's scheme unless the merchant picks another. */
 export const PAGE_SCHEME: SchemeId = "scheme-1";

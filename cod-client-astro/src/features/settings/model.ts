@@ -1,9 +1,9 @@
-import { Languages, Search, ShoppingCart, Store, Truck, type LucideIcon } from "lucide-react";
+import { Languages, Palette, Search, ShoppingCart, Store, Truck, type LucideIcon } from "lucide-react";
 import { STORE_LOCALES, type StoreLocale } from "../../../../cod-shared/i18n/locales";
 import type { TranslatableKey } from "../../../../cod-shared/i18n/translations";
 import type { StoreLanguage } from "./types";
 
-export type CategoryId = "general" | "languages" | "seo" | "cart" | "delivery";
+export type CategoryId = "general" | "appearance" | "languages" | "seo" | "cart" | "delivery";
 
 export interface SettingsCategory {
   id: CategoryId;
@@ -15,6 +15,7 @@ export interface SettingsCategory {
 /** The settings categories, in sidebar order: the store itself. Its Apps and Integrations have their own pages. */
 export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   { id: "general", icon: Store, labelKey: "general_title" },
+  { id: "appearance", icon: Palette, labelKey: "appearance_title" },
   { id: "languages", icon: Languages, labelKey: "languages_title" },
   { id: "seo", icon: Search, labelKey: "seo_title" },
   { id: "cart", icon: ShoppingCart, labelKey: "cart_title" },

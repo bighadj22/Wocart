@@ -35,6 +35,11 @@ export interface AppearanceColorScheme {
 export interface AppearanceSettings {
   colorSchemes: AppearanceColorScheme[];
   pageScheme: string;
+  /** A write that only saves colors leaves the other controls as they were. */
+  hideLogo?: boolean;
+  searchEnabled?: boolean;
+  hideHeroImages?: boolean;
+  headerHtml?: string;
 }
 
 /** The editor's starting palette, mirroring Theme-00's shipped schemes. */
@@ -64,7 +69,62 @@ export const APPEARANCE_DEFAULT_SCHEMES: AppearanceColorScheme[] = [
     name: "Night",
     colors: { background: "#0f1626", text: "#b9c0cd", heading: "#ffffff", accent: "#f2c14e", button: "#ffffff", buttonText: "#0f1626", border: "#26324b" },
   },
+  {
+    id: "scheme-6",
+    name: "Olive",
+    colors: { background: "#f3f2e7", text: "#343a29", heading: "#1f2716", accent: "#66763b", button: "#4b5b2c", buttonText: "#ffffff", border: "#d6d9bd" },
+  },
 ];
+
+export const APPEARANCE_HEADER_HTML_MAX = 2000;
+
+const HEADER_HTML_TAGS = new Set(["a", "b", "strong", "i", "em", "u", "small", "span", "br"]);
+const HEADER_HTML_ATTR = /([a-z][a-z0-9-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'>]+))/gi;
+const HEADER_HTML_TAG = /<\/?([a-z][a-z0-9]*)\b([^>]*)>/gi;
+const SAFE_HEADER_HREF = /^(https?:\/\/|\/|#|\?|mailto:|tel:)/i;
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+export function sanitizeHeaderHtml(value: string): string {
+  let output = "";
+  let last = 0;
+  for (const match of value.matchAll(HEADER_HTML_TAG)) {
+    const start = match.index ?? 0;
+    output += escapeHtml(value.slice(last, start));
+    last = start + match[0].length;
+    const tag = match[1]!.toLowerCase();
+    if (!HEADER_HTML_TAGS.has(tag)) {
+      output += escapeHtml(match[0]);
+      continue;
+    }
+    if (match[0].startsWith("</")) {
+      output += `</${tag}>`;
+      continue;
+    }
+    const attributes: string[] = [];
+    for (const attribute of (match[2] ?? "").matchAll(HEADER_HTML_ATTR)) {
+      const name = attribute[1]!.toLowerCase();
+      const raw = attribute[3] ?? attribute[4] ?? attribute[5] ?? "";
+      if (name === "class") {
+        const className = raw.replace(/[^A-Za-z0-9 _-]/g, "").trim().slice(0, 120);
+        if (className) attributes.push(`class="${escapeHtml(className)}"`);
+      } else if (tag === "a" && name === "href" && SAFE_HEADER_HREF.test(raw.trim())) {
+        attributes.push(`href="${escapeHtml(raw.trim())}"`);
+      } else if (tag === "a" && name === "target" && raw.trim() === "_blank") {
+        attributes.push('target="_blank"', 'rel="noopener noreferrer"');
+      }
+    }
+    const selfClosing = /\/\s*$/.test(match[2] ?? "") ? " /" : "";
+    output += `<${tag}${attributes.length > 0 ? ` ${attributes.join(" ")}` : ""}${selfClosing}>`;
+  }
+  return output + escapeHtml(value.slice(last));
+}
 
 /** The theme text keys the Appearance tab edits, with what each one is. */
 export const APPEARANCE_TEXT_KEYS = [
@@ -141,6 +201,15 @@ export function appearanceSettingsProblem(value: unknown): string | null {
   if (!schemes.some((scheme) => scheme.id === value.pageScheme)) {
     return `pageScheme names "${value.pageScheme}", which the store does not have`;
   }
+  for (const key of ["hideLogo", "searchEnabled", "hideHeroImages"] as const) {
+    if (value[key] !== undefined && typeof value[key] !== "boolean") return `${key} must be on or off`;
+  }
+  if (value.headerHtml !== undefined && typeof value.headerHtml !== "string") {
+    return "headerHtml must be text";
+  }
+  if (typeof value.headerHtml === "string" && value.headerHtml.length > APPEARANCE_HEADER_HTML_MAX) {
+    return `headerHtml holds at most ${APPEARANCE_HEADER_HTML_MAX} characters`;
+  }
   return null;
 }
 
@@ -156,7 +225,13 @@ export function mergeAppearance(
 ): { settings?: AppearanceSettings; error?: string } {
   const problem = appearanceSettingsProblem(next);
   if (problem) return { error: problem };
-  if (!current || current.colorSchemes.length === 0) return { settings: next };
+  const controls = {
+    hideLogo: next.hideLogo ?? current?.hideLogo ?? false,
+    searchEnabled: next.searchEnabled ?? current?.searchEnabled ?? true,
+    hideHeroImages: next.hideHeroImages ?? current?.hideHeroImages ?? false,
+    headerHtml: sanitizeHeaderHtml(next.headerHtml ?? current?.headerHtml ?? ""),
+  };
+  if (!current || current.colorSchemes.length === 0) return { settings: { ...next, ...controls } };
   if (next.colorSchemes.length !== current.colorSchemes.length) {
     return { error: "The store's color schemes cannot be added, removed or reordered here" };
   }
@@ -173,14 +248,27 @@ export function mergeAppearance(
   if (!merged.some((scheme) => scheme.id === next.pageScheme)) {
     return { error: `pageScheme names "${next.pageScheme}", which the store does not have` };
   }
-  return { settings: { colorSchemes: merged, pageScheme: next.pageScheme } };
+  return {
+    settings: {
+      colorSchemes: merged,
+      pageScheme: next.pageScheme,
+      ...controls,
+    },
+  };
 }
 
 /** Parse whatever the row holds into the tab's shape, or null. */
 export function appearanceSettingsOf(stored: Record<string, unknown> | null | undefined): AppearanceSettings | null {
   if (!stored) return null;
-  const candidate = { colorSchemes: stored.colorSchemes, pageScheme: stored.pageScheme };
-  return appearanceSettingsProblem(candidate) === null ? (candidate as unknown as AppearanceSettings) : null;
+  const candidate = {
+    colorSchemes: stored.colorSchemes,
+    pageScheme: stored.pageScheme,
+    hideLogo: stored.hideLogo ?? false,
+    searchEnabled: stored.searchEnabled ?? true,
+    hideHeroImages: stored.hideHeroImages ?? false,
+    headerHtml: typeof stored.headerHtml === "string" ? stored.headerHtml : "",
+  };
+  return appearanceSettingsProblem(candidate) === null ? (candidate as AppearanceSettings) : null;
 }
 
 export function appearanceTextProblem(key: string, value: string): string | null {

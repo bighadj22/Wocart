@@ -6,8 +6,9 @@
  * hostile value never reaches the markup.
  */
 import { describe, expect, it } from "vitest";
-import type { Category } from "@wocart/storefront";
+import type { Category, ProductList } from "@wocart/storefront";
 import type { RendererIssue } from "@wocart/theme/astro";
+import type { ComponentInstance } from "@wocart/theme";
 import { en } from "@/theme/content/en";
 import { fakeStorefront, makeProduct, renderSections } from "../support/home-render";
 
@@ -16,6 +17,13 @@ const products = Array.from({ length: 6 }, (_, index) =>
     id: `prod_${index}`,
     name: `Product ${index}`,
     handle: `product-${index}`,
+    coverImage: {
+      key: `products/p${index}.jpg`,
+      url: `https://media.boutique.test/products/p${index}.jpg`,
+      width: 600,
+      height: 600,
+      altText: `Photo ${index}`,
+    } as ProductList["coverImage"],
   }),
 );
 const categories = Array.from(
@@ -69,6 +77,23 @@ describe("hero and promo links", () => {
       ]);
     },
   );
+});
+
+describe("hero and banner photos", () => {
+  const sections: ComponentInstance[] = [
+    { id: "h", type: "hero" },
+    { id: "b", type: "image-banner" },
+  ];
+
+  it("show by default and disappear when the store switches them off", async () => {
+    const shown = await renderSections(sections, storefront);
+    expect(shown).toContain("hero-photo");
+    expect(shown).toContain("banner-photo");
+
+    const hidden = await renderSections(sections, storefront, { themeSettings: { hideHeroImages: true } });
+    expect(hidden).not.toContain("hero-photo");
+    expect(hidden).not.toContain("banner-photo");
+  });
 });
 
 describe("section titles", () => {

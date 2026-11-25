@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and checkout keeps the store's normal rate when the shopper chooses a
   method the offer does not cover. The public product payload exposes the
   setting for themes.
+- The dashboard's Appearance tab offers an olive preset and controls to hide
+  the store logo, hide the home page's large photos and put a short, sanitized
+  HTML strip above the header. The reference theme applies all four on the
+  storefront, and keeps the logo on the right in Arabic.
 
 ### Changed
 
@@ -66,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- WebP uploads from a browser that reports no MIME type keep `image/webp` on
+  the form part the media host receives. The dashboard derives the type from
+  the file's extension and sends a matching blob, so ImageKit cannot reject a
+  WebP as an untyped file.
 - MCP tools take any record id. Seeded and imported rows carry ids such as
   `store-1:starter:product:handbag`, and 73 tool inputs accepted only UUIDs,
   so an AI agent could not read, change or delete those rows.

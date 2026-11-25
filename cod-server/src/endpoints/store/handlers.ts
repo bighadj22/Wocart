@@ -25,6 +25,7 @@ import {
   CartValidationError,
   type CartLine,
 } from "../../../../cod-shared/queries/cart";
+import { sanitizeHeaderHtml } from "../../../../cod-shared/stores/appearance";
 // Pure, like normalizeOrderLines: imported directly rather than through
 // ./queries so there is nothing for a test to stub and no way for the priced
 // subtotal to diverge from what the engine charges.
@@ -65,7 +66,12 @@ export async function getStoreConfig(c: Context<AppContext>) {
     throw new NotFoundError("Store", storeId);
   }
   c.header("Content-Language", store.locale);
-  return c.json({ success: true, data: store }, 200);
+  const themeSettings = store.themeSettings as Record<string, unknown> | undefined;
+  const safeSettings =
+    themeSettings && typeof themeSettings.headerHtml === "string"
+      ? { ...themeSettings, headerHtml: sanitizeHeaderHtml(themeSettings.headerHtml) }
+      : themeSettings;
+  return c.json({ success: true, data: safeSettings ? { ...store, themeSettings: safeSettings } : store }, 200);
 }
 
 function storeProductsParams(c: Context<AppContext>): StoreProductsParams {

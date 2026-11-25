@@ -8,6 +8,7 @@ import {
   appearanceTextProblem,
   colorSchemesProblem,
   mergeAppearance,
+  sanitizeHeaderHtml,
   type AppearanceSettings,
 } from "./appearance";
 
@@ -16,6 +17,10 @@ const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const valid = (): AppearanceSettings => ({
   colorSchemes: clone(APPEARANCE_DEFAULT_SCHEMES),
   pageScheme: "scheme-1",
+  hideLogo: false,
+  searchEnabled: true,
+  hideHeroImages: false,
+  headerHtml: "",
 });
 
 describe("colorSchemesProblem", () => {
@@ -163,5 +168,54 @@ describe("appearanceLocaleProblem", () => {
 
   it("refuses a language the store does not list", () => {
     expect(appearanceLocaleProblem("en", ["ar"])).toMatch(/not one of the store's languages/);
+  });
+});
+
+describe("the olive preset and storefront controls", () => {
+  it("ships an olive scheme the page can wear", () => {
+    const olive = APPEARANCE_DEFAULT_SCHEMES.find((scheme) => scheme.id === "scheme-6");
+    expect(olive).toMatchObject({ name: "Olive", colors: { background: "#f3f2e7", button: "#4b5b2c" } });
+    expect(appearanceSettingsProblem({ ...valid(), pageScheme: "scheme-6" })).toBeNull();
+  });
+
+  it("defaults missing controls when an older settings row is read", () => {
+    expect(appearanceSettingsOf({ colorSchemes: clone(APPEARANCE_DEFAULT_SCHEMES), pageScheme: "scheme-1" })).toEqual(valid());
+  });
+
+  it("keeps the merchant's controls when only colors are saved", () => {
+    const current = { ...valid(), hideLogo: true, searchEnabled: false, hideHeroImages: true, headerHtml: "<strong>Hi</strong>" };
+    const merged = mergeAppearance(current, {
+      colorSchemes: current.colorSchemes,
+      pageScheme: "scheme-3",
+      hideLogo: false,
+    });
+    expect(merged.settings).toMatchObject({
+      pageScheme: "scheme-3",
+      hideLogo: false,
+      searchEnabled: false,
+      hideHeroImages: true,
+      headerHtml: "<strong>Hi</strong>",
+    });
+  });
+
+  it("refuses a control that is not on or off, and HTML past its limit", () => {
+    expect(appearanceSettingsProblem({ ...valid(), searchEnabled: "yes" })).toMatch(/must be on or off/);
+    expect(appearanceSettingsProblem({ ...valid(), headerHtml: "x".repeat(2001) })).toMatch(/at most 2000/);
+  });
+});
+
+describe("sanitizeHeaderHtml", () => {
+  it("keeps a short, safe strip and drops scripts, handlers and unknown tags", () => {
+    expect(sanitizeHeaderHtml('<strong class="promo">Sale</strong> <a href="/products" target="_blank">Shop</a><br /><img src="x" onerror="evil()" />'))
+      .toBe('<strong class="promo">Sale</strong> <a href="/products" target="_blank" rel="noopener noreferrer">Shop</a><br />&lt;img src=&quot;x&quot; onerror=&quot;evil()&quot; /&gt;');
+  });
+
+  it("drops unsafe link targets", () => {
+    expect(sanitizeHeaderHtml('<a href="javascript:evil()" onclick="evil()">x</a>')).toBe("<a>x</a>");
+    expect(sanitizeHeaderHtml('<a href="https://example.com">x</a>')).toBe('<a href="https://example.com">x</a>');
+  });
+
+  it("escapes plain text", () => {
+    expect(sanitizeHeaderHtml("A & B < C")).toBe("A &amp; B &lt; C");
   });
 });

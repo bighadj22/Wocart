@@ -38,6 +38,10 @@ const FORM: UploadSend = {
   fields: { token: "jwt", fileName: "3f2a.jpg" },
   fileField: "file",
 };
+const WEBP_FORM: UploadSend = {
+  ...FORM,
+  fields: { token: "jwt", fileName: "3f2a.webp" },
+};
 const PUT: UploadSend = { kind: "put", method: "PUT", url: "https://bucket.example/signed", headers: { "Content-Type": "image/jpeg" } };
 const RELAY: UploadSend = { kind: "relay", method: "PUT", url: "/api/media/uploads/m1/content", headers: { "Content-Type": "image/jpeg" } };
 
@@ -89,6 +93,19 @@ describe("sendUpload", () => {
     expect((form.get("file") as File).size).toBe(file.size);
     expect(init.headers).toBeUndefined();
     expect(seam.apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("sends a WebP part with the ticket's MIME type when the browser reports none", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ fileId: "ik-file-webp" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const file = makeFile({ type: "", name: "photo.webp" });
+
+    await expect(sendUpload(WEBP_FORM, file, "image/webp")).resolves.toEqual({ hostRef: "ik-file-webp" });
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const part = (init.body as FormData).get("file") as File;
+    expect(part.name).toBe("3f2a.webp");
+    expect(part.type).toBe("image/webp");
+    expect(part.size).toBe(file.size);
   });
 
   it("answers no host reference when the form's answer names no file", async () => {
@@ -149,6 +166,20 @@ describe("uploadImageFile (ticket → send → complete)", () => {
     const [path, init] = seam.apiFetch.mock.calls[1] as [string, RequestInit];
     expect(path).toBe("/api/media/uploads/m1/complete");
     expect(JSON.parse(init.body as string)).toEqual({ hostRef: "ik-file-1", width: null, height: null });
+  });
+
+  it("keeps the WebP MIME type from the ticket through to the host", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ fileId: "ik-file-webp" }));
+    vi.stubGlobal("fetch", fetchMock);
+    seam.apiFetch
+      .mockResolvedValueOnce({ success: true, data: ticket(WEBP_FORM) })
+      .mockResolvedValueOnce({ success: true, data: { ...IMAGE, key: "products/3f2a.webp" } });
+
+    await uploadImageFile(makeFile({ type: "", name: "photo.webp" }), "products");
+    const form = fetchMock.mock.calls[0][1].body as FormData;
+    expect((form.get("file") as File).type).toBe("image/webp");
+    const [, init] = seam.apiFetch.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).contentType).toBe("image/webp");
   });
 
   it("never completes an upload the host refused", async () => {

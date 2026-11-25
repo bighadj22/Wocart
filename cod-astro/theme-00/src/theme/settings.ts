@@ -62,4 +62,14 @@ export const THEME_SETTINGS = [
       { key: "cardButton", kind: "boolean", label: SETTING.cardButton, default: true },
     ],
   },
+  {
+    key: "storefront",
+    label: SETTINGS_GROUP.storefront,
+    fields: [
+      { key: "hideLogo", kind: "boolean", label: SETTING.hideLogo, default: false },
+      { key: "searchEnabled", kind: "boolean", label: SETTING.searchEnabled, default: true },
+      { key: "hideHeroImages", kind: "boolean", label: SETTING.hideHeroImages, default: false },
+      { key: "headerHtml", kind: "textarea", label: SETTING.headerHtml, default: "" },
+    ],
+  },
 ] as const satisfies readonly SettingsGroup[];

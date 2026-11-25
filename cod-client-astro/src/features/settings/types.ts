@@ -1,6 +1,7 @@
 import type { MediaImage } from "../../../../cod-shared/media/model";
 import type { StoreLocale } from "../../../../cod-shared/i18n/locales";
 import type { LocaleRow, StoreLanguage } from "../../../../cod-shared/stores/settings";
+import type { AppearanceColorScheme } from "../../../../cod-shared/stores/appearance";
 
 export type { StoreLanguage };
 
@@ -53,3 +54,21 @@ export type UpdateStoreData = Partial<
   /** Replaces the store's languages; must publish the primary. */
   languages?: LocaleRow[];
 };
+
+/** The storefront's colors and theme text, as the Appearance tab reads them. */
+export interface StoreAppearance {
+  /** The theme whose settings row and text edits are being edited. */
+  themeKey: string;
+  primaryLocale: StoreLocale;
+  /** Every language the store lists; only these can hold text edits. */
+  locales: StoreLocale[];
+  colorSchemes: AppearanceColorScheme[];
+  pageScheme: string;
+  hideLogo: boolean;
+  searchEnabled: boolean;
+  hideHeroImages: boolean;
+  /** Sanitized HTML the store puts above its header. */
+  headerHtml: string;
+  /** Saved text edits, `{ ar: { heroTitle: "…" } }`. */
+  texts: Partial<Record<StoreLocale, Record<string, string>>>;
+}

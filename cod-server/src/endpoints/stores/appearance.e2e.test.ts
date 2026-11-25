@@ -205,6 +205,28 @@ describe("the storefront config", () => {
     expect(config!.themeSettings).toEqual({ colorSchemes: palette, pageScheme: "scheme-1" });
   });
 
+  it("carries the storefront switches and the safe header strip the editor saved", async () => {
+    const id = await seedStore();
+    await saveThemeSettings(db, id, "theme-00", {
+      colorSchemes: APPEARANCE_DEFAULT_SCHEMES,
+      pageScheme: "scheme-6",
+      hideLogo: true,
+      searchEnabled: false,
+      hideHeroImages: true,
+      headerHtml: '<strong class="promo">Sale</strong>',
+    });
+
+    const config = await getStoreConfig(db, id, TEST_DELIVERY, { theme: "theme-00" });
+
+    expect(config!.themeSettings).toMatchObject({
+      pageScheme: "scheme-6",
+      hideLogo: true,
+      searchEnabled: false,
+      hideHeroImages: true,
+      headerHtml: '<strong class="promo">Sale</strong>',
+    });
+  });
+
   it("carries the text edits the editor saved, in their language", async () => {
     const id = await seedStore();
     await saveContentOverrides(db, id, "theme-00", "ar", [

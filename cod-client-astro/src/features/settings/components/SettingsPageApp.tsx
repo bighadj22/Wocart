@@ -11,6 +11,7 @@ import { categoryFromSearch, STORE_TRANSLATED_FIELDS, type CategoryId } from "@/
 import type { StoreConfig, UpdateStoreData } from "@/features/settings/types";
 import { SettingsSidebar } from "@/features/settings/components/SettingsSidebar";
 import { GeneralSettings } from "@/features/settings/components/GeneralSettings";
+import { AppearanceSettings } from "@/features/settings/components/AppearanceSettings";
 import { LanguagesSettings } from "@/features/settings/components/LanguagesSettings";
 import { TranslationsCard } from "@/features/translations/components/TranslationsCard";
 import { SeoSettings } from "@/features/settings/components/SeoSettings";
@@ -98,6 +99,8 @@ function SettingsContent() {
             />
           </div>
         );
+      case "appearance":
+        return <AppearanceSettings />;
       case "languages":
         return (
           <LanguagesSettings

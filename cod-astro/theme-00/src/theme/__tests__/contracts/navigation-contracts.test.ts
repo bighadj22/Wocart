@@ -66,7 +66,8 @@ describe("menuLinks", () => {
 });
 
 describe("the header and the footer's menu", () => {
-  const locals = () => testLocals({ locale: "fr", routing, content: fr });
+  const locals = (overrides: Parameters<typeof testLocals>[0] = {}) =>
+    testLocals({ locale: "fr", routing, content: fr, ...overrides });
   const renderHeader = async (storeMenu: StoreMenu | null) =>
     (await AstroContainer.create()).renderToString(Header, { props: { ...HEADER_PROPS, storeMenu }, locals: locals() });
   const renderFooterMenu = async (storeMenu: StoreMenu | null) =>
@@ -91,6 +92,16 @@ describe("the header and the footer's menu", () => {
     expect(header).not.toContain("site-menu");
     expect(header).not.toContain('class="nav-link"');
     expect(await renderFooterMenu(null)).not.toContain(fr.footerQuickLinks);
+  });
+
+  it("hide the logo and search and show the store's safe header strip when asked", async () => {
+    const html = await (await AstroContainer.create()).renderToString(Header, {
+      props: { ...HEADER_PROPS, showSearch: true, storeMenu: menu },
+      locals: locals({ config: { ...TEST_CONFIG, themeSettings: { hideLogo: true, searchEnabled: false, headerHtml: "<strong>Sale</strong>" } } }),
+    });
+    expect(html).not.toContain("header-logo");
+    expect(html).not.toContain("magnifying-glass");
+    expect(html).toMatch(/<div class="header-html"[^>]*><strong>Sale<\/strong><\/div>/);
   });
 });
 
@@ -179,6 +190,10 @@ describe("the theme's settings", () => {
       corners: "soft",
       cardImageRatio: "portrait",
       cardButton: true,
+      hideLogo: false,
+      searchEnabled: true,
+      hideHeroImages: false,
+      headerHtml: "",
     });
   });
 

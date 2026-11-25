@@ -54,8 +54,11 @@ function json(init: RequestInit = {}): RequestInit {
 }
 
 /** An Upload Ticket for this file: where and how to send it. */
-export async function requestUpload(file: File, folder: ImageUploadFolder): Promise<UploadTicket> {
-  const contentType = imageTypeOf(file);
+export async function requestUpload(
+  file: File,
+  folder: ImageUploadFolder,
+  contentType: ImageType | null = imageTypeOf(file),
+): Promise<UploadTicket> {
   if (!contentType) throw new ImageUploadRejectedError("unsupported_type");
   return (
     await apiFetch<DataEnvelope<UploadTicket>>(
@@ -70,7 +73,11 @@ export async function requestUpload(file: File, folder: ImageUploadFolder): Prom
  * signed URL, or a PUT to the store's server. Answers the host's own id for
  * the file when it gives one (a form upload's `fileId`).
  */
-export async function sendUpload(send: UploadSend, file: File): Promise<{ hostRef: string | null }> {
+export async function sendUpload(
+  send: UploadSend,
+  file: File,
+  contentType: ImageType | null = imageTypeOf(file),
+): Promise<{ hostRef: string | null }> {
   if (send.kind === "relay") {
     await apiFetch<void>(send.url, { method: send.method, headers: send.headers, body: file });
     return { hostRef: null };
@@ -82,7 +89,8 @@ export async function sendUpload(send: UploadSend, file: File): Promise<{ hostRe
   }
   const form = new FormData();
   for (const [name, value] of Object.entries(send.fields)) form.append(name, value);
-  form.append(send.fileField, file, send.fields.fileName ?? file.name);
+  const payload = contentType ? new Blob([file], { type: contentType }) : file;
+  form.append(send.fileField, payload, send.fields.fileName ?? file.name);
   const response = await fetch(send.url, { method: send.method, body: form });
   if (!response.ok) throw new ImageUploadFailedError(response.status);
   const { fileId } = (await response.json()) as { fileId?: string };
@@ -179,8 +187,10 @@ export function uploadFailure(cause: unknown): UploadFailure {
 /** Ticket → send → measure → complete. One implementation for all dashboard uploads. */
 export async function uploadImageFile(file: File, folder: ImageUploadFolder): Promise<MediaImage> {
   validateUploadFile(file);
-  const ticket = await requestUpload(file, folder);
-  const { hostRef } = await sendUpload(ticket.send, file);
+  const contentType = imageTypeOf(file);
+  if (!contentType) throw new ImageUploadRejectedError("unsupported_type");
+  const ticket = await requestUpload(file, folder, contentType);
+  const { hostRef } = await sendUpload(ticket.send, file, contentType);
   const size = await measureImageDimensions(file);
   return completeUpload(ticket.mediaId, { hostRef, width: size?.width ?? null, height: size?.height ?? null });
 }

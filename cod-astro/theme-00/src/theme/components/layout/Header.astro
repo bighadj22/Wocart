@@ -12,6 +12,7 @@ import { Icon } from "astro-icon/components";
 import CartBadge from "@/theme/components/cart/CartBadge.astro";
 import LanguageSwitcher from "@/theme/components/layout/LanguageSwitcher.astro";
 import { menuLinks } from "@/theme/runtime/navigation";
+import { settingsOf } from "@/theme/runtime/settings";
 import type { header } from "@/theme/catalog/header/header.def";
 
 type Props = InferProps<typeof header> & { storeMenu: StoreMenu | null };
@@ -19,6 +20,7 @@ type Props = InferProps<typeof header> & { storeMenu: StoreMenu | null };
 const { storeMenu, logoPosition, logoWidth, sticky, showSearch, showLanguage, scheme } = Astro.props;
 const store = Astro.locals.store;
 const { config, content } = store;
+const { hideLogo, searchEnabled, headerHtml } = settingsOf(store);
 const links = menuLinks(storeMenu, store.href, store.pathname) ?? [];
 const centered = logoPosition === "center";
 ---
@@ -27,19 +29,22 @@ const centered = logoPosition === "center";
   class:list={["site-header", schemeClass(scheme), sticky && "is-sticky", centered ? "is-centered" : "is-start"]}
   style={`--logo-w: ${logoWidth}px`}
 >
+  {headerHtml && <div class="header-html" set:html={headerHtml} />}
   <div class="header-bar frame">
     {links.length > 0 && (
       <button type="button" popovertarget="site-menu" class="icon-btn header-menu-button" aria-label={content.navMenu}>
         <Icon name="heroicons:bars-3" aria-hidden="true" />
       </button>
     )}
-    <a href={store.href("/")} class="header-logo" aria-label={config.name}>
-      {config.logo ? (
-        <Image src={config.logo.url} alt={config.name} width={480} height={160} fit="scale-down" quality={90} loading="eager" decoding="async" />
-      ) : (
-        <span class="header-name">{config.name}</span>
-      )}
-    </a>
+    {!hideLogo && (
+      <a href={store.href("/")} class="header-logo" aria-label={config.name}>
+        {config.logo ? (
+          <Image src={config.logo.url} alt={config.name} width={480} height={160} fit="scale-down" quality={90} loading="eager" decoding="async" />
+        ) : (
+          <span class="header-name">{config.name}</span>
+        )}
+      </a>
+    )}
     {links.length > 0 && (
       <nav class="header-nav" aria-label={content.ariaMainNavigation}>
         {links.map((link) =>
@@ -74,7 +79,7 @@ const centered = logoPosition === "center";
     )}
     <div class="header-end">
       {showLanguage && <LanguageSwitcher />}
-      {showSearch && (
+      {searchEnabled && showSearch && (
         <a href={store.href("/search")} class="icon-btn" aria-label={content.searchLabel}>
           <Icon name="heroicons:magnifying-glass" aria-hidden="true" />
         </a>
@@ -124,18 +129,28 @@ const centered = logoPosition === "center";
     backdrop-filter: saturate(1.6) blur(14px);
     -webkit-backdrop-filter: saturate(1.6) blur(14px);
   }
-  /* A phone: the menu, the logo in the middle, the icons. A wide screen: the
-     logo, the menu in the middle, the icons — or the menu around a centered logo. */
+  .header-html {
+    padding: 0.375rem var(--gutter, 1rem);
+    text-align: center;
+    font-size: var(--text-xs);
+    background: var(--clr-plate);
+    color: var(--clr-text);
+    border-bottom: 1px solid var(--clr-border);
+  }
+  .header-html :global(a) { color: var(--clr-ink); text-decoration: underline; }
   .header-bar {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    grid-template-areas: "menu logo end";
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "menu end logo";
     align-items: center;
     gap: 0.5rem;
     height: var(--header-h);
   }
+  [dir="rtl"] .header-bar { grid-template-areas: "logo menu end"; }
   .header-menu-button { grid-area: menu; justify-self: start; }
-  .header-logo { grid-area: logo; }
+  .header-logo { grid-area: logo; justify-self: end; }
+  [dir="rtl"] .header-logo,
+  [dir="rtl"] .header-menu-button { justify-self: start; }
   .header-nav { grid-area: nav; display: none; }
   .header-end { grid-area: end; display: flex; align-items: center; justify-content: flex-end; gap: 0.125rem; }
   @media (min-width: 1024px) {
@@ -145,6 +160,7 @@ const centered = logoPosition === "center";
     .is-start .header-nav { justify-content: center; }
     .is-centered .header-bar { grid-template-columns: 1fr auto 1fr; grid-template-areas: "nav logo end"; gap: 2rem; }
     .is-centered .header-nav { justify-content: flex-start; }
+    [dir="rtl"] .is-centered .header-bar { grid-template-columns: auto 1fr auto; grid-template-areas: "logo nav end"; }
   }
   .header-logo {
     display: inline-flex;
