@@ -12,7 +12,7 @@ import { ClientRouter } from "astro:transitions";
 import { openGraphLocale } from "@/theme/utils/seo";
 import ThemeStyles from "@wocart/theme/astro/ThemeStyles.astro";
 import type { ColorScheme } from "@wocart/theme";
-import type { ThemeFont } from "@/theme/appearance";
+import { DEFAULT_SCHEMES, DESIGN, STORE_PARAMETERS, type ThemeFont } from "@/theme/appearance";
 
 interface Props {
   title: string;
@@ -45,6 +45,9 @@ interface Props {
 
 const { title, description, ogImage, noindex, config, locale, canonical, alternates, schemes, themeColor, fonts, radii, isRTL, preloadImages, softNavigation = true } = Astro.props;
 const subset = isRTL ? "arabic" : "latin";
+const schemePalette = STORE_PARAMETERS.enforcePalette
+  ? DEFAULT_SCHEMES.map((scheme) => `.wc-scheme-${scheme.id}{--wc-color-background:${scheme.colors.background};--wc-color-text:${scheme.colors.text};--wc-color-heading:${scheme.colors.heading};--wc-color-accent:${scheme.colors.accent};--wc-color-button:${scheme.colors.button};--wc-color-button-text:${scheme.colors.buttonText};--wc-color-border:${scheme.colors.border}}`).join("\n    ")
+  : "";
 
 ---
 
@@ -113,6 +116,8 @@ const subset = isRTL ? "arabic" : "latin";
       --r-input: ${radii.input};
       --r-button: ${radii.button};
       --r-tag: ${radii.tag};
+      ${Object.entries(DESIGN.spacing).map(([name, value]) => `--space-${name}: ${value};`).join("\n      ")}
     }
+    ${schemePalette}
   `} />
 </head>
