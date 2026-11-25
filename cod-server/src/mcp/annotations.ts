@@ -45,6 +45,9 @@ const IDEMPOTENT_WRITE_TOOLS: ReadonlySet<string> = new Set([
   "unassignTagFromCustomer",
   "archiveOrder", // archiving again keeps the first date
   "unarchiveOrder",
+  "updateProductTranslations",
+  "updateProductGroupTranslations",
+  "updateOfferTranslations",
 ]);
 
 /** A registry entry gates read-only access when every required scope is a read scope. */

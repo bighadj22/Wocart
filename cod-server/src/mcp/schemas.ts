@@ -22,6 +22,7 @@ import { ORDER_TOOL_SCHEMAS, ORDER_TOOL_OUTPUT_SCHEMAS } from "@/endpoints/order
 import { SHIPMENT_TOOL_SCHEMAS, SHIPMENT_TOOL_OUTPUT_SCHEMAS } from "@/endpoints/shipments/ai-tools";
 import { DELIVERY_COMPANY_TOOL_SCHEMAS, DELIVERY_COMPANY_TOOL_OUTPUT_SCHEMAS } from "@/endpoints/delivery-companies/ai-tools";
 import { EVENT_TOOL_SCHEMAS, EVENT_TOOL_OUTPUT_SCHEMAS } from "@/endpoints/events/ai-tools";
+import { TRANSLATION_TOOL_SCHEMAS, TRANSLATION_TOOL_OUTPUT_SCHEMAS } from "@/endpoints/translations/ai-tools";
 
 /**
  * Tool name → Zod input shape, registered as `z.object(shape)` on the MCP
@@ -50,6 +51,7 @@ const SCHEMA_SOURCES: Record<string, z.ZodRawShape>[] = [
   SHIPMENT_TOOL_SCHEMAS,
   DELIVERY_COMPANY_TOOL_SCHEMAS,
   EVENT_TOOL_SCHEMAS,
+  TRANSLATION_TOOL_SCHEMAS,
 ];
 
 export const TOOL_SCHEMAS: Record<string, z.ZodRawShape> = Object.assign(
@@ -87,6 +89,7 @@ const OUTPUT_SCHEMA_SOURCES: Record<string, z.ZodType>[] = [
   SHIPMENT_TOOL_OUTPUT_SCHEMAS,
   DELIVERY_COMPANY_TOOL_OUTPUT_SCHEMAS,
   EVENT_TOOL_OUTPUT_SCHEMAS,
+  TRANSLATION_TOOL_OUTPUT_SCHEMAS,
 ];
 
 export const TOOL_OUTPUT_SCHEMAS: Record<string, z.ZodType> = Object.assign(

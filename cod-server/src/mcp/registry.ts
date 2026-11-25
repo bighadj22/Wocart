@@ -54,6 +54,7 @@ import { getOrderTools }         from "@/endpoints/orders/ai-tools";
 import { getShipmentTools }      from "@/endpoints/shipments/ai-tools";
 import { getDeliveryCompanyTools } from "@/endpoints/delivery-companies/ai-tools";
 import { getEventTools }         from "@/endpoints/events/ai-tools";
+import { getTranslationTools }   from "@/endpoints/translations/ai-tools";
 
 type ToolFactory = (
   db: ReturnType<typeof getDb>,
@@ -462,6 +463,32 @@ export const TOOL_REGISTRY: ToolRegistryEntry[] = [
     requires: [permission],
     build: ((db, _env, props) => pick(getEventTools(db, actorOf(props).scopes), ["listEventConsumers", "listEventDeliveries"])) satisfies ToolFactory,
   })),
+
+  // ─── Translations ─────────────────────────────────────────────────────────
+  {
+    requires: [SCOPES.PRODUCTS_READ],
+    build: (db, env) => pick(getTranslationTools(db, env), ["getProductTranslations"]),
+  },
+  {
+    requires: [SCOPES.PRODUCTS_MANAGE],
+    build: (db, env) => pick(getTranslationTools(db, env), ["updateProductTranslations"]),
+  },
+  {
+    requires: [SCOPES.PRODUCT_GROUPS_READ],
+    build: (db, env) => pick(getTranslationTools(db, env), ["getProductGroupTranslations"]),
+  },
+  {
+    requires: [SCOPES.PRODUCT_GROUPS_MANAGE],
+    build: (db, env) => pick(getTranslationTools(db, env), ["updateProductGroupTranslations"]),
+  },
+  {
+    requires: [SCOPES.OFFERS_READ],
+    build: (db, env) => pick(getTranslationTools(db, env), ["getOfferTranslations"]),
+  },
+  {
+    requires: [SCOPES.OFFERS_MANAGE],
+    build: (db, env) => pick(getTranslationTools(db, env), ["updateOfferTranslations"]),
+  },
 ];
 
 /**
