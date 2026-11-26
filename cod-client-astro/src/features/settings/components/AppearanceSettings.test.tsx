@@ -14,6 +14,7 @@ vi.mock("@/features/settings/api", () => ({
   getAppearance: async () => seam.appearance,
   saveAppearance: async (payload: Record<string, any>) => {
     seam.calls.push(payload);
+    const texts = payload.texts as { locale: string; values: Record<string, string> } | undefined;
     seam.appearance = {
       ...seam.appearance!,
       colorSchemes: payload.colorSchemes,
@@ -22,6 +23,12 @@ vi.mock("@/features/settings/api", () => ({
       searchEnabled: payload.searchEnabled,
       headerHtml: payload.headerHtml,
       logoAlignment: payload.logoAlignment,
+      sections: payload.sections ?? seam.appearance!.sections,
+      priceColors: payload.priceColors,
+      bannerBodyHtml: payload.bannerBodyHtml ?? "",
+      texts: texts
+        ? { ...seam.appearance!.texts, [texts.locale]: texts.values }
+        : seam.appearance!.texts,
     };
     return seam.appearance;
   },
@@ -49,6 +56,8 @@ const appearance = () => ({
   headerHtml: "",
   logoAlignment: "right",
   sections: Object.fromEntries(APPEARANCE_HOME_SECTIONS.map(({ key }) => [key, { hidden: false, image: null }])),
+  priceColors: {},
+  bannerBodyHtml: "",
   texts: {},
 });
 
@@ -75,8 +84,17 @@ async function render() {
   });
 }
 
-async function setValue(element: HTMLInputElement | HTMLSelectElement, value: string, event: string) {
-  const prototype = element instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+async function setValue(
+  element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  value: string,
+  event: string,
+) {
+  const prototype =
+    element instanceof HTMLSelectElement
+      ? HTMLSelectElement.prototype
+      : element instanceof HTMLTextAreaElement
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype;
   await act(async () => {
     Object.getOwnPropertyDescriptor(prototype, "value")!.set!.call(element, value);
     element.dispatchEvent(new Event(event, { bubbles: true }));
@@ -129,5 +147,58 @@ describe("AppearanceSettings", () => {
     expect(seam.calls[0]!.logoAlignment).toBe("left");
     expect(seam.calls[0]!.sections.hero.hidden).toBe(true);
     expect(seam.calls[0]!.sections.marquee.hidden).toBe(false);
+  });
+
+  it("sends unsaved edits from another card with the card being saved", async () => {
+    await render();
+    const background = host.querySelectorAll<HTMLInputElement>('input[aria-label$=" hex"]')[0]!;
+    await setValue(background, "#123456", "input");
+    await act(async () => background.dispatchEvent(new FocusEvent("blur", { bubbles: true })));
+
+    const heroLabel = [...host.querySelectorAll("span")].find(
+      (node) => node.textContent === "store.appearance_section_hero",
+    )!;
+    await click(heroLabel.closest("div")!.querySelector('[role="switch"]')!);
+    await click(saveButton(section("store.appearance_sections_title")));
+
+    expect(seam.calls[0]!.colorSchemes[0].colors.background).toBe("#123456");
+    expect(seam.calls[0]!.sections.hero.hidden).toBe(true);
+  });
+
+  it("edits the scrolling strip as text instead of an image uploader", async () => {
+    await render();
+    const marquee = section("store.appearance_sections_title");
+    const field = [...marquee.querySelectorAll("label")].find((node) =>
+      node.textContent?.includes("store.appearance_text_trust4Title"),
+    )!;
+    const input = field.querySelector("input")!;
+    expect(input.type).not.toBe("file");
+    await setValue(input, "Pay at your door", "input");
+
+    await click(saveButton(section("store.appearance_texts_title")));
+
+    expect(seam.calls[0]!.texts.values.trust4Title).toBe("Pay at your door");
+    expect(marquee.querySelector('input[type="file"]')).toBeNull();
+  });
+
+  it("saves semantic price colors and offer HTML alongside the image sections", async () => {
+    await render();
+    const oldPrice = host.querySelector<HTMLInputElement>(
+      'input[aria-label="store.appearance_color_oldPrice hex"]',
+    )!;
+    await setValue(oldPrice, "#777777", "input");
+    await act(async () => oldPrice.dispatchEvent(new FocusEvent("blur", { bubbles: true })));
+
+    const offer = section("store.appearance_texts_title");
+    const offerField = [...offer.querySelectorAll("label")].find((node) =>
+      node.textContent?.includes("store.appearance_text_bannerBodyHtml"),
+    )!;
+    await setValue(offerField.querySelector("textarea")!, "<p>Free delivery</p>", "input");
+
+    await click(saveButton(section("store.appearance_colors_title")));
+
+    expect(seam.calls[0]!.priceColors.oldPrice).toBe("#777777");
+    expect(seam.calls[0]!.bannerBodyHtml).toBe("<p>Free delivery</p>");
+    expect(seam.calls[0]!.sections["image-banner"].image).toBeNull();
   });
 });

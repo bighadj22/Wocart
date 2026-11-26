@@ -42,6 +42,8 @@ export interface SaveAppearanceInput {
   headerHtml?: string;
   logoAlignment?: AppearanceLogoAlignment;
   sections?: AppearanceSectionEdits;
+  priceColors?: { oldPrice?: string; newPrice?: string };
+  bannerBodyHtml?: string;
   /** One language's text edits; an empty string removes that edit. */
   texts?: { locale: StoreLocale; values: Record<string, string> };
 }

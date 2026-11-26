@@ -10,6 +10,7 @@ export const frHome: HomeStrings = {
   trust1Title: "Paiement à la livraison",
   trust2Title: "Livraison partout en Algérie",
   trust3Title: "Confirmation par téléphone",
+  trust4Title: "Payez à la livraison",
   heroCtaPrimary: "Découvrir",
   heroCtaSecondary: "Meilleures ventes",
   categoriesSection: "Acheter par catégorie",

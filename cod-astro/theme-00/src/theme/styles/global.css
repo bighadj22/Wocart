@@ -426,11 +426,11 @@ a { color: inherit; text-underline-offset: 0.25em; }
   color: var(--clr-ink);
   white-space: nowrap;
 }
-.price.is-sale { color: var(--clr-accent); }
+.price.is-sale { color: var(--clr-price-new, var(--clr-accent)); }
 .price-cur { font-size: 0.8em; font-weight: 500; margin-inline-start: 0.2em; }
 .price-was {
   font-variant-numeric: tabular-nums lining-nums;
-  color: var(--clr-muted);
+  color: var(--clr-price-old, var(--clr-muted));
   font-weight: 400;
   text-decoration: line-through;
   text-decoration-thickness: 1px;

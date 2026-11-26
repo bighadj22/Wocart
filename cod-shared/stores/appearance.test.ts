@@ -6,11 +6,13 @@ import {
   appearanceSettingsOf,
   appearanceSettingsProblem,
   appearanceSettingsToRemove,
+  appearancePriceColorsProblem,
   appearanceSettingsToTheme,
   appearanceTextProblem,
   appearanceThemeSettingsOf,
   colorSchemesProblem,
   mergeAppearance,
+  sanitizeBannerHtml,
   sanitizeHeaderHtml,
   type AppearanceSettings,
 } from "./appearance";
@@ -239,15 +241,28 @@ describe("logo alignment and home sections", () => {
         hero: { hidden: true, image: { key: "products/hero.webp", width: 1200, height: 600 } },
         marquee: { hidden: false, image: null },
       },
+      priceColors: { oldPrice: "#888888", newPrice: "#00aa55" },
+      bannerBodyHtml: '<p class="note">Free <a href="/shipping">delivery</a></p>',
     };
     expect(appearanceSettingsToTheme(settings)).toMatchObject({
       logoAlignment: "center",
       homeHeroHidden: true,
       homeHeroImage: { key: "products/hero.webp", width: 1200, height: 600 },
+      priceOldColor: "#888888",
+      priceNewColor: "#00aa55",
+      bannerBodyHtml: '<p class="note">Free <a href="/shipping">delivery</a></p>',
     });
     expect(appearanceSettingsToTheme(settings)).not.toHaveProperty("homeMarqueeHidden");
     expect(appearanceSettingsToRemove(settings)).toEqual(
-      expect.arrayContaining(["hideHeroImages", "homeMarqueeHidden", "homeMarqueeImage"]),
+      expect.arrayContaining([
+        "hideHeroImages",
+        "homeMarqueeHidden",
+        "homeMarqueeImage",
+      ]),
+    );
+    const cleared = { ...settings, priceColors: {}, bannerBodyHtml: "" };
+    expect(appearanceSettingsToRemove(cleared)).toEqual(
+      expect.arrayContaining(["priceOldColor", "priceNewColor", "bannerBodyHtml"]),
     );
   });
 
@@ -279,5 +294,40 @@ describe("sanitizeHeaderHtml", () => {
 
   it("escapes plain text", () => {
     expect(sanitizeHeaderHtml("A & B < C")).toBe("A &amp; B &lt; C");
+  });
+});
+
+describe("price colors and offer HTML", () => {
+  it("accepts only the two known price colors, as six-digit hex", () => {
+    expect(appearancePriceColorsProblem({ oldPrice: "#888888", newPrice: "#00aa55" })).toBeNull();
+    expect(appearancePriceColorsProblem({ glow: "#ffffff" })).toMatch(/not a price color/);
+    expect(appearancePriceColorsProblem({ newPrice: "red" })).toMatch(/hex color/);
+    expect(appearanceSettingsProblem({ ...valid(), priceColors: { newPrice: "red" } })).toMatch(/hex color/);
+  });
+
+  it("lets formatted offer lines through but strips scripts, handlers and unsafe links", () => {
+    expect(sanitizeBannerHtml('<p>Delivery <strong>free</strong></p><ul><li>One</li></ul>'))
+      .toBe("<p>Delivery <strong>free</strong></p><ul><li>One</li></ul>");
+    expect(sanitizeBannerHtml('<p onclick="evil()">Hi<a href="javascript:evil()">x</a><script>evil()</script></p>'))
+      .toBe("<p>Hi<a>x</a>&lt;script&gt;evil()&lt;/script&gt;</p>");
+  });
+
+  it("reads and sanitizes the flat price and offer keys back", () => {
+    const flat = {
+      ...appearanceSettingsToTheme(valid()),
+      priceOldColor: "#777777",
+      priceNewColor: "red; background:url(x)",
+      bannerBodyHtml: '<p class="note">Hi <strong>there</strong></p>',
+    };
+    expect(appearanceThemeSettingsOf(flat)).toMatchObject({
+      priceColors: { oldPrice: "#777777" },
+      bannerBodyHtml: '<p class="note">Hi <strong>there</strong></p>',
+    });
+    expect(appearanceThemeSettingsOf(flat)?.priceColors).not.toHaveProperty("newPrice");
+  });
+
+  it("ships an editable fourth ticker line", () => {
+    expect(appearanceTextProblem("trust4Title", "Pay on delivery")).toBeNull();
+    expect(appearanceTextProblem("trust5Title", "x")).toMatch(/not an editable text/);
   });
 });

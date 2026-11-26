@@ -34,6 +34,7 @@ interface Props {
   fonts: { body: ThemeFont; heading: ThemeFont };
   /** The corners setting's radii. */
   radii: Readonly<Record<"media" | "panel" | "input" | "button" | "tag", string>>;
+  priceColors?: { old?: string; new?: string };
   /** The page's script: only that subset of the theme face is preloaded. */
   isRTL: boolean;
   /** Client-side navigation to and from this page. */
@@ -43,7 +44,7 @@ interface Props {
   preloadImages?: string[];
 }
 
-const { title, description, ogImage, noindex, config, locale, canonical, alternates, schemes, themeColor, fonts, radii, isRTL, preloadImages, softNavigation = true } = Astro.props;
+const { title, description, ogImage, noindex, config, locale, canonical, alternates, schemes, themeColor, fonts, radii, priceColors, isRTL, preloadImages, softNavigation = true } = Astro.props;
 const subset = isRTL ? "arabic" : "latin";
 
 ---
@@ -113,6 +114,8 @@ const subset = isRTL ? "arabic" : "latin";
       --r-input: ${radii.input};
       --r-button: ${radii.button};
       --r-tag: ${radii.tag};
+      ${priceColors?.old ? `--clr-price-old: ${priceColors.old};` : ""}
+      ${priceColors?.new ? `--clr-price-new: ${priceColors.new};` : ""}
     }
   `} />
 </head>

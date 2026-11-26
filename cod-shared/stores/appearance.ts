@@ -21,6 +21,10 @@ export const APPEARANCE_COLOR_ROLES = [
 
 export type AppearanceColorRole = (typeof APPEARANCE_COLOR_ROLES)[number];
 
+export const APPEARANCE_PRICE_COLOR_KEYS = ["oldPrice", "newPrice"] as const;
+export type AppearancePriceColorKey = (typeof APPEARANCE_PRICE_COLOR_KEYS)[number];
+export type AppearancePriceColors = Partial<Record<AppearancePriceColorKey, string>>;
+
 export const APPEARANCE_MAX_SCHEMES = 12;
 export const APPEARANCE_SCHEME_ID = /^[a-z0-9-]+$/;
 export const APPEARANCE_HEX = /^#[0-9a-f]{6}$/i;
@@ -82,6 +86,8 @@ export interface AppearanceSettings {
   logoAlignment?: AppearanceLogoAlignment;
   /** Per-section visibility and photo overrides. */
   sections?: AppearanceSectionEdits;
+  priceColors?: AppearancePriceColors;
+  bannerBodyHtml?: string;
 }
 
 /** The editor's starting palette, mirroring Theme-00's shipped schemes. */
@@ -119,8 +125,10 @@ export const APPEARANCE_DEFAULT_SCHEMES: AppearanceColorScheme[] = [
 ];
 
 export const APPEARANCE_HEADER_HTML_MAX = 2000;
+export const APPEARANCE_BANNER_HTML_MAX = 1200;
 
 const HEADER_HTML_TAGS = new Set(["a", "b", "strong", "i", "em", "u", "small", "span", "br"]);
+const BANNER_HTML_TAGS = new Set(["a", "b", "strong", "i", "em", "u", "small", "span", "br", "p", "div", "ul", "ol", "li"]);
 const HEADER_HTML_ATTR = /([a-z][a-z0-9-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'>]+))/gi;
 const HEADER_HTML_TAG = /<\/?([a-z][a-z0-9]*)\b([^>]*)>/gi;
 const SAFE_HEADER_HREF = /^(https?:\/\/|\/|#|\?|mailto:|tel:)/i;
@@ -133,7 +141,7 @@ const escapeHtml = (value: string): string =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-export function sanitizeHeaderHtml(value: string): string {
+function sanitizeHtml(value: string, tags: ReadonlySet<string>): string {
   let output = "";
   let last = 0;
   for (const match of value.matchAll(HEADER_HTML_TAG)) {
@@ -141,7 +149,7 @@ export function sanitizeHeaderHtml(value: string): string {
     output += escapeHtml(value.slice(last, start));
     last = start + match[0].length;
     const tag = match[1]!.toLowerCase();
-    if (!HEADER_HTML_TAGS.has(tag)) {
+    if (!tags.has(tag)) {
       output += escapeHtml(match[0]);
       continue;
     }
@@ -168,6 +176,9 @@ export function sanitizeHeaderHtml(value: string): string {
   return output + escapeHtml(value.slice(last));
 }
 
+export const sanitizeHeaderHtml = (value: string): string => sanitizeHtml(value, HEADER_HTML_TAGS);
+export const sanitizeBannerHtml = (value: string): string => sanitizeHtml(value, BANNER_HTML_TAGS);
+
 /** The theme text keys the Appearance tab edits, with what each one is. */
 export const APPEARANCE_TEXT_KEYS = [
   "heroTitle",
@@ -177,6 +188,10 @@ export const APPEARANCE_TEXT_KEYS = [
   "bannerTag",
   "bannerTitle",
   "bannerSub",
+  "trust1Title",
+  "trust2Title",
+  "trust3Title",
+  "trust4Title",
 ] as const;
 
 export type AppearanceTextKey = (typeof APPEARANCE_TEXT_KEYS)[number];
@@ -189,6 +204,10 @@ export const APPEARANCE_TEXT_LIMITS: Record<AppearanceTextKey, { max: number; mu
   bannerTag: { max: 40, multiline: false },
   bannerTitle: { max: 120, multiline: false },
   bannerSub: { max: 400, multiline: true },
+  trust1Title: { max: 120, multiline: false },
+  trust2Title: { max: 120, multiline: false },
+  trust3Title: { max: 120, multiline: false },
+  trust4Title: { max: 120, multiline: false },
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -216,6 +235,23 @@ export function appearanceImageProblem(value: unknown): string | null {
       if (typeof point !== "number" || !Number.isFinite(point) || point < 0 || point > 1) {
         return `needs a focal ${axis} between 0 and 1`;
       }
+    }
+  }
+  return null;
+}
+
+export function appearancePriceColorsProblem(value: unknown): string | null {
+  if (value === undefined) return null;
+  if (!isRecord(value)) return "priceColors must be an object";
+  for (const key of Object.keys(value)) {
+    if (!(APPEARANCE_PRICE_COLOR_KEYS as readonly string[]).includes(key)) {
+      return `"${key}" is not a price color`;
+    }
+  }
+  for (const key of APPEARANCE_PRICE_COLOR_KEYS) {
+    const color = value[key];
+    if (color !== undefined && (typeof color !== "string" || !APPEARANCE_HEX.test(color))) {
+      return `"${key}" needs a hex color`;
     }
   }
   return null;
@@ -257,6 +293,9 @@ export function appearanceSettingsToTheme(settings: AppearanceSettings): Record<
     if (edit?.hidden === true) flat[section.hiddenKey] = true;
     if (edit?.image !== undefined && edit.image !== null) flat[section.imageKey] = edit.image;
   }
+  if (settings.priceColors?.oldPrice) flat.priceOldColor = settings.priceColors.oldPrice;
+  if (settings.priceColors?.newPrice) flat.priceNewColor = settings.priceColors.newPrice;
+  if (settings.bannerBodyHtml) flat.bannerBodyHtml = sanitizeBannerHtml(settings.bannerBodyHtml);
   return flat;
 }
 
@@ -268,6 +307,9 @@ export function appearanceSettingsToRemove(settings: AppearanceSettings): string
     if (edit?.hidden !== true) removed.push(section.hiddenKey);
     if (edit?.image === null || edit?.image === undefined) removed.push(section.imageKey);
   }
+  if (!settings.priceColors?.oldPrice) removed.push("priceOldColor");
+  if (!settings.priceColors?.newPrice) removed.push("priceNewColor");
+  if (!settings.bannerBodyHtml) removed.push("bannerBodyHtml");
   return removed;
 }
 
@@ -288,6 +330,13 @@ export function appearanceThemeSettingsOf(stored: Record<string, unknown> | null
       sections["image-banner"] = { ...sections["image-banner"], hidden: true };
     }
   }
+  const priceColors: AppearancePriceColors = {};
+  if (typeof stored.priceOldColor === "string" && APPEARANCE_HEX.test(stored.priceOldColor)) {
+    priceColors.oldPrice = stored.priceOldColor;
+  }
+  if (typeof stored.priceNewColor === "string" && APPEARANCE_HEX.test(stored.priceNewColor)) {
+    priceColors.newPrice = stored.priceNewColor;
+  }
   const candidate = {
     colorSchemes: stored.colorSchemes,
     pageScheme: stored.pageScheme,
@@ -298,6 +347,8 @@ export function appearanceThemeSettingsOf(stored: Record<string, unknown> | null
       ? (stored.logoAlignment as AppearanceLogoAlignment)
       : "right",
     sections: Object.keys(sections).length > 0 ? sections : undefined,
+    ...(Object.keys(priceColors).length > 0 ? { priceColors } : {}),
+    ...(typeof stored.bannerBodyHtml === "string" ? { bannerBodyHtml: sanitizeBannerHtml(stored.bannerBodyHtml) } : {}),
   };
   return appearanceSettingsProblem(candidate) === null ? (candidate as AppearanceSettings) : null;
 }
@@ -367,6 +418,14 @@ export function appearanceSettingsProblem(value: unknown): string | null {
     const sectionsProblem = appearanceSectionsProblem(value.sections);
     if (sectionsProblem) return sectionsProblem;
   }
+  const priceProblem = appearancePriceColorsProblem(value.priceColors);
+  if (priceProblem) return priceProblem;
+  if (value.bannerBodyHtml !== undefined && typeof value.bannerBodyHtml !== "string") {
+    return "bannerBodyHtml must be text";
+  }
+  if (typeof value.bannerBodyHtml === "string" && value.bannerBodyHtml.length > APPEARANCE_BANNER_HTML_MAX) {
+    return `bannerBodyHtml holds at most ${APPEARANCE_BANNER_HTML_MAX} characters`;
+  }
   return null;
 }
 
@@ -397,6 +456,16 @@ export function mergeAppearance(
     headerHtml: sanitizeHeaderHtml(next.headerHtml ?? current?.headerHtml ?? ""),
     logoAlignment: next.logoAlignment ?? current?.logoAlignment ?? "right",
     sections: Object.keys(sections).length > 0 ? sections : undefined,
+    ...(next.priceColors !== undefined
+      ? { priceColors: next.priceColors }
+      : current?.priceColors
+        ? { priceColors: current.priceColors }
+        : {}),
+    ...(next.bannerBodyHtml !== undefined
+      ? { bannerBodyHtml: sanitizeBannerHtml(next.bannerBodyHtml) }
+      : current?.bannerBodyHtml
+        ? { bannerBodyHtml: current.bannerBodyHtml }
+        : {}),
   };
   if (!current || current.colorSchemes.length === 0) return { settings: { ...next, ...controls } };
   if (next.colorSchemes.length !== current.colorSchemes.length) {
@@ -435,6 +504,8 @@ export function appearanceSettingsOf(stored: Record<string, unknown> | null | un
     headerHtml: typeof stored.headerHtml === "string" ? stored.headerHtml : "",
     logoAlignment: stored.logoAlignment ?? "right",
     sections: stored.sections,
+    priceColors: stored.priceColors,
+    bannerBodyHtml: stored.bannerBodyHtml,
   };
   return appearanceSettingsProblem(candidate) === null ? (candidate as AppearanceSettings) : null;
 }

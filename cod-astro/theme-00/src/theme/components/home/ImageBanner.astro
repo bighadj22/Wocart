@@ -13,6 +13,7 @@ import Section from "@/theme/components/ui/Section.astro";
 import Countdown from "@/theme/components/ui/Countdown.astro";
 import { countdownTarget } from "@wocart/storefront";
 import { homeSectionStateOf } from "@/theme/runtime/home-sections";
+import { settingsOf } from "@/theme/runtime/settings";
 import { pickedPicture } from "@/theme/utils/images";
 
 type Props = InferProps<typeof imageBanner> & {
@@ -24,6 +25,8 @@ const { image, imageSide, body, countdown, endsOn, endsAt, ctaHref, scheme, styl
 const store = Astro.locals.store;
 const { href, config } = store;
 const section = homeSectionStateOf(store, "image-banner");
+const values = settingsOf(store) as unknown as Record<string, unknown>;
+const extraBody = typeof values.bannerBodyHtml === "string" ? values.bannerBodyHtml : "";
 const own = pickedPicture(section.picked ?? image, config.media);
 const chosen = own ? { src: own.src, alt: own.alt } : lead;
 const photo = section.hidden ? null : chosen;
@@ -54,6 +57,7 @@ const units = { days: content.countdownDays, hours: content.countdownHours, minu
       {content.bannerTag && <span class="badge badge-offer banner-tag">{content.bannerTag}</span>}
       <h2 class="banner-title">{content.bannerTitle}</h2>
       {content.bannerSub && <p class="banner-body">{content.bannerSub}</p>}
+      {extraBody && <div class="banner-body rich-description" set:html={extraBody} />}
       {body && <div class="banner-body rich-description" set:html={richTextToHtml(body, { href })} />}
       <Countdown ends={ends} units={units} />
       {content.bannerCta && <a href={href(ctaHref)} class="btn-primary btn-auto banner-cta">{content.bannerCta}</a>}

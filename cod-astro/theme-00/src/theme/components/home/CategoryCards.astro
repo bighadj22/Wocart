@@ -25,8 +25,20 @@ type Props = InferProps<typeof categoryCards> & {
 const { blocks, categories, products = [], content, limit, showAll, headingAlign, scheme, style } = Astro.props;
 const store = Astro.locals.store;
 
-const photoFor = (category: Category) =>
-  category.image?.url ?? products.find((product) => product.categoryId === category.id && product.coverImage)?.coverImage?.url ?? null;
+type TilePhoto = { url: string; width: number | null; height: number | null };
+
+const photoFor = (category: Category): TilePhoto | null => {
+  if (category.image) {
+    return { url: category.image.url, width: category.image.width, height: category.image.height };
+  }
+  const cover = products.find((product) => product.categoryId === category.id && product.coverImage)?.coverImage;
+  return cover ? { url: cover.url, width: cover.width, height: cover.height } : null;
+};
+
+const isIcon = (photo: TilePhoto): boolean => {
+  const largest = Math.max(photo.width ?? 0, photo.height ?? 0);
+  return largest <= 128 && largest >= 1;
+};
 
 // A copy: the page shares this array with other sections, so sorting in place
 // would reorder their reads too.
@@ -44,11 +56,23 @@ const tiles = shown.length + (showAll ? 1 : 0);
           <li>
             <a
               href={store.href(storefrontPath("category", { slug: category.slug }))}
-              class="category-tile plate"
+              class:list={["category-tile", "plate", photo && isIcon(photo) && "is-whole"]}
               aria-label={message(content, "ariaBrowseCategoryProducts", { category: category.name }, store.locale)}
             >
               {photo ? (
-                <Image src={photo} alt="" width={600} height={750} widths={[300, 450, 600]} sizes="(min-width: 1024px) 18vw, 62vw" quality={82} loading="lazy" decoding="async" />
+                isIcon(photo) ? (
+                  <Image
+                    src={photo.url}
+                    alt=""
+                    width={photo.width ?? 48}
+                    height={photo.height ?? 48}
+                    quality={82}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <Image src={photo.url} alt="" width={600} height={750} widths={[300, 450, 600]} sizes="(min-width: 1024px) 18vw, 62vw" quality={82} loading="lazy" decoding="async" />
+                )
               ) : (
                 <span class="category-initial" aria-hidden="true">{category.name.charAt(0)}</span>
               )}
@@ -85,6 +109,16 @@ const tiles = shown.length + (showAll ? 1 : 0);
   .category-tile { display: block; aspect-ratio: 4 / 5; color: var(--clr-ink); text-decoration: none; }
   .category-tile :global(img) { transition: transform 0.8s var(--ease-out-expo); }
   @media (hover: hover) { .category-tile:hover :global(img) { transform: scale(1.05); } }
+  .category-tile.is-whole :global(img) {
+    width: auto;
+    height: auto;
+    max-width: 5rem;
+    max-height: 5rem;
+    margin: auto;
+    padding: 0.5rem;
+    object-fit: contain;
+  }
+  @media (hover: hover) { .category-tile.is-whole:hover :global(img) { transform: none; } }
   .category-initial {
     display: flex;
     height: 100%;
