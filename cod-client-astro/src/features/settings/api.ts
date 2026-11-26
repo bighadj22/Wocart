@@ -35,15 +35,13 @@ export async function updateMyStore(data: UpdateStoreData) {
 }
 
 export interface SaveAppearanceInput {
-  colorSchemes: AppearanceColorScheme[];
-  pageScheme: string;
+  colorSchemes?: AppearanceColorScheme[];
+  pageScheme?: string;
   hideLogo?: boolean;
   searchEnabled?: boolean;
   headerHtml?: string;
   logoAlignment?: AppearanceLogoAlignment;
   sections?: AppearanceSectionEdits;
-  priceColors?: { oldPrice?: string; newPrice?: string };
-  bannerBodyHtml?: string;
   /** One language's text edits; an empty string removes that edit. */
   texts?: { locale: StoreLocale; values: Record<string, string> };
 }

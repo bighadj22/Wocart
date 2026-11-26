@@ -17,13 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   setting for themes.
 - The dashboard's Appearance tab offers an olive preset; controls to hide the
   logo, put it on the right, left or center independently of the search icon,
-  and place a short, sanitized HTML strip above the header; and a Hide switch
-  for every home section. The reference theme applies each setting on the
-  storefront, with the logo on the right by default in Arabic.
-- Appearance can override the old and sale price colors independently of the
-  scheme, add sanitized HTML beside the image banner's photo, and edit a fourth
-  line of the scrolling strip. Small category photos are rendered as contained
-  icons instead of stretched banners.
+  and place a short, sanitized HTML strip above the header. The reference theme
+  applies each setting on the storefront, with the logo on the right by default
+  in Arabic.
 
 ### Changed
 
@@ -75,10 +71,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Saving Appearance colors keeps the logo, header, home-section controls,
-  price colors, offer HTML and text edits as they were instead of reverting
-  them on the next save. Only the hero and image banner offer a photo uploader;
-  the other home sections keep their text and layout controls.
+- Saving one Appearance card leaves the others as they were. The color card
+  opens on the scheme the storefront actually wears, so changing its colors
+  reaches the live store instead of a different preset. Small category photos
+  such as 48×48 WebP icons are centered at their natural size instead of being
+  stretched across a wide tile.
 - WebP uploads from a browser that reports no MIME type keep `image/webp` on
   the form part the media host receives. The dashboard derives the type from
   the file's extension and sends a matching blob, so ImageKit cannot reject a

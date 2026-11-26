@@ -1,27 +1,20 @@
 import { useEffect, useState } from "react";
-import { Check, Layers3, Loader2, Palette, SlidersHorizontal, Type } from "lucide-react";
+import { Check, Loader2, Palette, SlidersHorizontal, Type } from "lucide-react";
 import { Alert, Badge, Field, Input, Select, SwitchField, Textarea } from "@/components/ui";
 import { useLocale, useT } from "@/i18n/react";
 import { getAppearance, saveAppearance, type SaveAppearanceInput } from "@/features/settings/api";
 import { SettingsSection, FieldRow } from "@/features/settings/components/SettingsSection";
-import { ImageUploader } from "@/features/uploads/components/ImageUploader";
-import type { MediaImage } from "@/features/uploads/api";
 import type { StoreAppearance } from "@/features/settings/types";
 import {
-  APPEARANCE_BANNER_HTML_MAX,
   APPEARANCE_COLOR_ROLES,
   APPEARANCE_HEADER_HTML_MAX,
-  APPEARANCE_HOME_SECTIONS,
   APPEARANCE_LOGO_ALIGNMENTS,
   APPEARANCE_TEXT_KEYS,
   APPEARANCE_TEXT_LIMITS,
   APPEARANCE_HEX,
   type AppearanceColorRole,
   type AppearanceColorScheme,
-  type AppearanceHomeSectionKey,
   type AppearanceLogoAlignment,
-  type AppearancePriceColors,
-  type AppearanceSectionEdits,
   type AppearanceTextKey,
 } from "../../../../../cod-shared/stores/appearance";
 import { STORE_LOCALE_INFO, type StoreLocale } from "../../../../../cod-shared/i18n/locales";
@@ -30,8 +23,8 @@ const COLOR_LABEL_KEYS: Record<AppearanceColorRole, string> = {
   background: "store.appearance_color_background",
   text: "store.appearance_color_text",
   heading: "store.appearance_color_heading",
-  accent: "store.appearance_color_secondary",
-  button: "store.appearance_color_primary",
+  accent: "store.appearance_color_accent",
+  button: "store.appearance_color_button",
   buttonText: "store.appearance_color_buttonText",
   border: "store.appearance_color_border",
 };
@@ -44,44 +37,13 @@ const TEXT_FIELDS: { key: AppearanceTextKey; labelKey: string }[] = [
   { key: "bannerTag", labelKey: "store.appearance_text_bannerTag" },
   { key: "bannerTitle", labelKey: "store.appearance_text_bannerTitle" },
   { key: "bannerSub", labelKey: "store.appearance_text_bannerSub" },
-  { key: "trust1Title", labelKey: "store.appearance_text_trust1Title" },
-  { key: "trust2Title", labelKey: "store.appearance_text_trust2Title" },
-  { key: "trust3Title", labelKey: "store.appearance_text_trust3Title" },
-  { key: "trust4Title", labelKey: "store.appearance_text_trust4Title" },
 ];
 
-const MARQUEE_KEYS = ["trust1Title", "trust2Title", "trust3Title", "trust4Title"] as const;
-const IMAGE_SECTION_KEYS = new Set<AppearanceHomeSectionKey>(["hero", "image-banner"]);
-const AUTO_OLD_PRICE = "#8a8f98";
-
-type SectionState = StoreAppearance["sections"][AppearanceHomeSectionKey];
-
-function emptySections(): StoreAppearance["sections"] {
-  return Object.fromEntries(
-    APPEARANCE_HOME_SECTIONS.map(({ key }) => [key, { hidden: false, image: null }]),
-  ) as StoreAppearance["sections"];
-}
-
-function sectionEdits(sections: StoreAppearance["sections"]): AppearanceSectionEdits {
-  return Object.fromEntries(
-    APPEARANCE_HOME_SECTIONS.map(({ key }) => {
-      const image = IMAGE_SECTION_KEYS.has(key) ? sections[key]?.image : null;
-      return [
-        key,
-        {
-          hidden: sections[key]?.hidden ?? false,
-          image: image
-            ? {
-                key: image.key,
-                ...(image.width != null ? { width: image.width } : {}),
-                ...(image.height != null ? { height: image.height } : {}),
-              }
-            : null,
-        },
-      ];
-    }),
-  ) as AppearanceSectionEdits;
-}
+const LOOKS = [
+  { id: "scheme-1", labelKey: "store.appearance_look_original", swatch: "#ffffff" },
+  { id: "scheme-6", labelKey: "store.appearance_look_olive", swatch: "#4b5b2c" },
+  { id: "scheme-5", labelKey: "store.appearance_look_midnight", swatch: "#0f1626" },
+] as const;
 
 /** A scheme's name is a plain string, or the same name in several languages. */
 function schemeName(name: AppearanceColorScheme["name"], locale: string): string {
@@ -104,16 +66,10 @@ function ColorField({
   label,
   value,
   onChange,
-  isAuto = false,
-  autoLabel,
-  onClear,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  isAuto?: boolean;
-  autoLabel?: string;
-  onClear?: () => void;
 }) {
   const [text, setText] = useState(value);
 
@@ -154,19 +110,6 @@ function ColorField({
         maxLength={7}
         className="h-7 w-24 shrink-0 px-2 font-mono text-xs uppercase"
       />
-      {onClear && (
-        <button
-          type="button"
-          onClick={onClear}
-          disabled={isAuto}
-          aria-label={`${label} ${autoLabel ?? "auto"}`}
-          className={`shrink-0 rounded-md border px-2 py-1 text-[0.65rem] font-semibold ${
-            isAuto ? "border-primary/40 bg-primary/[0.06] text-foreground" : "border-border text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {autoLabel ?? "Auto"}
-        </button>
-      )}
     </div>
   );
 }
@@ -236,15 +179,16 @@ export function AppearanceSettings() {
     headerHtml: "",
     logoAlignment: "right" as AppearanceLogoAlignment,
   });
-  const [sections, setSections] = useState<StoreAppearance["sections"]>(emptySections);
-  const [priceColors, setPriceColors] = useState<AppearancePriceColors>({});
-  const [bannerBodyHtml, setBannerBodyHtml] = useState("");
 
   function applySaved(saved: StoreAppearance, initial = false) {
     setData(saved);
     setSchemes(cloneSchemes(saved.colorSchemes));
     setPageScheme(saved.pageScheme);
-    setSelected((id) => (saved.colorSchemes.some((scheme) => scheme.id === id) ? id : saved.colorSchemes[0]?.id ?? ""));
+    setSelected((id) =>
+      initial || !saved.colorSchemes.some((scheme) => scheme.id === id)
+        ? saved.pageScheme || saved.colorSchemes[0]?.id || ""
+        : id,
+    );
     if (initial) {
       setTextLocale(saved.primaryLocale);
       setDrafts(saved.texts);
@@ -255,16 +199,6 @@ export function AppearanceSettings() {
       headerHtml: saved.headerHtml,
       logoAlignment: saved.logoAlignment ?? "right",
     });
-    const nextSections = emptySections();
-    for (const { key } of APPEARANCE_HOME_SECTIONS) {
-      nextSections[key] = {
-        hidden: saved.sections?.[key]?.hidden ?? false,
-        image: saved.sections?.[key]?.image ?? null,
-      };
-    }
-    setSections(nextSections);
-    setPriceColors(saved.priceColors ?? {});
-    setBannerBodyHtml(saved.bannerBodyHtml ?? "");
   }
 
   async function load() {
@@ -317,40 +251,27 @@ export function AppearanceSettings() {
     );
   }
 
-  function appearancePayload(overrides: Partial<SaveAppearanceInput> = {}): SaveAppearanceInput {
-    const values: Record<string, string> = {};
-    for (const key of APPEARANCE_TEXT_KEYS) values[key] = localeDrafts[key] ?? "";
-    return {
-      colorSchemes: schemes,
-      pageScheme,
+  async function saveColors() {
+    const payload: SaveAppearanceInput = { colorSchemes: schemes, pageScheme };
+    applySaved(await saveAppearance(payload));
+  }
+
+  async function saveControls() {
+    const payload: SaveAppearanceInput = {
       hideLogo: controls.hideLogo,
       searchEnabled: controls.searchEnabled,
       headerHtml: controls.headerHtml,
       logoAlignment: controls.logoAlignment,
-      sections: sectionEdits(sections),
-      priceColors,
-      bannerBodyHtml,
-      texts: { locale: textLocale, values },
-      ...overrides,
     };
-  }
-
-  async function saveColors() {
-    applySaved(await saveAppearance(appearancePayload()));
-  }
-
-  async function saveControls() {
-    applySaved(await saveAppearance(appearancePayload()));
+    applySaved(await saveAppearance(payload));
   }
 
   async function saveTexts() {
-    const saved = await saveAppearance(appearancePayload());
+    const values: Record<string, string> = {};
+    for (const key of APPEARANCE_TEXT_KEYS) values[key] = localeDrafts[key] ?? "";
+    const saved = await saveAppearance({ texts: { locale: textLocale, values } });
     applySaved(saved);
     setDrafts((all) => ({ ...all, [textLocale]: saved.texts[textLocale] ?? {} }));
-  }
-
-  function updateSection(key: AppearanceHomeSectionKey, change: Partial<SectionState>) {
-    setSections((all) => ({ ...all, [key]: { ...all[key], ...change } }));
   }
 
   function updateText(key: AppearanceTextKey, value: string) {
@@ -385,7 +306,8 @@ export function AppearanceSettings() {
             <p className="text-xs text-muted-foreground">{t("store.appearance_looks_hint")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {schemes.map((look) => {
+            {LOOKS.map((look) => {
+              if (!schemes.some((scheme) => scheme.id === look.id)) return null;
               const active = pageScheme === look.id;
               return (
                 <button
@@ -400,8 +322,8 @@ export function AppearanceSettings() {
                     active ? "border-primary/50 bg-primary/[0.06] text-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <span className="size-3 rounded-full border border-black/10" style={{ background: look.colors.button }} />
-                  {schemeName(look.name, locale)}
+                  <span className="size-3 rounded-full border border-black/10" style={{ background: look.swatch }} />
+                  {t(look.labelKey)}
                   {active && <Check size={13} className="text-primary" />}
                 </button>
               );
@@ -474,28 +396,6 @@ export function AppearanceSettings() {
                 />
               ))}
             </div>
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-foreground">{t("store.appearance_price_colors_label")}</p>
-              <div className="grid gap-2.5 xl:grid-cols-2">
-                <ColorField
-                  label={t("store.appearance_color_oldPrice")}
-                  value={priceColors.oldPrice ?? AUTO_OLD_PRICE}
-                  isAuto={!priceColors.oldPrice}
-                  autoLabel={t("store.appearance_color_auto")}
-                  onClear={() => setPriceColors((all) => ({ ...all, oldPrice: undefined }))}
-                  onChange={(value) => setPriceColors((all) => ({ ...all, oldPrice: value }))}
-                />
-                <ColorField
-                  label={t("store.appearance_color_newPrice")}
-                  value={priceColors.newPrice ?? current?.colors.accent ?? "#c8102e"}
-                  isAuto={!priceColors.newPrice}
-                  autoLabel={t("store.appearance_color_auto")}
-                  onClear={() => setPriceColors((all) => ({ ...all, newPrice: undefined }))}
-                  onChange={(value) => setPriceColors((all) => ({ ...all, newPrice: value }))}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">{t("store.appearance_price_colors_hint")}</p>
-            </div>
             <AppearancePreview
               scheme={current}
               title={previewTitle}
@@ -561,54 +461,6 @@ export function AppearanceSettings() {
       </SettingsSection>
 
       <SettingsSection
-        icon={Layers3}
-        title={t("store.appearance_sections_title")}
-        subtitle={t("store.appearance_sections_subtitle")}
-        onSave={saveControls}
-      >
-        <div className="space-y-4">
-          {APPEARANCE_HOME_SECTIONS.map(({ key }) => {
-            const section = sections[key];
-            const label = t(`store.appearance_section_${key}`);
-            return (
-              <div key={key} className="space-y-3 rounded-lg border border-border p-4">
-                <SwitchField
-                  label={label}
-                  help={t("store.appearance_section_hide")}
-                  checked={section?.hidden ?? false}
-                  onChange={(hidden) => updateSection(key, { hidden })}
-                />
-                {IMAGE_SECTION_KEYS.has(key) ? (
-                  <ImageUploader
-                    value={section?.image ?? null}
-                    onChange={(image: MediaImage | null) => updateSection(key, { image })}
-                    alt={label}
-                    shape="landscape"
-                  />
-                ) : key === "marquee" ? (
-                  <div className="grid gap-2.5 xl:grid-cols-2">
-                    {MARQUEE_KEYS.map((textKey) => (
-                      <Field
-                        key={textKey}
-                        label={t(`store.appearance_text_${textKey}`)}
-                        hint={`${(localeDrafts[textKey] ?? "").length}/${APPEARANCE_TEXT_LIMITS[textKey].max}`}
-                      >
-                        <Input
-                          value={localeDrafts[textKey] ?? ""}
-                          maxLength={APPEARANCE_TEXT_LIMITS[textKey].max}
-                          onChange={(event) => updateText(textKey, event.target.value)}
-                        />
-                      </Field>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      </SettingsSection>
-
-      <SettingsSection
         icon={Type}
         title={t("store.appearance_texts_title")}
         subtitle={t("store.appearance_texts_subtitle")}
@@ -655,21 +507,6 @@ export function AppearanceSettings() {
             );
           })}
         </div>
-
-        <Field
-          label={t("store.appearance_text_bannerBodyHtml")}
-          hint={`${bannerBodyHtml.length}/${APPEARANCE_BANNER_HTML_MAX}`}
-          className="xl:col-span-2"
-        >
-          <Textarea
-            value={bannerBodyHtml}
-            maxLength={APPEARANCE_BANNER_HTML_MAX}
-            rows={4}
-            spellCheck={false}
-            onChange={(event) => setBannerBodyHtml(event.target.value)}
-          />
-          <p className="mt-1 text-xs text-muted-foreground">{t("store.appearance_text_bannerBodyHtml_hint")}</p>
-        </Field>
 
         <AppearancePreview
           scheme={current}

@@ -16,7 +16,7 @@ export const marquee = defineComponent({
     { key: "message1", kind: "text", label: FIELD.message(1), contentKey: "trust1Title" },
     { key: "message2", kind: "text", label: FIELD.message(2), contentKey: "trust2Title" },
     { key: "message3", kind: "text", label: FIELD.message(3), contentKey: "trust3Title" },
-    { key: "message4", kind: "text", label: FIELD.message(4), contentKey: "trust4Title" },
+    { key: "message4", kind: "text", label: FIELD.message(4) },
     {
       key: "speed",
       kind: "select",

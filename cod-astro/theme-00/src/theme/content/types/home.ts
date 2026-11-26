@@ -13,7 +13,6 @@ export type HomeStrings = {
   trust1Title: string;
   trust2Title: string;
   trust3Title: string;
-  trust4Title: string;
   heroCtaPrimary: string;
   heroCtaSecondary: string;
   categoriesSection: string;

@@ -58,9 +58,6 @@ export const SCHEME_OF = { light: "scheme-1", stone: "scheme-2", sand: "scheme-3
 /** The page's scheme unless the merchant picks another. */
 export const PAGE_SCHEME: SchemeId = "scheme-1";
 
-export const hexSetting = (value: unknown): string | undefined =>
-  typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : undefined;
-
 /** The sizes the theme gives the platform's style steps and widths, in pixels. */
 export const THEME_STYLE: ThemeStyle = styleSizes;
 

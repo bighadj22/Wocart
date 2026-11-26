@@ -61,12 +61,12 @@ describe("the dashboard's home section controls", () => {
     expect(hidden).toContain('class="features"');
   });
 
-  it("ignores a photo on a section that does not draw one", async () => {
+  it("puts a section's own photo behind its content", async () => {
     const html = await render({
       homeFeaturesBarImage: { key: "products/panel.webp", alt: "Panel" },
     });
-    expect(html).not.toContain("home-section-backdrop");
-    expect(html).not.toContain("products/panel.webp");
+    expect(html).toContain("home-section-backdrop");
+    expect(html).toContain("https://media.boutique.test/products/panel.webp");
     expect(html).toContain('class="features"');
   });
 });

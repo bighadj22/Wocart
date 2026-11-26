@@ -23,8 +23,6 @@ export const THEME_SETTINGS = [
     fields: [
       { key: "colorSchemes", kind: "colorSchemes", label: SETTING.colorSchemes, default: DEFAULT_SCHEMES },
       { key: "pageScheme", kind: "colorScheme", label: SETTING.pageScheme, default: PAGE_SCHEME },
-      { key: "priceOldColor", kind: "color", label: SETTING.priceOldColor },
-      { key: "priceNewColor", kind: "color", label: SETTING.priceNewColor },
     ],
   },
   {
@@ -99,7 +97,6 @@ export const THEME_SETTINGS = [
       { key: "homeProductTabsImage", kind: "image", label: HOME_SETTING["product-tabs"].image },
       { key: "homeImageBannerHidden", kind: "boolean", label: HOME_SETTING["image-banner"].hidden, default: false },
       { key: "homeImageBannerImage", kind: "image", label: HOME_SETTING["image-banner"].image },
-      { key: "bannerBodyHtml", kind: "textarea", label: SETTING.bannerBodyHtml, default: "" },
       { key: "homeHowItWorksHidden", kind: "boolean", label: HOME_SETTING["how-it-works"].hidden, default: false },
       { key: "homeHowItWorksImage", kind: "image", label: HOME_SETTING["how-it-works"].image },
       { key: "homeCustomerTestimonialsHidden", kind: "boolean", label: HOME_SETTING["customer-testimonials"].hidden, default: false },

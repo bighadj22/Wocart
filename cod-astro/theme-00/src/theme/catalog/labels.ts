@@ -267,9 +267,6 @@ export const SETTING = {
   hideHeroImages: text("إخفاء صور البانر", "Masquer les photos des bannières", "Hide hero & banner photos"),
   headerHtml: text("HTML أعلى الرأس", "HTML au-dessus de l’en-tête", "Header HTML"),
   logoAlignment: text("محاذاة الشعار", "Alignement du logo", "Logo alignment"),
-  priceOldColor: text("لون السعر القديم", "Couleur de l’ancien prix", "Old price color"),
-  priceNewColor: text("لون السعر الجديد", "Couleur du nouveau prix", "New price color"),
-  bannerBodyHtml: text("تفاصيل العرض (HTML)", "Détails de l’offre (HTML)", "Offer details (HTML)"),
 };
 
 /** The hide and photo controls for one home section, in the editor's words. */

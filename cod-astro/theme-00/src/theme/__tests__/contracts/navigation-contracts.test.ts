@@ -212,7 +212,6 @@ describe("the theme's settings", () => {
       homeCategoryCardsHidden: false,
       homeProductTabsHidden: false,
       homeImageBannerHidden: false,
-      bannerBodyHtml: "",
       homeHowItWorksHidden: false,
       homeCustomerTestimonialsHidden: false,
       homeFeaturesBarHidden: false,

@@ -26,7 +26,6 @@ import { STORE_LOCALES } from "../../../../cod-shared/i18n/locales";
 import { NotFoundError, ValidationError } from "@/lib/errors/classes";
 import { ERROR_CODES } from "../../../../cod-shared/errors/codes";
 import {
-  APPEARANCE_BANNER_HTML_MAX,
   APPEARANCE_DEFAULT_SCHEMES,
   APPEARANCE_HEADER_HTML_MAX,
   APPEARANCE_HEX,
@@ -42,7 +41,6 @@ import {
   appearanceTextProblem,
   appearanceThemeSettingsOf,
   mergeAppearance,
-  sanitizeBannerHtml,
   sanitizeHeaderHtml,
   type AppearanceColorScheme,
   type AppearanceHomeSectionKey,
@@ -81,8 +79,8 @@ const logoAlignmentSchema = z.enum(
 const appearanceImageSchema = z.object({
   key: z.string().regex(APPEARANCE_MEDIA_KEY),
   alt: z.string().max(200).optional(),
-  width: z.number().int().positive().nullable().optional(),
-  height: z.number().int().positive().nullable().optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
   focal: z
     .object({
       x: z.number().min(0).max(1),
@@ -108,11 +106,6 @@ const sectionStateSchema = z.object({
     .nullable(),
 });
 
-const priceColorsSchema = z.object({
-  oldPrice: z.string().regex(APPEARANCE_HEX).optional(),
-  newPrice: z.string().regex(APPEARANCE_HEX).optional(),
-});
-
 const appearanceSchema = z.object({
   themeKey: z.string(),
   primaryLocale: z.enum(STORE_LOCALES),
@@ -124,21 +117,17 @@ const appearanceSchema = z.object({
   headerHtml: z.string(),
   logoAlignment: logoAlignmentSchema,
   sections: z.record(z.enum(SECTION_KEYS), sectionStateSchema),
-  priceColors: priceColorsSchema.optional(),
-  bannerBodyHtml: z.string(),
   texts: z.record(z.string(), z.record(z.string(), z.string())),
 });
 
 const saveAppearanceSchema = z.object({
-  colorSchemes: z.array(colorSchemeSchema).min(1).max(APPEARANCE_MAX_SCHEMES),
-  pageScheme: z.string(),
+  colorSchemes: z.array(colorSchemeSchema).min(1).max(APPEARANCE_MAX_SCHEMES).optional(),
+  pageScheme: z.string().optional(),
   hideLogo: z.boolean().optional(),
   searchEnabled: z.boolean().optional(),
   headerHtml: z.string().max(APPEARANCE_HEADER_HTML_MAX).optional(),
   logoAlignment: logoAlignmentSchema.optional(),
   sections: z.record(z.enum(SECTION_KEYS), sectionEditSchema).optional(),
-  priceColors: priceColorsSchema.optional(),
-  bannerBodyHtml: z.string().max(APPEARANCE_BANNER_HTML_MAX).optional(),
   texts: z
     .object({
       locale: z.enum(STORE_LOCALES),
@@ -148,26 +137,6 @@ const saveAppearanceSchema = z.object({
 });
 
 type StoreRow = NonNullable<Awaited<ReturnType<typeof queries.getStore>>>;
-type RequestSections = Partial<Record<AppearanceHomeSectionKey, z.infer<typeof sectionEditSchema>>>;
-
-export function appearanceSectionsFromRequest(sections: RequestSections | undefined): AppearanceSectionEdits | undefined {
-  if (!sections) return undefined;
-  return Object.fromEntries(
-    Object.entries(sections).map(([key, edit]) => [
-      key,
-      {
-        ...edit,
-        image: edit.image
-          ? {
-              ...edit.image,
-              width: edit.image.width ?? undefined,
-              height: edit.image.height ?? undefined,
-            }
-          : edit.image,
-      },
-    ]),
-  ) as AppearanceSectionEdits;
-}
 
 async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow, env: Env) {
   const stored = await getThemeSettings(db, store.id, store.themeId);
@@ -212,8 +181,6 @@ async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow, env: 
     headerHtml: saved?.headerHtml ?? "",
     logoAlignment: saved?.logoAlignment ?? "right",
     sections,
-    priceColors: saved?.priceColors,
-    bannerBodyHtml: saved?.bannerBodyHtml ?? "",
     texts,
   };
 }
@@ -234,17 +201,17 @@ export async function saveAppearance(c: Context<AppContext>) {
     saveAppearanceSchema.parse(await c.req.json())) as z.infer<typeof saveAppearanceSchema>;
   const stored = await getThemeSettings(db, store.id, store.themeId);
   const saved = appearanceThemeSettingsOf(stored);
-  const sections = appearanceSectionsFromRequest(body.sections);
+  const colorSchemes = (body.colorSchemes ?? saved?.colorSchemes ?? APPEARANCE_DEFAULT_SCHEMES) as AppearanceColorScheme[];
+  const pageScheme = body.pageScheme ?? saved?.pageScheme ?? colorSchemes[0]?.id;
+  if (!pageScheme) throw new ValidationError("The colors cannot be saved", ERROR_CODES.VALIDATION_FAILED);
   const merged = mergeAppearance(saved, {
-    colorSchemes: body.colorSchemes as AppearanceColorScheme[],
-    pageScheme: body.pageScheme,
+    colorSchemes,
+    pageScheme,
     hideLogo: body.hideLogo ?? saved?.hideLogo ?? false,
     searchEnabled: body.searchEnabled ?? saved?.searchEnabled ?? true,
     headerHtml: sanitizeHeaderHtml(body.headerHtml ?? saved?.headerHtml ?? ""),
     logoAlignment: body.logoAlignment ?? saved?.logoAlignment ?? "right",
-    sections,
-    priceColors: body.priceColors ?? saved?.priceColors,
-    bannerBodyHtml: sanitizeBannerHtml(body.bannerBodyHtml ?? saved?.bannerBodyHtml ?? ""),
+    sections: body.sections as AppearanceSectionEdits | undefined,
   });
   if (merged.error || !merged.settings) {
     throw new ValidationError(merged.error ?? "The colors cannot be saved", ERROR_CODES.VALIDATION_FAILED);
@@ -291,7 +258,7 @@ const getAppearanceRoute = defineRoute({
   tags: ["Store Settings"],
   summary: "Get the storefront's appearance",
   description:
-    "Returns the store's color schemes, the scheme its page wears, its optional price colors, its storefront switches, safe header and offer HTML, and the theme text it edited, per language.",
+    "Returns the store's color schemes, the scheme its page wears, its storefront switches and a safe header HTML strip, and the theme text it edited, per language.",
   operationId: "getStoreAppearance",
   responses: {
     200: {
@@ -309,7 +276,7 @@ const saveAppearanceRoute = defineRoute({
   tags: ["Store Settings"],
   summary: "Save the storefront's appearance",
   description:
-    "Replaces the colors of the store's existing schemes, the scheme the page wears, its optional price colors, its storefront switches and safe header and offer HTML, and (optionally) one language's theme text edits. An empty text deletes the edit.",
+    "Saves only the fields supplied: the colors of the store's existing schemes and the scheme the page wears, its storefront switches and a safe header HTML strip, or one language's theme text edits. Fields left out keep their saved values; an empty text deletes the edit.",
   operationId: "saveStoreAppearance",
   body: saveAppearanceSchema,
   responses: {

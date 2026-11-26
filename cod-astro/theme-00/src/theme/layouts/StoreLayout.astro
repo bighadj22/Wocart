@@ -11,7 +11,7 @@ import { message } from "@/theme/content/messages";
 import type { StoreConfig } from "@wocart/storefront";
 import { schemeClass } from "@wocart/theme";
 import { settingsOf } from "@/theme/runtime/settings";
-import { BODY_FONT, HEADING_FONT, cardAspect, cornerRadii, hexSetting, schemeBackground, themeFont } from "@/theme/appearance";
+import { BODY_FONT, HEADING_FONT, cardAspect, cornerRadii, schemeBackground, themeFont } from "@/theme/appearance";
 
 interface Props {
   title?: string;
@@ -76,11 +76,6 @@ const pageOg = ogImage ?? config.ogImage?.url ?? "";
 // The merchant's choices for this theme, checked against its declaration: a
 // value it does not accept falls back to the theme's default.
 const settings = settingsOf(store);
-const settingsValues = settings as unknown as Record<string, unknown>;
-const priceColors = {
-  old: hexSetting(settingsValues.priceOldColor),
-  new: hexSetting(settingsValues.priceNewColor),
-};
 const fonts = { body: themeFont(settings.font, BODY_FONT), heading: themeFont(settings.headingFont, HEADING_FONT) };
 ---
 
@@ -99,7 +94,6 @@ const fonts = { body: themeFont(settings.font, BODY_FONT), heading: themeFont(se
     themeColor={schemeBackground(settings.colorSchemes, settings.pageScheme)}
     fonts={fonts}
     radii={cornerRadii(settings.corners)}
-    priceColors={priceColors}
     isRTL={isRTL}
     preloadImages={preloadImages}
     softNavigation={softNavigation}

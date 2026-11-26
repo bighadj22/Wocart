@@ -10,7 +10,6 @@ export const arHome: HomeStrings = {
   trust1Title: "الدفع عند الاستلام",
   trust2Title: "توصيل عبر كامل الجزائر",
   trust3Title: "نتصل بك لتأكيد طلبك",
-  trust4Title: "ادفع عند الاستلام",
   heroCtaPrimary: "تسوّق الآن",
   heroCtaSecondary: "الأكثر مبيعاً",
   categoriesSection: "تسوّق حسب الفئة",

@@ -74,8 +74,6 @@ export interface StoreAppearance {
   headerHtml: string;
   /** Where the logo sits, regardless of the header's own logo position. */
   logoAlignment: AppearanceLogoAlignment;
-  priceColors?: { oldPrice?: string; newPrice?: string };
-  bannerBodyHtml: string;
   /** One entry for every home section, including an image ready to preview. */
   sections: Record<AppearanceHomeSectionKey, { hidden: boolean; image: MediaImage | null }>;
   /** Saved text edits, `{ ar: { heroTitle: "…" } }`. */

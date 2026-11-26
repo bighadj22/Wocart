@@ -14,22 +14,7 @@ vi.mock("@/features/settings/api", () => ({
   getAppearance: async () => seam.appearance,
   saveAppearance: async (payload: Record<string, any>) => {
     seam.calls.push(payload);
-    const texts = payload.texts as { locale: string; values: Record<string, string> } | undefined;
-    seam.appearance = {
-      ...seam.appearance!,
-      colorSchemes: payload.colorSchemes,
-      pageScheme: payload.pageScheme,
-      hideLogo: payload.hideLogo,
-      searchEnabled: payload.searchEnabled,
-      headerHtml: payload.headerHtml,
-      logoAlignment: payload.logoAlignment,
-      sections: payload.sections ?? seam.appearance!.sections,
-      priceColors: payload.priceColors,
-      bannerBodyHtml: payload.bannerBodyHtml ?? "",
-      texts: texts
-        ? { ...seam.appearance!.texts, [texts.locale]: texts.values }
-        : seam.appearance!.texts,
-    };
+    seam.appearance = { ...seam.appearance!, ...payload };
     return seam.appearance;
   },
 }));
@@ -38,11 +23,8 @@ vi.mock("@/i18n/react", () => ({
   useLocale: () => "en",
 }));
 vi.mock("@/lib/notify", () => ({ notify: { success: vi.fn(), error: vi.fn() } }));
-vi.mock("@/features/uploads/components/ImageUploader", () => ({
-  ImageUploader: () => null,
-}));
 
-import { APPEARANCE_DEFAULT_SCHEMES, APPEARANCE_HOME_SECTIONS } from "../../../../../cod-shared/stores/appearance";
+import { APPEARANCE_DEFAULT_SCHEMES } from "../../../../../cod-shared/stores/appearance";
 import { AppearanceSettings } from "./AppearanceSettings";
 
 const appearance = () => ({
@@ -55,9 +37,6 @@ const appearance = () => ({
   searchEnabled: true,
   headerHtml: "",
   logoAlignment: "right",
-  sections: Object.fromEntries(APPEARANCE_HOME_SECTIONS.map(({ key }) => [key, { hidden: false, image: null }])),
-  priceColors: {},
-  bannerBodyHtml: "",
   texts: {},
 });
 
@@ -84,17 +63,8 @@ async function render() {
   });
 }
 
-async function setValue(
-  element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
-  value: string,
-  event: string,
-) {
-  const prototype =
-    element instanceof HTMLSelectElement
-      ? HTMLSelectElement.prototype
-      : element instanceof HTMLTextAreaElement
-        ? HTMLTextAreaElement.prototype
-        : HTMLInputElement.prototype;
+async function setValue(element: HTMLInputElement | HTMLSelectElement, value: string, event: string) {
+  const prototype = element instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
   await act(async () => {
     Object.getOwnPropertyDescriptor(prototype, "value")!.set!.call(element, value);
     element.dispatchEvent(new Event(event, { bubbles: true }));
@@ -118,7 +88,7 @@ async function click(element: HTMLElement) {
 }
 
 describe("AppearanceSettings", () => {
-  it("saves a typed hex color and keeps it in the field after the answer", async () => {
+  it("saves only colors so a color change cannot clear texts or storefront controls", async () => {
     await render();
     const background = host.querySelectorAll<HTMLInputElement>('input[aria-label$=" hex"]')[0]!;
     await setValue(background, "#123456", "input");
@@ -126,79 +96,62 @@ describe("AppearanceSettings", () => {
 
     await click(saveButton(section("store.appearance_colors_title")));
 
+    expect(seam.calls).toHaveLength(1);
+    expect(Object.keys(seam.calls[0]!).sort()).toEqual(["colorSchemes", "pageScheme"]);
     expect(seam.calls[0]!.colorSchemes[0].colors.background).toBe("#123456");
     expect(host.querySelectorAll<HTMLInputElement>('input[aria-label$=" hex"]')[0]!.value).toBe("#123456");
   });
 
-  it("sends logo alignment and each home section's hide switch with the controls", async () => {
+  it("accepts a hex typed without the hash when the field loses focus", async () => {
+    await render();
+    const background = host.querySelectorAll<HTMLInputElement>('input[aria-label$=" hex"]')[0]!;
+    await setValue(background, "123456", "input");
+    await act(async () => background.dispatchEvent(new FocusEvent("blur", { bubbles: true })));
+    await click(saveButton(section("store.appearance_colors_title")));
+
+    expect(seam.calls[0]!.colorSchemes[0].colors.background).toBe("#123456");
+    expect(background.value).toBe("#123456");
+  });
+
+  it("opens on the scheme the storefront actually wears", async () => {
+    seam.appearance = { ...appearance(), pageScheme: "scheme-6" };
+    await render();
+    const selected = Array.from(host.querySelectorAll("button")).find(
+      (node) => node.getAttribute("aria-pressed") === "true" && node.textContent?.includes("store.appearance_look_olive"),
+    );
+    expect(selected).toBeTruthy();
+    expect(host.querySelectorAll<HTMLInputElement>('input[aria-label$=" hex"]')[0]!.value).toBe("#f3f2e7");
+  });
+
+  it("saves storefront controls on their own", async () => {
     await render();
     const logoSelect = (Array.from(host.querySelectorAll("select")) as HTMLSelectElement[]).find((node) =>
       Array.from(node.options).some((option) => option.value === "left"),
     )!;
     await setValue(logoSelect, "left", "change");
 
-    const heroLabel = [...host.querySelectorAll("span")].find(
-      (node) => node.textContent === "store.appearance_section_hero",
-    )!;
-    await click(heroLabel.closest("div")!.querySelector('[role="switch"]')!);
+    await click(saveButton(section("store.appearance_storefront_title")));
 
-    await click(saveButton(section("store.appearance_sections_title")));
-
+    expect(seam.calls).toHaveLength(1);
     expect(seam.calls[0]!.logoAlignment).toBe("left");
-    expect(seam.calls[0]!.sections.hero.hidden).toBe(true);
-    expect(seam.calls[0]!.sections.marquee.hidden).toBe(false);
+    expect(seam.calls[0]!.colorSchemes).toBeUndefined();
+    expect(seam.calls[0]!.texts).toBeUndefined();
   });
 
-  it("sends unsaved edits from another card with the card being saved", async () => {
+  it("saves text edits without touching colors or storefront controls", async () => {
     await render();
-    const background = host.querySelectorAll<HTMLInputElement>('input[aria-label$=" hex"]')[0]!;
-    await setValue(background, "#123456", "input");
-    await act(async () => background.dispatchEvent(new FocusEvent("blur", { bubbles: true })));
-
-    const heroLabel = [...host.querySelectorAll("span")].find(
-      (node) => node.textContent === "store.appearance_section_hero",
+    const label = [...host.querySelectorAll("label")].find((node) =>
+      node.textContent?.includes("store.appearance_text_heroTitle"),
     )!;
-    await click(heroLabel.closest("div")!.querySelector('[role="switch"]')!);
-    await click(saveButton(section("store.appearance_sections_title")));
-
-    expect(seam.calls[0]!.colorSchemes[0].colors.background).toBe("#123456");
-    expect(seam.calls[0]!.sections.hero.hidden).toBe(true);
-  });
-
-  it("edits the scrolling strip as text instead of an image uploader", async () => {
-    await render();
-    const marquee = section("store.appearance_sections_title");
-    const field = [...marquee.querySelectorAll("label")].find((node) =>
-      node.textContent?.includes("store.appearance_text_trust4Title"),
-    )!;
-    const input = field.querySelector("input")!;
-    expect(input.type).not.toBe("file");
-    await setValue(input, "Pay at your door", "input");
+    const title = label.querySelector("input")!;
+    await setValue(title, "New title", "input");
 
     await click(saveButton(section("store.appearance_texts_title")));
 
-    expect(seam.calls[0]!.texts.values.trust4Title).toBe("Pay at your door");
-    expect(marquee.querySelector('input[type="file"]')).toBeNull();
-  });
-
-  it("saves semantic price colors and offer HTML alongside the image sections", async () => {
-    await render();
-    const oldPrice = host.querySelector<HTMLInputElement>(
-      'input[aria-label="store.appearance_color_oldPrice hex"]',
-    )!;
-    await setValue(oldPrice, "#777777", "input");
-    await act(async () => oldPrice.dispatchEvent(new FocusEvent("blur", { bubbles: true })));
-
-    const offer = section("store.appearance_texts_title");
-    const offerField = [...offer.querySelectorAll("label")].find((node) =>
-      node.textContent?.includes("store.appearance_text_bannerBodyHtml"),
-    )!;
-    await setValue(offerField.querySelector("textarea")!, "<p>Free delivery</p>", "input");
-
-    await click(saveButton(section("store.appearance_colors_title")));
-
-    expect(seam.calls[0]!.priceColors.oldPrice).toBe("#777777");
-    expect(seam.calls[0]!.bannerBodyHtml).toBe("<p>Free delivery</p>");
-    expect(seam.calls[0]!.sections["image-banner"].image).toBeNull();
+    expect(seam.calls).toHaveLength(1);
+    expect(Object.keys(seam.calls[0]!)).toEqual(["texts"]);
+    expect(seam.calls[0]!.texts.values.heroTitle).toBe("New title");
+    expect(seam.calls[0]!.colorSchemes).toBeUndefined();
+    expect(seam.calls[0]!.logoAlignment).toBeUndefined();
   });
 });

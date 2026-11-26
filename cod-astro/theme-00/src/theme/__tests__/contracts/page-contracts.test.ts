@@ -132,6 +132,13 @@ describe("pages that take an order", () => {
   });
 });
 
+describe("category photos", () => {
+  it("loads the icon binding where category tiles render", () => {
+    const source = read(join(SRC_DIR, "theme/components/home/CategoryCards.astro"));
+    expect(scriptsOf(source).has("category-icons")).toBe(true);
+  });
+});
+
 describe("the OTP step and the bot gate", () => {
   it("bring their own scripts, so a page loads them only where they render", () => {
     expect(scriptsOf(read(OTP_STEP)).has("otp-step")).toBe(true);

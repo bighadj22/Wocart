@@ -27,12 +27,7 @@ import {
   saveContentOverrides,
   saveThemeSettings,
 } from "../../../../cod-shared/queries/stores";
-import {
-  APPEARANCE_DEFAULT_SCHEMES,
-  appearanceSettingsProblem,
-  appearanceThemeSettingsOf,
-} from "../../../../cod-shared/stores/appearance";
-import { appearanceSectionsFromRequest } from "./appearance";
+import { APPEARANCE_DEFAULT_SCHEMES, appearanceThemeSettingsOf } from "../../../../cod-shared/stores/appearance";
 import { TEST_DELIVERY } from "@/test-utils/media";
 
 const registry: Miniflare[] = [];
@@ -280,45 +275,5 @@ describe("the storefront config", () => {
     const config = await getStoreConfig(db, id, TEST_DELIVERY, { theme: "theme-00" });
 
     expect(config!.contentOverrides).toEqual({});
-  });
-});
-
-describe("appearance save input", () => {
-  it("turns null image dimensions into omitted keys without losing other section edits", () => {
-    const edits = appearanceSectionsFromRequest({
-      hero: { hidden: true, image: { key: "products/hero.webp", width: null, height: null } },
-      marquee: { hidden: false, image: null },
-    });
-
-    expect(edits).toMatchObject({
-      hero: { hidden: true, image: { key: "products/hero.webp", width: undefined, height: undefined } },
-      marquee: { image: null },
-    });
-    expect(
-      appearanceSettingsProblem({
-        colorSchemes: APPEARANCE_DEFAULT_SCHEMES,
-        pageScheme: "scheme-1",
-        sections: edits,
-      }),
-    ).toBeNull();
-  });
-
-  it("carries price colors and offer HTML into the flat public config", async () => {
-    const id = await seedStore();
-    await saveThemeSettings(db, id, "theme-00", {
-      colorSchemes: APPEARANCE_DEFAULT_SCHEMES,
-      pageScheme: "scheme-1",
-      priceOldColor: "#888888",
-      priceNewColor: "#00aa55",
-      bannerBodyHtml: '<p class="note">Free <strong>delivery</strong></p>',
-    });
-
-    const config = await getStoreConfig(db, id, TEST_DELIVERY, { theme: "theme-00" });
-
-    expect(config!.themeSettings).toMatchObject({
-      priceOldColor: "#888888",
-      priceNewColor: "#00aa55",
-      bannerBodyHtml: '<p class="note">Free <strong>delivery</strong></p>',
-    });
   });
 });
