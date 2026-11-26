@@ -11,6 +11,8 @@
 import { OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import type { AppContext } from "@/types";
+import type { Env } from "@/types/env";
+import { mediaDeliveryOf } from "@/lib/media";
 import { defineRoute } from "@/lib/route-builder";
 import { getDb } from "@/db";
 import * as queries from "./queries";
@@ -27,16 +29,25 @@ import {
   APPEARANCE_DEFAULT_SCHEMES,
   APPEARANCE_HEADER_HTML_MAX,
   APPEARANCE_HEX,
+  APPEARANCE_HOME_SECTIONS,
+  APPEARANCE_LOGO_ALIGNMENTS,
   APPEARANCE_MAX_SCHEMES,
+  APPEARANCE_MEDIA_KEY,
   APPEARANCE_SCHEME_ID,
   APPEARANCE_TEXT_KEYS,
   appearanceLocaleProblem,
-  appearanceSettingsOf,
+  appearanceSettingsToRemove,
+  appearanceSettingsToTheme,
   appearanceTextProblem,
+  appearanceThemeSettingsOf,
   mergeAppearance,
   sanitizeHeaderHtml,
   type AppearanceColorScheme,
+  type AppearanceHomeSectionKey,
+  type AppearanceLogoAlignment,
+  type AppearanceSectionEdits,
 } from "../../../../cod-shared/stores/appearance";
+import { imageOf } from "../../../../cod-shared/media/views";
 import { SuccessResponseSchema } from "@/openapi/schemas";
 
 const jsonContent = <T extends z.ZodType>(schema: T) => ({
@@ -57,6 +68,44 @@ const colorSchemeSchema = z.object({
   }),
 });
 
+const SECTION_KEYS = APPEARANCE_HOME_SECTIONS.map((section) => section.key) as [
+  AppearanceHomeSectionKey,
+  ...AppearanceHomeSectionKey[],
+];
+const logoAlignmentSchema = z.enum(
+  APPEARANCE_LOGO_ALIGNMENTS as unknown as [AppearanceLogoAlignment, ...AppearanceLogoAlignment[]],
+);
+
+const appearanceImageSchema = z.object({
+  key: z.string().regex(APPEARANCE_MEDIA_KEY),
+  alt: z.string().max(200).optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  focal: z
+    .object({
+      x: z.number().min(0).max(1),
+      y: z.number().min(0).max(1),
+    })
+    .optional(),
+});
+
+const sectionEditSchema = z.object({
+  hidden: z.boolean().nullable().optional(),
+  image: appearanceImageSchema.nullable().optional(),
+});
+
+const sectionStateSchema = z.object({
+  hidden: z.boolean(),
+  image: z
+    .object({
+      key: z.string(),
+      url: z.string(),
+      width: z.number().nullable(),
+      height: z.number().nullable(),
+    })
+    .nullable(),
+});
+
 const appearanceSchema = z.object({
   themeKey: z.string(),
   primaryLocale: z.enum(STORE_LOCALES),
@@ -65,8 +114,9 @@ const appearanceSchema = z.object({
   pageScheme: z.string(),
   hideLogo: z.boolean(),
   searchEnabled: z.boolean(),
-  hideHeroImages: z.boolean(),
   headerHtml: z.string(),
+  logoAlignment: logoAlignmentSchema,
+  sections: z.record(z.enum(SECTION_KEYS), sectionStateSchema),
   texts: z.record(z.string(), z.record(z.string(), z.string())),
 });
 
@@ -75,8 +125,9 @@ const saveAppearanceSchema = z.object({
   pageScheme: z.string(),
   hideLogo: z.boolean().optional(),
   searchEnabled: z.boolean().optional(),
-  hideHeroImages: z.boolean().optional(),
   headerHtml: z.string().max(APPEARANCE_HEADER_HTML_MAX).optional(),
+  logoAlignment: logoAlignmentSchema.optional(),
+  sections: z.record(z.enum(SECTION_KEYS), sectionEditSchema).optional(),
   texts: z
     .object({
       locale: z.enum(STORE_LOCALES),
@@ -87,9 +138,9 @@ const saveAppearanceSchema = z.object({
 
 type StoreRow = NonNullable<Awaited<ReturnType<typeof queries.getStore>>>;
 
-async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow) {
+async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow, env: Env) {
   const stored = await getThemeSettings(db, store.id, store.themeId);
-  const saved = appearanceSettingsOf(stored);
+  const saved = appearanceThemeSettingsOf(stored);
   const colorSchemes = saved?.colorSchemes ?? APPEARANCE_DEFAULT_SCHEMES;
   const pageScheme = saved?.pageScheme ?? colorSchemes[0]!.id;
   const [localeRows, overrides] = await Promise.all([
@@ -103,6 +154,22 @@ async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow) {
     if (!(APPEARANCE_TEXT_KEYS as readonly string[]).includes(row.key)) continue;
     (texts[row.locale] ??= {})[row.key] = row.value;
   }
+  const delivery = mediaDeliveryOf(env);
+  const sections = Object.fromEntries(
+    APPEARANCE_HOME_SECTIONS.map((section) => {
+      const edit = saved?.sections?.[section.key];
+      const source = edit?.image;
+      return [
+        section.key,
+        {
+          hidden: edit?.hidden === true,
+          image: source
+            ? imageOf(source.key, delivery, { width: source.width, height: source.height })
+            : null,
+        },
+      ];
+    }),
+  );
   return {
     themeKey: store.themeId,
     primaryLocale: store.lang,
@@ -111,8 +178,9 @@ async function appearanceOf(db: ReturnType<typeof getDb>, store: StoreRow) {
     pageScheme,
     hideLogo: saved?.hideLogo ?? false,
     searchEnabled: saved?.searchEnabled ?? true,
-    hideHeroImages: saved?.hideHeroImages ?? false,
     headerHtml: saved?.headerHtml ?? "",
+    logoAlignment: saved?.logoAlignment ?? "right",
+    sections,
     texts,
   };
 }
@@ -121,7 +189,7 @@ export async function getAppearance(c: Context<AppContext>) {
   const db = getDb(c.env.DB);
   const store = await queries.getStore(db);
   if (!store) throw new NotFoundError("Store");
-  return c.json({ success: true, data: await appearanceOf(db, store) }, 200);
+  return c.json({ success: true, data: await appearanceOf(db, store, c.env) }, 200);
 }
 
 export async function saveAppearance(c: Context<AppContext>) {
@@ -132,14 +200,15 @@ export async function saveAppearance(c: Context<AppContext>) {
   const body = ((c.req as any).valid?.("json") ??
     saveAppearanceSchema.parse(await c.req.json())) as z.infer<typeof saveAppearanceSchema>;
   const stored = await getThemeSettings(db, store.id, store.themeId);
-  const saved = appearanceSettingsOf(stored);
+  const saved = appearanceThemeSettingsOf(stored);
   const merged = mergeAppearance(saved, {
     colorSchemes: body.colorSchemes as AppearanceColorScheme[],
     pageScheme: body.pageScheme,
     hideLogo: body.hideLogo ?? saved?.hideLogo ?? false,
     searchEnabled: body.searchEnabled ?? saved?.searchEnabled ?? true,
-    hideHeroImages: body.hideHeroImages ?? saved?.hideHeroImages ?? false,
     headerHtml: sanitizeHeaderHtml(body.headerHtml ?? saved?.headerHtml ?? ""),
+    logoAlignment: body.logoAlignment ?? saved?.logoAlignment ?? "right",
+    sections: body.sections as AppearanceSectionEdits | undefined,
   });
   if (merged.error || !merged.settings) {
     throw new ValidationError(merged.error ?? "The colors cannot be saved", ERROR_CODES.VALIDATION_FAILED);
@@ -158,10 +227,12 @@ export async function saveAppearance(c: Context<AppContext>) {
     }
   }
 
-  await saveThemeSettings(db, store.id, store.themeId, {
+  const flat = {
     ...stored,
-    ...merged.settings,
-  });
+    ...appearanceSettingsToTheme(merged.settings),
+  } as Record<string, unknown>;
+  for (const key of appearanceSettingsToRemove(merged.settings)) delete flat[key];
+  await saveThemeSettings(db, store.id, store.themeId, flat);
   if (body.texts) {
     await saveContentOverrides(
       db,
@@ -172,7 +243,7 @@ export async function saveAppearance(c: Context<AppContext>) {
     );
   }
 
-  return c.json({ success: true, data: await appearanceOf(db, store) }, 200);
+  return c.json({ success: true, data: await appearanceOf(db, store, c.env) }, 200);
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────

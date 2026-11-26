@@ -5,7 +5,10 @@ import {
   appearanceLocaleProblem,
   appearanceSettingsOf,
   appearanceSettingsProblem,
+  appearanceSettingsToRemove,
+  appearanceSettingsToTheme,
   appearanceTextProblem,
+  appearanceThemeSettingsOf,
   colorSchemesProblem,
   mergeAppearance,
   sanitizeHeaderHtml,
@@ -19,8 +22,8 @@ const valid = (): AppearanceSettings => ({
   pageScheme: "scheme-1",
   hideLogo: false,
   searchEnabled: true,
-  hideHeroImages: false,
   headerHtml: "",
+  logoAlignment: "right",
 });
 
 describe("colorSchemesProblem", () => {
@@ -180,10 +183,18 @@ describe("the olive preset and storefront controls", () => {
 
   it("defaults missing controls when an older settings row is read", () => {
     expect(appearanceSettingsOf({ colorSchemes: clone(APPEARANCE_DEFAULT_SCHEMES), pageScheme: "scheme-1" })).toEqual(valid());
+    expect(appearanceThemeSettingsOf({ colorSchemes: clone(APPEARANCE_DEFAULT_SCHEMES), pageScheme: "scheme-1" })).toEqual(valid());
   });
 
   it("keeps the merchant's controls when only colors are saved", () => {
-    const current = { ...valid(), hideLogo: true, searchEnabled: false, hideHeroImages: true, headerHtml: "<strong>Hi</strong>" };
+    const current = {
+      ...valid(),
+      hideLogo: true,
+      searchEnabled: false,
+      logoAlignment: "left" as const,
+      headerHtml: "<strong>Hi</strong>",
+      sections: { hero: { hidden: true }, marquee: { image: { key: "landing/strip.jpg" } } },
+    };
     const merged = mergeAppearance(current, {
       colorSchemes: current.colorSchemes,
       pageScheme: "scheme-3",
@@ -193,14 +204,65 @@ describe("the olive preset and storefront controls", () => {
       pageScheme: "scheme-3",
       hideLogo: false,
       searchEnabled: false,
-      hideHeroImages: true,
+      logoAlignment: "left",
       headerHtml: "<strong>Hi</strong>",
+      sections: current.sections,
     });
   });
 
   it("refuses a control that is not on or off, and HTML past its limit", () => {
     expect(appearanceSettingsProblem({ ...valid(), searchEnabled: "yes" })).toMatch(/must be on or off/);
     expect(appearanceSettingsProblem({ ...valid(), headerHtml: "x".repeat(2001) })).toMatch(/at most 2000/);
+  });
+});
+
+describe("logo alignment and home sections", () => {
+  it("takes only the three alignments", () => {
+    for (const logoAlignment of ["right", "left", "center"] as const) {
+      expect(appearanceSettingsProblem({ ...valid(), logoAlignment })).toBeNull();
+    }
+    expect(appearanceSettingsProblem({ ...valid(), logoAlignment: "top" })).toMatch(/right, left or center/);
+  });
+
+  it("validates each section's hide switch and image reference", () => {
+    expect(appearanceSettingsProblem({ ...valid(), sections: { hero: { hidden: true, image: { key: "products/hero.jpg" } } } })).toBeNull();
+    expect(appearanceSettingsProblem({ ...valid(), sections: { unknown: { hidden: true } } })).toMatch(/not a home section/);
+    expect(appearanceSettingsProblem({ ...valid(), sections: { hero: { image: { key: "../secret.jpg" } } } })).toMatch(/needs a media key/);
+    expect(appearanceSettingsProblem({ ...valid(), sections: { hero: { image: { key: "home/hero.jpg" } } } })).toMatch(/needs a media key/);
+  });
+
+  it("writes section edits as flat theme settings and removes cleared ones", () => {
+    const settings: AppearanceSettings = {
+      ...valid(),
+      logoAlignment: "center",
+      sections: {
+        hero: { hidden: true, image: { key: "products/hero.webp", width: 1200, height: 600 } },
+        marquee: { hidden: false, image: null },
+      },
+    };
+    expect(appearanceSettingsToTheme(settings)).toMatchObject({
+      logoAlignment: "center",
+      homeHeroHidden: true,
+      homeHeroImage: { key: "products/hero.webp", width: 1200, height: 600 },
+    });
+    expect(appearanceSettingsToTheme(settings)).not.toHaveProperty("homeMarqueeHidden");
+    expect(appearanceSettingsToRemove(settings)).toEqual(
+      expect.arrayContaining(["hideHeroImages", "homeMarqueeHidden", "homeMarqueeImage"]),
+    );
+  });
+
+  it("reads flat theme settings back, including the old grouped image switch", () => {
+    const flat = {
+      ...appearanceSettingsToTheme(valid()),
+      homeImageBannerHidden: true,
+      homeCustomerTestimonialsImage: { key: "reviews/quote.jpg" },
+    };
+    expect(appearanceThemeSettingsOf(flat)?.sections).toEqual({
+      "image-banner": { hidden: true },
+      "customer-testimonials": { image: { key: "reviews/quote.jpg" } },
+    });
+    expect(appearanceThemeSettingsOf({ ...flat, hideHeroImages: true })?.sections?.hero).toEqual({ hidden: true });
+    expect(appearanceThemeSettingsOf({ ...flat, hideHeroImages: true, homeHeroHidden: false })?.sections?.hero).toBeUndefined();
   });
 });
 

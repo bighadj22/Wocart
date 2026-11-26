@@ -15,10 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and checkout keeps the store's normal rate when the shopper chooses a
   method the offer does not cover. The public product payload exposes the
   setting for themes.
-- The dashboard's Appearance tab offers an olive preset and controls to hide
-  the store logo, hide the home page's large photos and put a short, sanitized
-  HTML strip above the header. The reference theme applies all four on the
-  storefront, and keeps the logo on the right in Arabic.
+- The dashboard's Appearance tab offers an olive preset; controls to hide the
+  logo, put it on the right, left or center independently of the search icon,
+  and place a short, sanitized HTML strip above the header; and a Hide switch
+  and photo uploader for every home section. The reference theme applies each
+  setting on the storefront, with the logo on the right by default in Arabic.
 
 ### Changed
 
@@ -70,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Saving Appearance colors keeps the logo, header and home-section controls as
+  they were instead of reverting them on the next save.
 - WebP uploads from a browser that reports no MIME type keep `image/webp` on
   the form part the media host receives. The dashboard derives the type from
   the file's extension and sends a matching blob, so ImageKit cannot reject a

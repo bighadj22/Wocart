@@ -94,6 +94,18 @@ describe("the header and the footer's menu", () => {
     expect(await renderFooterMenu(null)).not.toContain(fr.footerQuickLinks);
   });
 
+  it("aligns the logo from the dashboard, independently of the header's own logo position", async () => {
+    const renderWith = async (themeSettings: Record<string, unknown>, logoPosition: "start" | "center" = "start") =>
+      (await AstroContainer.create()).renderToString(Header, {
+        props: { ...HEADER_PROPS, logoPosition, storeMenu: menu },
+        locals: locals({ config: { ...TEST_CONFIG, themeSettings } }),
+      });
+    expect(await renderWith({})).toMatch(/data-logo-align="right"/);
+    expect(await renderWith({ logoAlignment: "left" })).toMatch(/data-logo-align="left"/);
+    expect(await renderWith({ logoAlignment: "center" }, "center")).toMatch(/data-logo-align="center"/);
+    expect(await renderWith({ logoAlignment: "somewhere" })).toMatch(/data-logo-align="right"/);
+  });
+
   it("hide the logo and search and show the store's safe header strip when asked", async () => {
     const html = await (await AstroContainer.create()).renderToString(Header, {
       props: { ...HEADER_PROPS, showSearch: true, storeMenu: menu },
@@ -194,6 +206,15 @@ describe("the theme's settings", () => {
       searchEnabled: true,
       hideHeroImages: false,
       headerHtml: "",
+      logoAlignment: "right",
+      homeHeroHidden: false,
+      homeMarqueeHidden: false,
+      homeCategoryCardsHidden: false,
+      homeProductTabsHidden: false,
+      homeImageBannerHidden: false,
+      homeHowItWorksHidden: false,
+      homeCustomerTestimonialsHidden: false,
+      homeFeaturesBarHidden: false,
     });
   });
 

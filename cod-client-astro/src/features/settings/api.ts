@@ -1,5 +1,9 @@
 import { apiFetch } from "@/lib/api";
-import type { AppearanceColorScheme } from "../../../../cod-shared/stores/appearance";
+import type {
+  AppearanceColorScheme,
+  AppearanceLogoAlignment,
+  AppearanceSectionEdits,
+} from "../../../../cod-shared/stores/appearance";
 import type { StoreLocale } from "../../../../cod-shared/i18n/locales";
 import type { StoreAppearance, StoreConfig, UpdateStoreData } from "./types";
 import type { StoreSummary } from "./store-summary";
@@ -35,8 +39,9 @@ export interface SaveAppearanceInput {
   pageScheme: string;
   hideLogo?: boolean;
   searchEnabled?: boolean;
-  hideHeroImages?: boolean;
   headerHtml?: string;
+  logoAlignment?: AppearanceLogoAlignment;
+  sections?: AppearanceSectionEdits;
   /** One language's text edits; an empty string removes that edit. */
   texts?: { locale: StoreLocale; values: Record<string, string> };
 }

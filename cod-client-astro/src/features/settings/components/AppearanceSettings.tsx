@@ -1,18 +1,25 @@
 import { useEffect, useState } from "react";
-import { Check, Loader2, Palette, SlidersHorizontal, Type } from "lucide-react";
+import { Check, Layers3, Loader2, Palette, SlidersHorizontal, Type } from "lucide-react";
 import { Alert, Badge, Field, Input, Select, SwitchField, Textarea } from "@/components/ui";
 import { useLocale, useT } from "@/i18n/react";
 import { getAppearance, saveAppearance, type SaveAppearanceInput } from "@/features/settings/api";
 import { SettingsSection, FieldRow } from "@/features/settings/components/SettingsSection";
+import { ImageUploader } from "@/features/uploads/components/ImageUploader";
+import type { MediaImage } from "@/features/uploads/api";
 import type { StoreAppearance } from "@/features/settings/types";
 import {
   APPEARANCE_COLOR_ROLES,
   APPEARANCE_HEADER_HTML_MAX,
+  APPEARANCE_HOME_SECTIONS,
+  APPEARANCE_LOGO_ALIGNMENTS,
   APPEARANCE_TEXT_KEYS,
   APPEARANCE_TEXT_LIMITS,
   APPEARANCE_HEX,
   type AppearanceColorRole,
   type AppearanceColorScheme,
+  type AppearanceHomeSectionKey,
+  type AppearanceLogoAlignment,
+  type AppearanceSectionEdits,
   type AppearanceTextKey,
 } from "../../../../../cod-shared/stores/appearance";
 import { STORE_LOCALE_INFO, type StoreLocale } from "../../../../../cod-shared/i18n/locales";
@@ -43,6 +50,29 @@ const LOOKS = [
   { id: "scheme-5", labelKey: "store.appearance_look_midnight", swatch: "#0f1626" },
 ] as const;
 
+type SectionState = StoreAppearance["sections"][AppearanceHomeSectionKey];
+
+function emptySections(): StoreAppearance["sections"] {
+  return Object.fromEntries(
+    APPEARANCE_HOME_SECTIONS.map(({ key }) => [key, { hidden: false, image: null }]),
+  ) as StoreAppearance["sections"];
+}
+
+function sectionEdits(sections: StoreAppearance["sections"]): AppearanceSectionEdits {
+  return Object.fromEntries(
+    APPEARANCE_HOME_SECTIONS.map(({ key }) => {
+      const image = sections[key]?.image;
+      return [
+        key,
+        {
+          hidden: sections[key]?.hidden ?? false,
+          image: image ? { key: image.key, width: image.width, height: image.height } : null,
+        },
+      ];
+    }),
+  ) as AppearanceSectionEdits;
+}
+
 /** A scheme's name is a plain string, or the same name in several languages. */
 function schemeName(name: AppearanceColorScheme["name"], locale: string): string {
   if (typeof name === "string") return name;
@@ -51,6 +81,13 @@ function schemeName(name: AppearanceColorScheme["name"], locale: string): string
 
 function cloneSchemes(schemes: AppearanceColorScheme[]): AppearanceColorScheme[] {
   return JSON.parse(JSON.stringify(schemes)) as AppearanceColorScheme[];
+}
+
+function normalizedHex(raw: string): string | null {
+  const next = raw.trim().toLowerCase();
+  if (APPEARANCE_HEX.test(next)) return next;
+  if (APPEARANCE_HEX.test(`#${next}`)) return `#${next}`;
+  return null;
 }
 
 function ColorField({
@@ -67,9 +104,19 @@ function ColorField({
   useEffect(() => setText(value), [value]);
 
   function commit(raw: string) {
-    const next = raw.trim().toLowerCase();
+    const next = normalizedHex(raw);
     setText(raw);
-    if (APPEARANCE_HEX.test(next)) onChange(next);
+    if (next) onChange(next);
+  }
+
+  function settle() {
+    const next = normalizedHex(text);
+    if (next) {
+      setText(next);
+      onChange(next);
+    } else {
+      setText(value);
+    }
   }
 
   return (
@@ -85,7 +132,7 @@ function ColorField({
       <Input
         value={text}
         onChange={(event) => commit(event.target.value)}
-        onBlur={() => setText(value)}
+        onBlur={settle}
         aria-label={`${label} hex`}
         spellCheck={false}
         maxLength={7}
@@ -157,9 +204,10 @@ export function AppearanceSettings() {
   const [controls, setControls] = useState({
     hideLogo: false,
     searchEnabled: true,
-    hideHeroImages: false,
     headerHtml: "",
+    logoAlignment: "right" as AppearanceLogoAlignment,
   });
+  const [sections, setSections] = useState<StoreAppearance["sections"]>(emptySections);
 
   function applySaved(saved: StoreAppearance, initial = false) {
     setData(saved);
@@ -173,9 +221,17 @@ export function AppearanceSettings() {
     setControls({
       hideLogo: saved.hideLogo,
       searchEnabled: saved.searchEnabled,
-      hideHeroImages: saved.hideHeroImages,
       headerHtml: saved.headerHtml,
+      logoAlignment: saved.logoAlignment ?? "right",
     });
+    const nextSections = emptySections();
+    for (const { key } of APPEARANCE_HOME_SECTIONS) {
+      nextSections[key] = {
+        hidden: saved.sections?.[key]?.hidden ?? false,
+        image: saved.sections?.[key]?.image ?? null,
+      };
+    }
+    setSections(nextSections);
   }
 
   async function load() {
@@ -234,8 +290,9 @@ export function AppearanceSettings() {
       pageScheme,
       hideLogo: controls.hideLogo,
       searchEnabled: controls.searchEnabled,
-      hideHeroImages: controls.hideHeroImages,
       headerHtml: controls.headerHtml,
+      logoAlignment: controls.logoAlignment,
+      sections: sectionEdits(sections),
       ...overrides,
     };
   }
@@ -257,13 +314,18 @@ export function AppearanceSettings() {
         pageScheme: data!.pageScheme,
         hideLogo: data!.hideLogo,
         searchEnabled: data!.searchEnabled,
-        hideHeroImages: data!.hideHeroImages,
         headerHtml: data!.headerHtml,
+        logoAlignment: data!.logoAlignment ?? "right",
+        sections: sectionEdits(data!.sections ?? emptySections()),
         texts: { locale: textLocale, values },
       }),
     });
     applySaved(saved);
     setDrafts((all) => ({ ...all, [textLocale]: saved.texts[textLocale] ?? {} }));
+  }
+
+  function updateSection(key: AppearanceHomeSectionKey, change: Partial<SectionState>) {
+    setSections((all) => ({ ...all, [key]: { ...all[key], ...change } }));
   }
 
   function updateText(key: AppearanceTextKey, value: string) {
@@ -417,12 +479,23 @@ export function AppearanceSettings() {
             checked={controls.searchEnabled}
             onChange={(searchEnabled) => setControls((current) => ({ ...current, searchEnabled }))}
           />
-          <SwitchField
-            label={t("store.appearance_control_hideHeroImages")}
-            help={t("store.appearance_control_hideHeroImages_hint")}
-            checked={controls.hideHeroImages}
-            onChange={(hideHeroImages) => setControls((current) => ({ ...current, hideHeroImages }))}
-          />
+          <FieldRow
+            label={t("store.appearance_control_logoAlignment")}
+            help={t("store.appearance_control_logoAlignment_hint")}
+          >
+            <Select
+              value={controls.logoAlignment}
+              onChange={(event) =>
+                setControls((current) => ({ ...current, logoAlignment: event.target.value as AppearanceLogoAlignment }))
+              }
+            >
+              {APPEARANCE_LOGO_ALIGNMENTS.map((alignment) => (
+                <option key={alignment} value={alignment}>
+                  {t(`store.appearance_logo_${alignment}`)}
+                </option>
+              ))}
+            </Select>
+          </FieldRow>
           <Field
             label={t("store.appearance_control_headerHtml")}
             hint={`${controls.headerHtml.length}/${APPEARANCE_HEADER_HTML_MAX}`}
@@ -438,6 +511,36 @@ export function AppearanceSettings() {
               {t("store.appearance_control_headerHtml_hint")}
             </p>
           </Field>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        icon={Layers3}
+        title={t("store.appearance_sections_title")}
+        subtitle={t("store.appearance_sections_subtitle")}
+        onSave={saveControls}
+      >
+        <div className="space-y-4">
+          {APPEARANCE_HOME_SECTIONS.map(({ key }) => {
+            const section = sections[key];
+            const label = t(`store.appearance_section_${key}`);
+            return (
+              <div key={key} className="space-y-3 rounded-lg border border-border p-4">
+                <SwitchField
+                  label={label}
+                  help={t("store.appearance_section_hide")}
+                  checked={section?.hidden ?? false}
+                  onChange={(hidden) => updateSection(key, { hidden })}
+                />
+                <ImageUploader
+                  value={section?.image ?? null}
+                  onChange={(image: MediaImage | null) => updateSection(key, { image })}
+                  alt={label}
+                  shape="landscape"
+                />
+              </div>
+            );
+          })}
         </div>
       </SettingsSection>
 

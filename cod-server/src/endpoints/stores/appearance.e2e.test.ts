@@ -27,7 +27,7 @@ import {
   saveContentOverrides,
   saveThemeSettings,
 } from "../../../../cod-shared/queries/stores";
-import { APPEARANCE_DEFAULT_SCHEMES } from "../../../../cod-shared/stores/appearance";
+import { APPEARANCE_DEFAULT_SCHEMES, appearanceThemeSettingsOf } from "../../../../cod-shared/stores/appearance";
 import { TEST_DELIVERY } from "@/test-utils/media";
 
 const registry: Miniflare[] = [];
@@ -205,15 +205,18 @@ describe("the storefront config", () => {
     expect(config!.themeSettings).toEqual({ colorSchemes: palette, pageScheme: "scheme-1" });
   });
 
-  it("carries the storefront switches and the safe header strip the editor saved", async () => {
+  it("carries the storefront switches, logo alignment and safe header strip the editor saved", async () => {
     const id = await seedStore();
     await saveThemeSettings(db, id, "theme-00", {
       colorSchemes: APPEARANCE_DEFAULT_SCHEMES,
       pageScheme: "scheme-6",
       hideLogo: true,
       searchEnabled: false,
-      hideHeroImages: true,
+      logoAlignment: "left",
       headerHtml: '<strong class="promo">Sale</strong>',
+      homeHeroHidden: true,
+      homeHeroImage: { key: "products/hero.webp" },
+      homeFeaturesBarHidden: true,
     });
 
     const config = await getStoreConfig(db, id, TEST_DELIVERY, { theme: "theme-00" });
@@ -222,8 +225,31 @@ describe("the storefront config", () => {
       pageScheme: "scheme-6",
       hideLogo: true,
       searchEnabled: false,
-      hideHeroImages: true,
+      logoAlignment: "left",
       headerHtml: '<strong class="promo">Sale</strong>',
+      homeHeroHidden: true,
+      homeHeroImage: { key: "products/hero.webp" },
+      homeFeaturesBarHidden: true,
+    });
+  });
+
+  it("reads per-section overrides back from the flat row the API writes", async () => {
+    const id = await seedStore();
+    await saveThemeSettings(db, id, "theme-00", {
+      colorSchemes: APPEARANCE_DEFAULT_SCHEMES,
+      pageScheme: "scheme-1",
+      logoAlignment: "center",
+      homeHeroHidden: true,
+      homeHeroImage: { key: "products/hero.webp", alt: "New arrival" },
+      homeMarqueeImage: { key: "landing/strip.webp" },
+    });
+
+    expect(appearanceThemeSettingsOf(await getThemeSettings(db, id, "theme-00"))).toMatchObject({
+      logoAlignment: "center",
+      sections: {
+        hero: { hidden: true, image: { key: "products/hero.webp", alt: "New arrival" } },
+        marquee: { image: { key: "landing/strip.webp" } },
+      },
     });
   });
 

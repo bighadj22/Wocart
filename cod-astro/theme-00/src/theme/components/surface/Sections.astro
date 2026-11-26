@@ -4,9 +4,15 @@
 // completed with every fixed and required block, each rendered through the
 // SDK with one read cache for the page. A preview marks every instance so the
 // editor can select it; a shopper's page carries no markers.
+//
+// The dashboard's Appearance tab can hide a home section and give it its own
+// photo without touching the page document: those are theme settings, read
+// here once per section. Hero and image-banner draw their picked photo in the
+// component; every other section wears it as a backdrop behind its content.
 import InstanceView from "@wocart/theme/astro/InstanceView.astro";
 import { createReadCache } from "@wocart/theme/astro";
 import { resolveSurfaceDocument, type ReadCache, type ThemeDefinition } from "@wocart/theme";
+import { homeSectionStateOf, NATIVE_IMAGE_SECTIONS, type HomeSectionType } from "@/theme/runtime/home-sections";
 import { renderContext } from "@/theme/runtime/render-context";
 import { reportSurface } from "@/theme/pages/surface-report";
 
@@ -28,8 +34,28 @@ const resolved = resolveSurfaceDocument(theme, surface, document, { content: sto
 reportSurface(surface, resolved);
 const context = renderContext(store, params);
 const reads = Astro.props.reads ?? createReadCache();
+const views = resolved.page.sections
+  .map((section) => ({ section, state: homeSectionStateOf(store, section.type) }))
+  .filter(({ state }) => !state.hidden);
 ---
 
-{resolved.page.sections.map((section) => (
-  <InstanceView instance={section} theme={theme} context={context} storefront={store.client} reads={reads} preview={preview} />
-))}
+{views.map(({ section, state }) => {
+  const backdrop = state.image && !NATIVE_IMAGE_SECTIONS.has(section.type as HomeSectionType) ? state.image : null;
+  const view = (
+    <InstanceView instance={section} theme={theme} context={context} storefront={store.client} reads={reads} preview={preview} />
+  );
+  return backdrop ? (
+    <div class="home-section-backdrop" style={`background-image: url('${backdrop.src}'); background-position: ${backdrop.position ?? "center"}`}>
+      {view}
+    </div>
+  ) : (
+    view
+  );
+})}
+
+<style>
+  .home-section-backdrop {
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+</style>

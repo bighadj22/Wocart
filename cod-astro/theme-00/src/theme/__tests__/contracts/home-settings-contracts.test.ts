@@ -79,20 +79,47 @@ describe("hero and promo links", () => {
   );
 });
 
-describe("hero and banner photos", () => {
+describe("per-section visibility and photos", () => {
   const sections: ComponentInstance[] = [
     { id: "h", type: "hero" },
     { id: "b", type: "image-banner" },
   ];
 
-  it("show by default and disappear when the store switches them off", async () => {
+  it("show by default and disappear only where the store hides them", async () => {
     const shown = await renderSections(sections, storefront);
     expect(shown).toContain("hero-photo");
     expect(shown).toContain("banner-photo");
 
-    const hidden = await renderSections(sections, storefront, { themeSettings: { hideHeroImages: true } });
-    expect(hidden).not.toContain("hero-photo");
-    expect(hidden).not.toContain("banner-photo");
+    const heroHidden = await renderSections(sections, storefront, { themeSettings: { homeHeroHidden: true } });
+    expect(heroHidden).not.toContain("hero-photo");
+    expect(heroHidden).toContain("banner-photo");
+
+    const bannerHidden = await renderSections(sections, storefront, { themeSettings: { homeImageBannerHidden: true } });
+    expect(bannerHidden).toContain("hero-photo");
+    expect(bannerHidden).not.toContain("banner-photo");
+  });
+
+  it("uses each section's own photo instead of the first product", async () => {
+    const html = await renderSections(sections, storefront, {
+      themeSettings: {
+        homeHeroImage: { key: "products/hero.webp", alt: "Own hero" },
+        homeImageBannerImage: { key: "landing/promo.webp", alt: "Own promo" },
+      },
+    });
+    expect(html).toContain('alt="Own hero"');
+    expect(html).toContain('alt="Own promo"');
+    expect(html).not.toContain("Photo 0");
+  });
+
+  it("keeps the old grouped switch until a save clears it", async () => {
+    const legacy = await renderSections(sections, storefront, { themeSettings: { hideHeroImages: true } });
+    expect(legacy).not.toContain("hero-photo");
+    expect(legacy).not.toContain("banner-photo");
+
+    const superseded = await renderSections(sections, storefront, {
+      themeSettings: { hideHeroImages: true, homeHeroHidden: false },
+    });
+    expect(superseded).toContain("hero-photo");
   });
 });
 

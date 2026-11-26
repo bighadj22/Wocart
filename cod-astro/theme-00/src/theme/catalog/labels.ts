@@ -187,6 +187,8 @@ export const OPTION = {
   start: text("في البداية", "Au début", "At the start"),
   end: text("في النهاية", "À la fin", "At the end"),
   center: text("في الوسط", "Au centre", "Centered"),
+  right: text("على اليمين", "À droite", "Right"),
+  left: text("على اليسار", "À gauche", "Left"),
 };
 
 export const GROUP = {
@@ -249,6 +251,7 @@ export const SETTINGS_GROUP = {
   shape: text("الأشكال", "Formes", "Shape"),
   productCards: text("بطاقات المنتجات", "Cartes produit", "Product cards"),
   storefront: text("الرأس والمتجر", "En-tête et boutique", "Header & storefront"),
+  homeSections: text("أقسام الصفحة الرئيسية", "Sections de la page d'accueil", "Home sections"),
 };
 
 export const SETTING = {
@@ -263,6 +266,30 @@ export const SETTING = {
   searchEnabled: text("تفعيل البحث", "Activer la recherche", "Enable search"),
   hideHeroImages: text("إخفاء صور البانر", "Masquer les photos des bannières", "Hide hero & banner photos"),
   headerHtml: text("HTML أعلى الرأس", "HTML au-dessus de l’en-tête", "Header HTML"),
+  logoAlignment: text("محاذاة الشعار", "Alignement du logo", "Logo alignment"),
+};
+
+/** The hide and photo controls for one home section, in the editor's words. */
+const partsOf = (label: LocalizedText) =>
+  typeof label === "string" ? { ar: label, fr: label, en: label } : label;
+const hideOf = (label: LocalizedText): LocalizedText => {
+  const { ar, fr, en } = partsOf(label);
+  return { ar: `إخفاء ${ar}`, fr: `Masquer ${fr}`, en: `Hide ${en}` };
+};
+const imageOf = (label: LocalizedText): LocalizedText => {
+  const { ar, fr, en } = partsOf(label);
+  return { ar: `صورة ${ar}`, fr: `Image ${fr}`, en: `${en} image` };
+};
+
+export const HOME_SETTING = {
+  hero: { hidden: hideOf(SECTION.hero), image: imageOf(SECTION.hero) },
+  marquee: { hidden: hideOf(SECTION.marquee), image: imageOf(SECTION.marquee) },
+  "category-cards": { hidden: hideOf(SECTION.categoryCards), image: imageOf(SECTION.categoryCards) },
+  "product-tabs": { hidden: hideOf(SECTION.productTabs), image: imageOf(SECTION.productTabs) },
+  "image-banner": { hidden: hideOf(SECTION.imageBanner), image: imageOf(SECTION.imageBanner) },
+  "how-it-works": { hidden: hideOf(SECTION.howItWorks), image: imageOf(SECTION.howItWorks) },
+  "customer-testimonials": { hidden: hideOf(SECTION.customerTestimonials), image: imageOf(SECTION.customerTestimonials) },
+  "features-bar": { hidden: hideOf(SECTION.featuresBar), image: imageOf(SECTION.featuresBar) },
 };
 
 /** The theme's default color schemes, as the editor names them. */

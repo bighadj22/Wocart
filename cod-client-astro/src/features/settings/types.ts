@@ -1,7 +1,11 @@
 import type { MediaImage } from "../../../../cod-shared/media/model";
 import type { StoreLocale } from "../../../../cod-shared/i18n/locales";
 import type { LocaleRow, StoreLanguage } from "../../../../cod-shared/stores/settings";
-import type { AppearanceColorScheme } from "../../../../cod-shared/stores/appearance";
+import type {
+  AppearanceColorScheme,
+  AppearanceHomeSectionKey,
+  AppearanceLogoAlignment,
+} from "../../../../cod-shared/stores/appearance";
 
 export type { StoreLanguage };
 
@@ -66,9 +70,12 @@ export interface StoreAppearance {
   pageScheme: string;
   hideLogo: boolean;
   searchEnabled: boolean;
-  hideHeroImages: boolean;
   /** Sanitized HTML the store puts above its header. */
   headerHtml: string;
+  /** Where the logo sits, regardless of the header's own logo position. */
+  logoAlignment: AppearanceLogoAlignment;
+  /** One entry for every home section, including an image ready to preview. */
+  sections: Record<AppearanceHomeSectionKey, { hidden: boolean; image: MediaImage | null }>;
   /** Saved text edits, `{ ar: { heroTitle: "…" } }`. */
   texts: Partial<Record<StoreLocale, Record<string, string>>>;
 }

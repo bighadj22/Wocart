@@ -9,7 +9,7 @@ import type { InferProps } from "@wocart/theme";
 import type { StoreFrontContent } from "@/theme/content";
 import type { hero } from "@/theme/catalog/home/hero.def";
 import Section from "@/theme/components/ui/Section.astro";
-import { settingsOf } from "@/theme/runtime/settings";
+import { homeSectionStateOf } from "@/theme/runtime/home-sections";
 import { pickedPicture } from "@/theme/utils/images";
 
 type Props = InferProps<typeof hero> & {
@@ -19,10 +19,10 @@ type Props = InferProps<typeof hero> & {
 
 const { content, ctaPrimaryHref, ctaSecondaryHref, image, photoSide, scheme, style, lead } = Astro.props;
 const store = Astro.locals.store;
-const { hideHeroImages } = settingsOf(store);
-const own = pickedPicture(image, store.config.media);
+const section = homeSectionStateOf(store, "hero");
+const own = pickedPicture(section.picked ?? image, store.config.media);
 const chosen = own ? { src: own.src, alt: own.alt } : lead;
-const photo = hideHeroImages ? null : chosen;
+const photo = section.hidden ? null : chosen;
 const focus = own?.position ?? "50% 55%";
 ---
 
