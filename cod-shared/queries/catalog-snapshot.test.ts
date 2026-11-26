@@ -44,6 +44,7 @@ const gift = (id: string, extra: Partial<CatalogOffer> = {}): CatalogOffer => ({
   rewardVariantId: null,
   rewardQuantity: 1,
   tiers: [],
+  freeShippingDeliveryType: null,
   ...extra,
 });
 

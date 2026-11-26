@@ -133,6 +133,20 @@ describe("Store API routes (OpenAPIHono)", () => {
       expect(body.data.name).toBe("متجري");
     });
 
+    it("sanitizes the header strip before the storefront reads it", async () => {
+      vi.mocked(queries.getStoreConfig).mockResolvedValue({
+        id: "store_1",
+        name: "متجري",
+        lang: "ar",
+        themeSettings: { pageScheme: "scheme-6", headerHtml: '<strong>Sale</strong><script>alert(1)</script>' },
+      } as any);
+
+      const res = await app.request("/store/config");
+      const body: any = await res.json();
+
+      expect(body.data.themeSettings.headerHtml).toBe("<strong>Sale</strong>&lt;script&gt;alert(1)&lt;/script&gt;");
+    });
+
     it("returns 404 when the store is missing", async () => {
       vi.mocked(queries.getStoreConfig).mockResolvedValue(null as any);
 

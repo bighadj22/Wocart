@@ -81,7 +81,13 @@
     "tier_each": "{perUnit} l'unité",
     "tier_remove": "Retirer ce palier",
     "tier_add": "Ajouter un palier",
-    "tier_free_shipping": "Livraison gratuite à partir de ce palier (quand la commande ne contient que ce produit)"
+    "tier_free_shipping": "Livraison gratuite à partir de ce palier (quand la commande ne contient que ce produit)",
+    "eligible_delivery_methods_label": "Modes de livraison éligibles",
+    "eligible_delivery_methods_hint": "La livraison gratuite s'applique uniquement au mode choisi par le client. Sélectionnez les deux pour tous les modes.",
+    "eligible_delivery_home": "🏠 Livraison à domicile",
+    "eligible_delivery_stop_desk": "📍 Point de retrait",
+    "error_eligible_delivery_methods": "Sélectionnez au moins un mode de livraison",
+    "error_tier_eligible_delivery_methods": "Sélectionnez au moins un mode de livraison pour chaque palier incluant la livraison gratuite"
   },
   "buy_x_get_y": "Achetez {x}, recevez {y} gratuitement",
   "buy_x_free_shipping": "Achetez {x}, livraison gratuite",

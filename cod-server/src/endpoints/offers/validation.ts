@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MAX_PRICE_TIERS, MAX_TIER_QUANTITY, OFFER_KINDS } from "../../../../cod-shared/offers/model";
+import { FREE_SHIPPING_DELIVERY_TYPES } from "../../../../cod-shared/offers/engine";
 
 /**
  * The shape of an offer write. Whether the whole offer is coherent — a gift
@@ -11,6 +12,7 @@ const priceTier = z.object({
   quantity: z.number().int().min(1).max(MAX_TIER_QUANTITY),
   price: z.number().int().min(0),
   freeShipping: z.boolean().default(false),
+  freeShippingDeliveryType: z.enum(FREE_SHIPPING_DELIVERY_TYPES).optional().nullable().default(null),
 });
 
 export const createOfferSchema = z.object({
@@ -26,6 +28,8 @@ export const createOfferSchema = z.object({
   startsAt: z.string().datetime({ offset: true }).nullish(),
   endsAt: z.string().datetime({ offset: true }).nullish(),
   status: z.enum(["active", "inactive"]).default("active"),
+  /** null means both home delivery and pickup point. */
+  freeShippingDeliveryType: z.enum(FREE_SHIPPING_DELIVERY_TYPES).optional().nullable(),
 });
 
 /** Any field; a field left out keeps its value, null clears one that may be empty. */

@@ -30,6 +30,8 @@ export interface PriceTier {
   quantity: number;
   price: number;
   freeShipping: boolean;
+  /** Delivery method earning this tier's free shipping; null or absent inherits the offer's. */
+  freeShippingDeliveryType?: "home" | "stop_desk" | null;
 }
 
 /** The highest tier `quantity` reaches, or null below the lowest. */
@@ -70,6 +72,8 @@ export interface OfferShape {
   endsAt: string | null;
   /** Quantity pricing's tiers; empty for the other kinds. */
   tiers: readonly PriceTier[];
+  /** Delivery method earning free shipping; null or absent means both. */
+  freeShippingDeliveryType?: "home" | "stop_desk" | null;
 }
 
 export type OfferProblem =

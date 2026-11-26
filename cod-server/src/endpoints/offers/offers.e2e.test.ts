@@ -184,6 +184,33 @@ describe("offers through the real routes", () => {
     expect(edited.body.data).toMatchObject({ triggerQuantity: 2, tiers: [{ quantity: 2, price: 3000, freeShipping: false }] });
   });
 
+  it("save and keep the eligible delivery method of a free-shipping offer and its tiers", async () => {
+    const created = await call("POST", "/api/offers", {
+      name: "Pickup ships free",
+      discountType: "free_shipping",
+      triggerProductId: "robe",
+      triggerQuantity: 2,
+      freeShippingDeliveryType: "stop_desk",
+    });
+    expect(created.status).toBe(201);
+    expect(created.body.data.freeShippingDeliveryType).toBe("stop_desk");
+
+    const edited = await call("PATCH", `/api/offers/${created.body.data.id}`, { name: "Pickup only" });
+    expect(edited.body.data.freeShippingDeliveryType).toBe("stop_desk");
+    const both = await call("PATCH", `/api/offers/${created.body.data.id}`, { freeShippingDeliveryType: null });
+    expect(both.body.data.freeShippingDeliveryType).toBeNull();
+
+    const tiers = await call("POST", "/api/offers", {
+      ...quantityPricing,
+      status: "inactive",
+      tiers: [{ quantity: 2, price: 3500, freeShipping: true, freeShippingDeliveryType: "home" }],
+    });
+    expect(tiers.status).toBe(201);
+    expect(tiers.body.data.tiers).toEqual([{ quantity: 2, price: 3500, freeShipping: true, freeShippingDeliveryType: "home" }]);
+    const tierEdit = await call("PATCH", `/api/offers/${tiers.body.data.id}`, { name: "Home packs" });
+    expect(tierEdit.body.data.tiers).toEqual([{ quantity: 2, price: 3500, freeShipping: true, freeShippingDeliveryType: "home" }]);
+  });
+
   it("refuse tiers that are empty, doubled, or on another kind", async () => {
     const refused = async (body: unknown) => (await call("POST", "/api/offers", body)).body;
     expect(await refused({ ...quantityPricing, tiers: [] })).toMatchObject({ code: "INVALID_OFFER", context: { reason: "empty" } });

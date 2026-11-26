@@ -63,6 +63,21 @@ describe("the store summary", () => {
     expect(seen).toEqual(["Maysa Shop"]);
   });
 
+  it("shows a removed logo at once instead of the one cached earlier", async () => {
+    const oldLogo = { key: "products/old.webp", url: "https://media.example.com/products/old.webp", width: 200, height: 200 };
+    seam.updateMyStore.mockResolvedValue({ ...store, logo: null });
+    const { saveMyStore, storeSummaryChanged, watchStoreSummary, cachedStoreSummary } = await import("./store-summary");
+    storeSummaryChanged({ ...store, logo: oldLogo });
+    const seen: unknown[] = [];
+    watchStoreSummary((summary) => seen.push(summary));
+
+    await saveMyStore({ logoKey: null });
+
+    expect(seam.updateMyStore).toHaveBeenCalledWith({ logoKey: null });
+    expect(seen).toEqual([{ name: "Maysa", domain: "maysashop.online", logo: null }]);
+    expect(cachedStoreSummary()).toEqual({ name: "Maysa", domain: "maysashop.online", logo: null });
+  });
+
   it("is told of every save of the store, and the dashboard saves the store nowhere else", async () => {
     seam.updateMyStore.mockResolvedValue({ ...store, name: "Maysa Shop", logo: { key: "products/logo.webp", url: "https://media.example.com/products/logo.webp", width: 512, height: 512 } });
     const { saveMyStore, watchStoreSummary } = await import("./store-summary");

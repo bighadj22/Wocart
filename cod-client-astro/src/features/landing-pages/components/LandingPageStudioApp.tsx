@@ -50,7 +50,7 @@ import {
 } from "@/features/landing-pages/components/TrackingBadge";
 import type { TrackingView } from "@/features/landing-pages/model";
 import { useConversionEventLabel } from "@/components/tracking/ConversionEventPicker";
-import { partitionUploadFiles, ACCEPTED_IMAGE_TYPES, uploadFailure } from "@/features/uploads/api";
+import { partitionUploadFiles, IMAGE_ACCEPT, uploadFailure } from "@/features/uploads/api";
 import { useImageUpload } from "@/features/uploads/useImageUpload";
 import type {
   LandingPage,
@@ -787,7 +787,7 @@ function Gated({ landingPageId }: { landingPageId: string }) {
           <input
             ref={inputRef}
             type="file"
-            accept={ACCEPTED_IMAGE_TYPES.join(",")}
+            accept={IMAGE_ACCEPT}
             multiple
             className="hidden"
             onChange={(event) => {

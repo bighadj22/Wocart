@@ -44,9 +44,11 @@ export function GeneralSettings({
           placeholder={t("store.name_placeholder")}
         />
       </FieldRow>
-      <FieldRow label={t("store.logo_label")} help={t("store.logo_hint")}>
-        <ImageUploader value={logo} onChange={setLogo} alt={name} shape="logo" />
-      </FieldRow>
+      <div className="ml-auto w-full max-w-xs">
+        <FieldRow label={t("store.logo_label")} help={t("store.logo_hint")}>
+          <ImageUploader value={logo} onChange={setLogo} alt={name} shape="logo" />
+        </FieldRow>
+      </div>
       <FieldRow label={t("store.currency_symbol_label")} help={t("store.currency_symbol_hint")}>
         <Input
           value={currencySymbol}

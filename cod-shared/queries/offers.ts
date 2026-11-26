@@ -30,6 +30,8 @@ export interface OfferInput {
   startsAt?: string | null;
   endsAt?: string | null;
   status: OfferStatus;
+  /** Delivery method earning free shipping; null or absent means both. */
+  freeShippingDeliveryType?: "home" | "stop_desk" | null;
 }
 
 export type OfferPatch = Partial<OfferInput>;
@@ -47,7 +49,7 @@ async function tiersOf(db: AppDb, ids: readonly string[]): Promise<Map<string, P
   const byOffer = new Map<string, PriceTier[]>();
   if (ids.length === 0) return byOffer;
   const rows = await db.select().from(offerPriceTiers).where(inArray(offerPriceTiers.offerId, [...ids])).orderBy(asc(offerPriceTiers.quantity)).all();
-  for (const row of rows) byOffer.set(row.offerId, [...(byOffer.get(row.offerId) ?? []), { quantity: row.quantity, price: row.price, freeShipping: row.freeShipping }]);
+  for (const row of rows) byOffer.set(row.offerId, [...(byOffer.get(row.offerId) ?? []), { quantity: row.quantity, price: row.price, freeShipping: row.freeShipping, freeShippingDeliveryType: row.freeShippingDeliveryType as "home" | "stop_desk" | null }]);
   return byOffer;
 }
 
@@ -81,6 +83,7 @@ async function detail(db: AppDb, offer: OfferRow, tiers: PriceTier[], now: strin
     triggerVariant: triggerVariant ? { id: triggerVariant.id, label: variantLabel(triggerVariant.variations) } : null,
     rewardProduct: rewardProduct ?? null,
     rewardVariant: rewardVariant ? { id: rewardVariant.id, label: variantLabel(rewardVariant.variations) } : null,
+    freeShippingDeliveryType: offer.freeShippingDeliveryType as "home" | "stop_desk" | null,
   };
 }
 
@@ -115,6 +118,7 @@ function shapeOf(input: OfferInput): OfferShape & { name: string; status: OfferS
     startsAt: input.startsAt ?? null,
     endsAt: input.endsAt ?? null,
     tiers,
+    freeShippingDeliveryType: input.freeShippingDeliveryType ?? null,
   };
 }
 
@@ -155,7 +159,7 @@ function rowOf(shape: ReturnType<typeof shapeOf>) {
 type BatchStatement = Parameters<AppDb["batch"]>[0][number];
 
 const tierRows = (offerId: string, tiers: readonly PriceTier[]) =>
-  tiers.map((tier) => ({ offerId, quantity: tier.quantity, price: tier.price, freeShipping: tier.freeShipping }));
+  tiers.map((tier) => ({ offerId, quantity: tier.quantity, price: tier.price, freeShipping: tier.freeShipping, freeShippingDeliveryType: tier.freeShippingDeliveryType ?? null }));
 
 export async function createOffer(db: AppDb, input: OfferInput): Promise<{ ok: true; id: string } | ({ ok: false } & OfferWriteProblem)> {
   const shape = shapeOf(input);
@@ -192,6 +196,7 @@ export async function updateOffer(
     rewardVariantId: patch.rewardVariantId !== undefined ? patch.rewardVariantId : kindChanges ? null : (stored.rewardVariant?.id ?? null),
     ...(patch.rewardQuantity !== undefined ? { rewardQuantity: patch.rewardQuantity } : kindChanges ? {} : { rewardQuantity: stored.rewardQuantity }),
     tiers: patch.tiers ?? (kindChanges ? [] : stored.tiers),
+    freeShippingDeliveryType: patch.freeShippingDeliveryType !== undefined ? patch.freeShippingDeliveryType : stored.freeShippingDeliveryType,
     startsAt: patch.startsAt !== undefined ? patch.startsAt : stored.startsAt,
     endsAt: patch.endsAt !== undefined ? patch.endsAt : stored.endsAt,
   });

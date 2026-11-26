@@ -62,6 +62,7 @@ export default function RichTextDescriptionEditor({
         onChange={handleChange}
         disabled={disabled}
         busy={busy}
+        htmlPaste
       />
       <div className="border-t border-border/60 px-3 py-1">
         <DescriptionLength value={value} />

@@ -154,9 +154,9 @@ describe("quantity pricing on the product page", () => {
       name: "Packs malins",
       triggerVariantId: null,
       tiers: [
-        { quantity: 1, price: 2000, freeShipping: false },
-        { quantity: 2, price: 3500, freeShipping: true },
-        { quantity: 3, price: 4500, freeShipping: false },
+        { quantity: 1, price: 2000, freeShipping: false, freeShippingDeliveryType: null },
+        { quantity: 2, price: 3500, freeShipping: true, freeShippingDeliveryType: null },
+        { quantity: 3, price: 4500, freeShipping: false, freeShippingDeliveryType: null },
       ],
     });
     expect(data.offers).toEqual([]);

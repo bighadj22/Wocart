@@ -1,5 +1,5 @@
 import { ApiError, apiFetch } from "@/lib/api";
-import { IMAGE_TYPES, MEDIA_MAX_BYTES, type UploadFolder } from "../../../../cod-shared/media/keys";
+import { IMAGE_TYPES, MEDIA_MAX_BYTES, isImageType, type ImageType, type UploadFolder } from "../../../../cod-shared/media/keys";
 import type { MediaImage } from "../../../../cod-shared/media/model";
 import type { UploadSend, UploadTicket } from "../../../../cod-shared/media/library";
 
@@ -7,7 +7,25 @@ export type ImageUploadFolder = UploadFolder;
 export type { MediaImage };
 
 export const ACCEPTED_IMAGE_TYPES: readonly string[] = IMAGE_TYPES;
+export const IMAGE_ACCEPT = [...IMAGE_TYPES, ".jpg", ".jpeg", ".png", ".webp", ".gif"].join(",");
 export const MAX_UPLOAD_MB = MEDIA_MAX_BYTES / (1024 * 1024);
+
+const TYPE_FROM_EXTENSION: Record<string, ImageType> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+};
+
+/** Some browsers hand a file over with no useful MIME type; its extension still names the image. */
+export function imageTypeOf(file: File): ImageType | null {
+  if (file.type && file.type !== "application/octet-stream") {
+    return isImageType(file.type) ? file.type : null;
+  }
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return TYPE_FROM_EXTENSION[extension] ?? null;
+}
 
 export type ImageUploadRejection = "unsupported_type" | "file_too_large";
 
@@ -36,11 +54,16 @@ function json(init: RequestInit = {}): RequestInit {
 }
 
 /** An Upload Ticket for this file: where and how to send it. */
-export async function requestUpload(file: File, folder: ImageUploadFolder): Promise<UploadTicket> {
+export async function requestUpload(
+  file: File,
+  folder: ImageUploadFolder,
+  contentType: ImageType | null = imageTypeOf(file),
+): Promise<UploadTicket> {
+  if (!contentType) throw new ImageUploadRejectedError("unsupported_type");
   return (
     await apiFetch<DataEnvelope<UploadTicket>>(
       "/api/media/uploads",
-      json({ method: "POST", body: JSON.stringify({ folder, contentType: file.type, bytes: file.size }) }),
+      json({ method: "POST", body: JSON.stringify({ folder, contentType, bytes: file.size }) }),
     )
   ).data;
 }
@@ -50,7 +73,11 @@ export async function requestUpload(file: File, folder: ImageUploadFolder): Prom
  * signed URL, or a PUT to the store's server. Answers the host's own id for
  * the file when it gives one (a form upload's `fileId`).
  */
-export async function sendUpload(send: UploadSend, file: File): Promise<{ hostRef: string | null }> {
+export async function sendUpload(
+  send: UploadSend,
+  file: File,
+  contentType: ImageType | null = imageTypeOf(file),
+): Promise<{ hostRef: string | null }> {
   if (send.kind === "relay") {
     await apiFetch<void>(send.url, { method: send.method, headers: send.headers, body: file });
     return { hostRef: null };
@@ -62,7 +89,8 @@ export async function sendUpload(send: UploadSend, file: File): Promise<{ hostRe
   }
   const form = new FormData();
   for (const [name, value] of Object.entries(send.fields)) form.append(name, value);
-  form.append(send.fileField, file, send.fields.fileName ?? file.name);
+  const payload = contentType ? new Blob([file], { type: contentType }) : file;
+  form.append(send.fileField, payload, send.fields.fileName ?? file.name);
   const response = await fetch(send.url, { method: send.method, body: form });
   if (!response.ok) throw new ImageUploadFailedError(response.status);
   const { fileId } = (await response.json()) as { fileId?: string };
@@ -84,8 +112,8 @@ export function partitionUploadFiles(files: File[]): {
   unsupportedCount: number;
   tooLargeCount: number;
 } {
-  const unsupportedCount = files.filter((file) => !ACCEPTED_IMAGE_TYPES.includes(file.type)).length;
-  const typeAccepted = files.filter((file) => ACCEPTED_IMAGE_TYPES.includes(file.type));
+  const unsupportedCount = files.filter((file) => imageTypeOf(file) === null).length;
+  const typeAccepted = files.filter((file) => imageTypeOf(file) !== null);
   const tooLargeCount = typeAccepted.filter((file) => file.size > MEDIA_MAX_BYTES).length;
   return {
     accepted: typeAccepted.filter((file) => file.size <= MEDIA_MAX_BYTES),
@@ -96,7 +124,7 @@ export function partitionUploadFiles(files: File[]): {
 
 /** Throws ImageUploadRejectedError for a file that must not be uploaded. */
 export function validateUploadFile(file: File): void {
-  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) throw new ImageUploadRejectedError("unsupported_type");
+  if (imageTypeOf(file) === null) throw new ImageUploadRejectedError("unsupported_type");
   if (file.size > MEDIA_MAX_BYTES) throw new ImageUploadRejectedError("file_too_large");
 }
 
@@ -159,8 +187,10 @@ export function uploadFailure(cause: unknown): UploadFailure {
 /** Ticket → send → measure → complete. One implementation for all dashboard uploads. */
 export async function uploadImageFile(file: File, folder: ImageUploadFolder): Promise<MediaImage> {
   validateUploadFile(file);
-  const ticket = await requestUpload(file, folder);
-  const { hostRef } = await sendUpload(ticket.send, file);
+  const contentType = imageTypeOf(file);
+  if (!contentType) throw new ImageUploadRejectedError("unsupported_type");
+  const ticket = await requestUpload(file, folder, contentType);
+  const { hostRef } = await sendUpload(ticket.send, file, contentType);
   const size = await measureImageDimensions(file);
   return completeUpload(ticket.mediaId, { hostRef, width: size?.width ?? null, height: size?.height ?? null });
 }

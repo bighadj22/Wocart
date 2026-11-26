@@ -1,5 +1,11 @@
 import { apiFetch } from "@/lib/api";
-import type { StoreConfig, UpdateStoreData } from "./types";
+import type {
+  AppearanceColorScheme,
+  AppearanceLogoAlignment,
+  AppearanceSectionEdits,
+} from "../../../../cod-shared/stores/appearance";
+import type { StoreLocale } from "../../../../cod-shared/i18n/locales";
+import type { StoreAppearance, StoreConfig, UpdateStoreData } from "./types";
 import type { StoreSummary } from "./store-summary";
 
 interface DataEnvelope<T> {
@@ -26,4 +32,24 @@ export async function getStoreSummary() {
 
 export async function updateMyStore(data: UpdateStoreData) {
   return (await apiFetch<DataEnvelope<StoreConfig>>("/api/stores/me", json({ method: "PATCH", body: JSON.stringify(data) }))).data;
+}
+
+export interface SaveAppearanceInput {
+  colorSchemes?: AppearanceColorScheme[];
+  pageScheme?: string;
+  hideLogo?: boolean;
+  searchEnabled?: boolean;
+  headerHtml?: string;
+  logoAlignment?: AppearanceLogoAlignment;
+  sections?: AppearanceSectionEdits;
+  /** One language's text edits; an empty string removes that edit. */
+  texts?: { locale: StoreLocale; values: Record<string, string> };
+}
+
+export async function getAppearance() {
+  return (await apiFetch<DataEnvelope<StoreAppearance>>("/api/stores/me/appearance")).data;
+}
+
+export async function saveAppearance(data: SaveAppearanceInput) {
+  return (await apiFetch<DataEnvelope<StoreAppearance>>("/api/stores/me/appearance", json({ method: "PUT", body: JSON.stringify(data) }))).data;
 }

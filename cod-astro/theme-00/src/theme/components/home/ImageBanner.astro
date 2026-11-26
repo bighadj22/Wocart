@@ -12,6 +12,7 @@ import type { imageBanner } from "@/theme/catalog/home/image-banner.def";
 import Section from "@/theme/components/ui/Section.astro";
 import Countdown from "@/theme/components/ui/Countdown.astro";
 import { countdownTarget } from "@wocart/storefront";
+import { homeSectionStateOf } from "@/theme/runtime/home-sections";
 import { pickedPicture } from "@/theme/utils/images";
 
 type Props = InferProps<typeof imageBanner> & {
@@ -20,9 +21,12 @@ type Props = InferProps<typeof imageBanner> & {
 };
 
 const { image, imageSide, body, countdown, endsOn, endsAt, ctaHref, scheme, style, content, lead } = Astro.props;
-const { href, config } = Astro.locals.store;
-const own = pickedPicture(image, config.media);
-const photo = own ? { src: own.src, alt: own.alt } : lead;
+const store = Astro.locals.store;
+const { href, config } = store;
+const section = homeSectionStateOf(store, "image-banner");
+const own = pickedPicture(section.picked ?? image, config.media);
+const chosen = own ? { src: own.src, alt: own.alt } : lead;
+const photo = section.hidden ? null : chosen;
 const focus = own?.position ?? "50% 50%";
 const ends = countdownTarget(countdown, endsOn, endsAt);
 const units = { days: content.countdownDays, hours: content.countdownHours, minutes: content.countdownMinutes, seconds: content.countdownSeconds };

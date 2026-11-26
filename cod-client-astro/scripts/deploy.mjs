@@ -24,7 +24,7 @@
  */
 
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, renameSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, renameSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { getCloudEnv } from "../../cod-server/scripts/cloud-env.mjs";
 
@@ -61,9 +61,9 @@ function wranglerApiUrl() {
 
 /** Every URL `astro:env/client` inlined into the browser bundle. */
 function inlinedApiUrls() {
-  const files = execSync(`find ${CLIENT_DIR} -name '*.js'`, { encoding: "utf8" })
-    .split("\n")
-    .filter(Boolean);
+  const files = readdirSync(CLIENT_DIR, { recursive: true })
+    .filter((file) => file.endsWith(".js"))
+    .map((file) => `${CLIENT_DIR}/${file}`);
   const found = new Set();
   for (const file of files) {
     for (const m of readFileSync(file, "utf8").matchAll(

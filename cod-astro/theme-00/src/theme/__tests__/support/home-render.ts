@@ -68,14 +68,16 @@ export async function renderSections(
   storefront: StoreClient,
   options: {
     content?: Record<string, string>;
+    themeSettings?: Record<string, unknown>;
     locale?: string;
     /** The store's languages, for links: `/products` → `/fr/products` in French. */
     routing?: LocaleRouting;
     onIssue?: (issue: RendererIssue) => void;
   } = {},
 ): Promise<string> {
+  const config = options.themeSettings ? { ...TEST_CONFIG, themeSettings: options.themeSettings } : TEST_CONFIG;
   const context: ThemeRenderContext = {
-    store: TEST_CONFIG,
+    store: config,
     content: options.content ?? en,
     locale: options.locale ?? "en",
     fallbackLocales: [],
@@ -89,7 +91,7 @@ export async function renderSections(
   for (const instance of sections) {
     html += await container.renderToString(InstanceView, {
       props: { instance, theme: theme00, context, storefront, reads, onIssue: options.onIssue },
-      locals: testLocals({ locale: context.locale, routing: options.routing ?? { primary: context.locale, published: [context.locale] } }),
+      locals: testLocals({ config, locale: context.locale, routing: options.routing ?? { primary: context.locale, published: [context.locale] } }),
     });
   }
   return html;

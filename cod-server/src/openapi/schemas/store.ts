@@ -221,6 +221,9 @@ export const StoreQuantityPricingSchema = z
           quantity: z.number().int().openapi({ example: 2 }),
           price: z.number().int().openapi({ description: "What that many units cost, in DZD", example: 3500 }),
           freeShipping: z.boolean().openapi({ description: "Delivery is free from this tier, for a basket of this product alone" }),
+          freeShippingDeliveryType: z.enum(["home", "stop_desk"]).nullable().openapi({
+            description: "Delivery method earning this tier's free shipping. null inherits the offer's setting.",
+          }),
         }),
       )
       .openapi({ description: "In increasing quantity" }),
@@ -268,6 +271,10 @@ export const StoreOfferSummarySchema = z.object({
   rewardUnitPrice: z.number().nullable().openapi({
     description:
       "What one gift unit is worth at list price: the reward variant's price, or the reward product's when there is no variant. The storefront states savings at this value.",
+  }),
+  freeShippingDeliveryType: z.enum(["home", "stop_desk"]).nullable().openapi({
+    description:
+      "Delivery method earning this free-delivery offer: `home` or `stop_desk`. null means both. The store's normal rate stands for a method the offer does not cover.",
   }),
 });
 

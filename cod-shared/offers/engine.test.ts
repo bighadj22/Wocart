@@ -29,18 +29,19 @@ const offer = (extra: Partial<EngineOffer> & { triggerProductId: string }): Engi
   rewardVariantId: null,
   rewardQuantity: 1,
   tiers: [],
+  freeShippingDeliveryType: null,
   ...extra,
 });
 
-const tiers = (...entries: Array<[number, number, boolean?]>): PriceTier[] =>
-  entries.map(([quantity, price, freeShipping = false]) => ({ quantity, price, freeShipping }));
+const tiers = (...entries: Array<[number, number, boolean?, ("home" | "stop_desk" | null)?]>): PriceTier[] =>
+  entries.map(([quantity, price, freeShipping = false, freeShippingDeliveryType = null]) => ({ quantity, price, freeShipping, freeShippingDeliveryType }));
 
 const pricing = (productId: string, list: PriceTier[], extra: Partial<EngineOffer> = {}) =>
   offer({ triggerProductId: productId, discountType: "quantity_price", rewardProductId: null, rewardQuantity: 0, triggerQuantity: 1, tiers: list, ...extra });
 
 /** Every reward fits: its own variant, or the counted line's. */
 const placeAll: PlaceReward = (offer, line) => ({ productId: offer.rewardProductId!, variantId: offer.rewardVariantId ?? line.variantId });
-const apply = (lines: OfferLine[], candidates: EngineOffer[], place: PlaceReward = placeAll) => applyOffers(lines, candidates, place);
+const apply = (lines: OfferLine[], candidates: EngineOffer[], place: PlaceReward = placeAll, deliveryType: "home" | "stop_desk" = "home") => applyOffers(lines, candidates, place, deliveryType);
 const totals = (lines: OfferLine[], candidates: EngineOffer[]) => apply(lines, candidates).lines.map((priced) => priced.lineTotal);
 
 describe("quantity pricing", () => {
@@ -97,6 +98,16 @@ describe("quantity pricing", () => {
     expect(apply([line("robe", 1)], [withDelivery]).freeShippingOfferId).toBeNull();
     expect(apply([line("robe", 2)], [withDelivery]).freeShippingOfferId).toBe(withDelivery.id);
     expect(apply([line("robe", 2), line("sac", 1)], [withDelivery]).freeShippingOfferId).toBeNull();
+  });
+
+  it("honours the tier's delivery method, or inherits the offer's", () => {
+    const pickupOnly = pricing("robe", tiers([2, 3500, true, "stop_desk"]));
+    expect(apply([line("robe", 2)], [pickupOnly], placeAll, "stop_desk").freeShippingOfferId).toBe(pickupOnly.id);
+    expect(apply([line("robe", 2)], [pickupOnly], placeAll, "home").freeShippingOfferId).toBeNull();
+
+    const homeOffer = pricing("robe", tiers([2, 3500, true]), { freeShippingDeliveryType: "home" });
+    expect(apply([line("robe", 2)], [homeOffer], placeAll, "home").freeShippingOfferId).toBe(homeOffer.id);
+    expect(apply([line("robe", 2)], [homeOffer], placeAll, "stop_desk").freeShippingOfferId).toBeNull();
   });
 });
 
@@ -164,7 +175,18 @@ describe("free-shipping offers", () => {
   it("make delivery free for a basket of that product alone, in any variants", () => {
     const fs = free("p1");
     expect(apply([line("p1", 2)], [fs]).freeShippingOfferId).toBe(fs.id);
+    expect(apply([line("p1", 2)], [fs], placeAll, "stop_desk").freeShippingOfferId).toBe(fs.id);
     expect(apply([line("p1", 1, { variantId: "a" }), line("p1", 1, { variantId: "b" })], [fs]).freeShippingOfferId).toBe(fs.id);
+  });
+
+  it("leave the store's rate standing for a delivery method the offer does not cover", () => {
+    const homeOnly = offer({ triggerProductId: "p1", discountType: "free_shipping", rewardProductId: null, rewardQuantity: 0, freeShippingDeliveryType: "home" });
+    expect(apply([line("p1", 2)], [homeOnly], placeAll, "home").freeShippingOfferId).toBe(homeOnly.id);
+    expect(apply([line("p1", 2)], [homeOnly], placeAll, "stop_desk").freeShippingOfferId).toBeNull();
+
+    const pickupOnly = offer({ triggerProductId: "p1", discountType: "free_shipping", rewardProductId: null, rewardQuantity: 0, freeShippingDeliveryType: "stop_desk" });
+    expect(apply([line("p1", 2)], [pickupOnly], placeAll, "stop_desk").freeShippingOfferId).toBe(pickupOnly.id);
+    expect(apply([line("p1", 2)], [pickupOnly], placeAll, "home").freeShippingOfferId).toBeNull();
   });
 
   it("do nothing — and are not reported, nor named on a line — once another product joins", () => {

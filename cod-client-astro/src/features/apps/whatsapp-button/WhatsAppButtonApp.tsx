@@ -21,7 +21,7 @@ import {
 } from "@/components/ui";
 import { useT } from "@/i18n/react";
 import { notify } from "@/lib/notify";
-import { ACCEPTED_IMAGE_TYPES, uploadFailure } from "@/features/uploads/api";
+import { IMAGE_ACCEPT, uploadFailure } from "@/features/uploads/api";
 import { useImageUpload } from "@/features/uploads/useImageUpload";
 import { getWhatsAppButtonApp, saveWhatsAppButtonApp } from "@/features/apps/whatsapp-button/api";
 import type { AppBodyProps } from "@/features/apps/types";
@@ -228,7 +228,7 @@ export default function WhatsAppButtonApp({ canManage, onSaved }: AppBodyProps) 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                accept={IMAGE_ACCEPT}
                 className="hidden"
                 onChange={(e) => void handleAvatarFileSelect(e)}
               />

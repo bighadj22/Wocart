@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { checkThemeSettings, contrastRatio, themeStyleSheet } from "@wocart/theme";
 import themeFonts from "@/theme/fonts.json";
 import styleSizes from "@/theme/style-sizes.json";
-import { BODY_FONT, CORNERS, DEFAULT_SCHEMES, HEADING_FONT, cardAspect, cornerRadii, schemeBackground, themeFont } from "@/theme/appearance";
+import { BODY_FONT, CORNERS, DEFAULT_SCHEMES, HEADING_FONT, SCHEME_OF, cardAspect, cornerRadii, schemeBackground, themeFont } from "@/theme/appearance";
 import { theme00 } from "@/theme/theme";
 
 const rem = (value: string) => (value === "0" ? 0 : Number.parseFloat(value));
@@ -20,7 +20,7 @@ describe("the default color schemes", () => {
   it("are schemes the SDK accepts, the page's first", () => {
     expect(checkThemeSettings(theme00, { colorSchemes: DEFAULT_SCHEMES })).toEqual([]);
     expect(DEFAULT_SCHEMES[0].id).toBe("scheme-1");
-    expect(DEFAULT_SCHEMES.map((scheme) => scheme.id)).toEqual(["scheme-1", "scheme-2", "scheme-3", "scheme-4", "scheme-5"]);
+    expect(DEFAULT_SCHEMES.map((scheme) => scheme.id)).toEqual(["scheme-1", "scheme-2", "scheme-3", "scheme-4", "scheme-5", "scheme-6"]);
   });
 
   it("keep their text, headings and button labels readable (WCAG AA, 4.5:1)", () => {
@@ -37,6 +37,8 @@ describe("the default color schemes", () => {
 
   it("give the browser's chrome the page scheme's background, white for an unknown one", () => {
     expect(schemeBackground(DEFAULT_SCHEMES, "scheme-5")).toBe("#0f1626");
+    expect(SCHEME_OF.olive).toBe("scheme-6");
+    expect(schemeBackground(DEFAULT_SCHEMES, SCHEME_OF.olive)).toBe("#f3f2e7");
     expect(schemeBackground(DEFAULT_SCHEMES, "gone")).toBe("#ffffff");
     expect(schemeBackground(undefined, "scheme-1")).toBe("#ffffff");
   });

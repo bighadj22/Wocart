@@ -5,7 +5,7 @@
  * and brings mobile TTFB in Algeria down from ~1200ms to ~25ms.
  *
  * Senior-dev invariants:
- *   1. High-traffic catalog & marketing pages MUST have SWR edge cache rules.
+ *   1. Pages render uncached so a dashboard Appearance save shows immediately.
  *   2. Communes (immutable administrative data) MUST have long-lived cache.
  *   3. Transactional routes (checkout, thank-you, OTP, order submission)
  *      MUST NEVER be cached.
@@ -33,16 +33,16 @@ describe("astro edge cache configuration", () => {
     expect(config).toContain("@astrojs/cloudflare/cache");
   });
 
-  it("enforces SWR cache rules for high-traffic public catalog routes", () => {
-    expect(config).toContain('"/": { maxAge: 60, swr: 3600, tags: ["home", PAGES_CACHE_TAG] }');
-    expect(config).toContain('"/products": { maxAge: 60, swr: 3600, tags: ["products", PAGES_CACHE_TAG] }');
-    expect(config).toContain('"/products/[slug]": { maxAge: 60, swr: 86400, tags: ["products", PAGES_CACHE_TAG] }');
-    expect(config).toContain('"/category/[slug]": { maxAge: 60, swr: 86400, tags: ["categories", PAGES_CACHE_TAG] }');
-    expect(config).toContain('"/lp/[slug]": { maxAge: 60, swr: 86400, tags: ["landing-pages", PAGES_CACHE_TAG] }');
+  it("renders public pages uncached so saved appearance shows immediately", () => {
+    expect(config).toContain('"/": { maxAge: 0, swr: 0, tags: ["home", PAGES_CACHE_TAG] }');
+    expect(config).toContain('"/products": { maxAge: 0, swr: 0, tags: ["products", PAGES_CACHE_TAG] }');
+    expect(config).toContain('"/products/[slug]": { maxAge: 0, swr: 0, tags: ["products", PAGES_CACHE_TAG] }');
+    expect(config).toContain('"/category/[slug]": { maxAge: 0, swr: 0, tags: ["categories", PAGES_CACHE_TAG] }');
+    expect(config).toContain('"/lp/[slug]": { maxAge: 0, swr: 0, tags: ["landing-pages", PAGES_CACHE_TAG] }');
   });
 
-  it("enforces long-lived cache for legal pages and immutable communes", () => {
-    expect(config).toContain('"/pages/[slug]": { maxAge: 3600, swr: 604800, tags: ["legal-pages", PAGES_CACHE_TAG] }');
+  it("keeps legal pages uncached and communes long-lived", () => {
+    expect(config).toContain('"/pages/[slug]": { maxAge: 0, swr: 0, tags: ["legal-pages", PAGES_CACHE_TAG] }');
     expect(config).toContain('"/api/communes/[wilayaId]": { maxAge: 31536000, swr: 31536000, tags: ["communes"] }');
   });
 

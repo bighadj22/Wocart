@@ -81,7 +81,13 @@
     "tier_each": "{perUnit} للقطعة",
     "tier_remove": "إزالة هذه الشريحة",
     "tier_add": "إضافة شريحة",
-    "tier_free_shipping": "توصيل مجاني ابتداءً من هذه الشريحة (عندما يحتوي الطلب على هذا المنتج وحده)"
+    "tier_free_shipping": "توصيل مجاني ابتداءً من هذه الشريحة (عندما يحتوي الطلب على هذا المنتج وحده)",
+    "eligible_delivery_methods_label": "طرق التوصيل المؤهلة",
+    "eligible_delivery_methods_hint": "يُطبق التوصيل المجاني فقط عندما يختار الزبون طريقة توصيل محددة هنا. اختر الطريقتين لتشمل كل الطرق.",
+    "eligible_delivery_home": "🏠 توصيل للمنزل",
+    "eligible_delivery_stop_desk": "📍 الاستلام من المكتب",
+    "error_eligible_delivery_methods": "اختر طريقة توصيل واحدة على الأقل",
+    "error_tier_eligible_delivery_methods": "اختر طريقة توصيل واحدة على الأقل لكل شريحة تتضمن توصيلًا مجانيًا"
   },
   "buy_x_get_y": "اشترِ {x} واحصل على {y} مجانًا",
   "buy_x_free_shipping": "اشترِ {x} واحصل على شحن مجاني",

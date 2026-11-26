@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Eye } from "lucide-react";
 import {
   canScope,
   useIdentity,
@@ -38,7 +39,7 @@ import type {
   ShippingProfile,
   VariantOptionFormState,
 } from "@/features/products/types";
-import { Alert, Card, FormPage, useConfirmDialog } from "@/components/ui";
+import { Alert, Button, Card, FormPage, useConfirmDialog } from "@/components/ui";
 import {
   ProductImageUploader,
   formImageId,
@@ -51,6 +52,10 @@ import {
   type VariantRow,
 } from "@/features/products/components/ProductVariantsCard";
 import { ProductSettingsCard } from "@/features/products/components/ProductSettingsCard";
+import {
+  ProductPreview,
+  type ProductPreviewStats,
+} from "@/features/products/components/ProductPreview";
 import { ProductCollectionsCard } from "@/features/products/components/ProductCollectionsCard";
 import { ProductSeoCard } from "@/features/products/components/ProductSeoCard";
 import { listCollections } from "@/features/collections/api";
@@ -101,6 +106,14 @@ export function ProductForm({ productId }: { productId?: string }) {
   const [hasVariantsSwitch, setHasVariantsSwitch] = useState(false);
   const [variantOptions, setVariantOptions] = useState<VariantOptionFormState[]>([]);
   const [variantRows, setVariantRows] = useState<VariantRow[]>([]);
+
+  /** The shopper's view of the form as it stands, unsaved edits included. */
+  const [previewOpen, setPreviewOpen] = useState(false);
+  /** The saved product's own visibility mark; the form does not edit it. */
+  const [productVisible, setProductVisible] = useState(true);
+  const [reviewStats, setReviewStats] = useState<ProductPreviewStats | null>(
+    null,
+  );
 
   const canManage = canScope(identity, SCOPES.PRODUCTS_MANAGE);
   const canSave = editing
@@ -183,6 +196,15 @@ export function ProductForm({ productId }: { productId?: string }) {
         setStatus(product.status);
         setTrackInventory(product.trackInventory);
         setShowInStore(product.showInStore);
+        setProductVisible(product.visibility);
+        setReviewStats(
+          product.reviewCount && product.reviewCount > 0
+            ? {
+                avgRating: product.avgRating ?? 0,
+                reviewCount: product.reviewCount,
+              }
+            : null,
+        );
         setCollectionIds(product.collectionIds ?? []);
         setInventory(String(product.inventory));
         setLowStockThreshold(String(product.lowStockThreshold ?? 5));
@@ -461,110 +483,157 @@ export function ProductForm({ productId }: { productId?: string }) {
   const backHref = productId
     ? `/products/${encodeURIComponent(productId)}`
     : "/products";
+  const previewImages = images.map((img) =>
+    img.kind === "saved"
+      ? { url: img.image.url, alt: img.image.altText ?? null }
+      : { url: img.url, alt: null },
+  );
+  const previewVariants = variantOptions
+    .map((option) => ({
+      name: option.name,
+      values: option.values
+        .map((value) => value.value)
+        .filter((value) => value.trim() !== ""),
+    }))
+    .filter((option) => option.name.trim() !== "" && option.values.length > 0);
 
   return (
-    <FormPage
-      title={editing ? t("form.title_edit") : t("form.title_add")}
-      backHref={backHref}
-      error={message}
-      onSave={() => void save()}
-      saving={busy}
-      aside={
-        <>
-        <ProductSettingsCard
-          status={status}
-          setStatus={setStatus}
-          inventory={inventory}
-          setInventory={setInventory}
-          lowStockThreshold={lowStockThreshold}
-          setLowStockThreshold={setLowStockThreshold}
-          trackInventory={trackInventory}
-          setTrackInventory={setTrackInventory}
-          showInStore={showInStore}
-          setShowInStore={setShowInStore}
-          hasVariantsSwitch={hasVariantsSwitch}
-          editing={editing}
-          busy={busy}
-        />
-        {collections && <ProductCollectionsCard collections={collections} selected={collectionIds} onChange={setCollectionIds} busy={busy} />}
-        </>
-      }
-    >
-        <ProductBasicInfoCard
-          name={name}
-          setName={setName}
-          sku={sku}
-          setSku={setSku}
-          slug={slug}
-          setSlug={setSlug}
-          categoryId={categoryId}
-          setCategoryId={setCategoryId}
-          shippingProfileId={shippingProfileId}
-          setShippingProfileId={setShippingProfileId}
-          description={description}
-          setDescription={setDescription}
-          setDescriptionFormat={setDescriptionFormat}
-          groups={groups}
-          shippingProfiles={shippingProfiles}
-          errors={errors}
-          setErrors={setErrors}
-          busy={busy}
-          hasVariantsSwitch={hasVariantsSwitch}
-        />
-
-        <Card title={t("form.section_images")}>
-          <ProductImageUploader
-            images={images}
-            disabled={busy}
-            onAdd={(img) => setImages((prev) => [...prev, img])}
-            onRemove={(id) => {
-              setImages((prev) => prev.filter((item) => formImageId(item) !== id));
-              setVariantRows((rows) =>
-                rows.map((row) => (row.imageId === id ? { ...row, imageId: null } : row)),
-              );
-            }}
-            onReorder={setImages}
+    <>
+      <FormPage
+        title={editing ? t("form.title_edit") : t("form.title_add")}
+        backHref={backHref}
+        error={message}
+        onSave={() => void save()}
+        saving={busy}
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setPreviewOpen(true)}
+          >
+            <Eye size={16} aria-hidden="true" />
+            {t("preview.open")}
+          </Button>
+        }
+        aside={
+          <>
+          <ProductSettingsCard
+            status={status}
+            setStatus={setStatus}
+            inventory={inventory}
+            setInventory={setInventory}
+            lowStockThreshold={lowStockThreshold}
+            setLowStockThreshold={setLowStockThreshold}
+            trackInventory={trackInventory}
+            setTrackInventory={setTrackInventory}
+            showInStore={showInStore}
+            setShowInStore={setShowInStore}
+            hasVariantsSwitch={hasVariantsSwitch}
+            editing={editing}
+            busy={busy}
           />
-        </Card>
+          {collections && <ProductCollectionsCard collections={collections} selected={collectionIds} onChange={setCollectionIds} busy={busy} />}
+          </>
+        }
+      >
+          <ProductBasicInfoCard
+            name={name}
+            setName={setName}
+            sku={sku}
+            setSku={setSku}
+            slug={slug}
+            setSlug={setSlug}
+            categoryId={categoryId}
+            setCategoryId={setCategoryId}
+            shippingProfileId={shippingProfileId}
+            setShippingProfileId={setShippingProfileId}
+            description={description}
+            setDescription={setDescription}
+            setDescriptionFormat={setDescriptionFormat}
+            groups={groups}
+            shippingProfiles={shippingProfiles}
+            errors={errors}
+            setErrors={setErrors}
+            busy={busy}
+            hasVariantsSwitch={hasVariantsSwitch}
+          />
+  
+          <Card title={t("form.section_images")}>
+            <ProductImageUploader
+              images={images}
+              disabled={busy}
+              onAdd={(img) => setImages((prev) => [...prev, img])}
+              onRemove={(id) => {
+                setImages((prev) => prev.filter((item) => formImageId(item) !== id));
+                setVariantRows((rows) =>
+                  rows.map((row) => (row.imageId === id ? { ...row, imageId: null } : row)),
+                );
+              }}
+              onReorder={setImages}
+            />
+          </Card>
+  
+          <ProductPricingCard
+            price={price}
+            setPrice={setPrice}
+            compareAtPrice={compareAtPrice}
+            setCompareAtPrice={setCompareAtPrice}
+            costPrice={costPrice}
+            setCostPrice={setCostPrice}
+            margin={margin}
+            hasVariantsSwitch={hasVariantsSwitch}
+            errors={errors}
+            busy={busy}
+          />
+  
+          <ProductVariantsCard
+            hasVariantsSwitch={hasVariantsSwitch}
+            onToggleVariants={toggleVariants}
+            variantOptions={variantOptions}
+            setVariantOptions={setVariantOptions}
+            variantRows={variantRows}
+            setVariantRows={setVariantRows}
+            existingImages={shownSavedImages}
+            errors={errors}
+            setErrors={setErrors}
+            busy={busy}
+            showImageCol={showImageCol}
+            productCost={costPrice}
+          />
 
-        <ProductPricingCard
-          price={price}
-          setPrice={setPrice}
-          compareAtPrice={compareAtPrice}
-          setCompareAtPrice={setCompareAtPrice}
-          costPrice={costPrice}
-          setCostPrice={setCostPrice}
-          margin={margin}
-          hasVariantsSwitch={hasVariantsSwitch}
-          errors={errors}
-          busy={busy}
-        />
-
-        <ProductVariantsCard
-          hasVariantsSwitch={hasVariantsSwitch}
-          onToggleVariants={toggleVariants}
-          variantOptions={variantOptions}
-          setVariantOptions={setVariantOptions}
-          variantRows={variantRows}
-          setVariantRows={setVariantRows}
-          existingImages={shownSavedImages}
-          errors={errors}
-          setErrors={setErrors}
-          busy={busy}
-          showImageCol={showImageCol}
-          productCost={costPrice}
-        />
-
-        <ProductSeoCard
-          metaTitle={metaTitle}
-          setMetaTitle={setMetaTitle}
-          metaDescription={metaDescription}
-          setMetaDescription={setMetaDescription}
-          name={name}
-          description={description}
-          handle={slug || toSlug(name)}
-          busy={busy}
-        />
-    </FormPage>
+          <ProductSeoCard
+            metaTitle={metaTitle}
+            setMetaTitle={setMetaTitle}
+            metaDescription={metaDescription}
+            setMetaDescription={setMetaDescription}
+            name={name}
+            description={description}
+            handle={slug || toSlug(name)}
+            busy={busy}
+          />
+      </FormPage>
+      <ProductPreview
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        productId={productId}
+        name={name}
+        handle={slug || toSlug(name)}
+        description={description}
+        descriptionFormat={descriptionFormat}
+        price={price}
+        compareAtPrice={compareAtPrice}
+        stock={{
+          tracked: trackInventory,
+          quantity: Number(inventory) || 0,
+          threshold: Number(lowStockThreshold) || 0,
+        }}
+        images={previewImages}
+        variants={previewVariants}
+        status={status}
+        showInStore={showInStore}
+        productVisible={productVisible}
+        reviewStats={reviewStats}
+      />
+    </>
   );
 }

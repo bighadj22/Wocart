@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, UploadCloud, X } from "lucide-react";
-import { ACCEPTED_IMAGE_TYPES, MAX_UPLOAD_MB, partitionUploadFiles, uploadFailure } from "@/features/uploads/api";
+import { IMAGE_ACCEPT, MAX_UPLOAD_MB, partitionUploadFiles, uploadFailure } from "@/features/uploads/api";
 import { useImageUpload } from "@/features/uploads/useImageUpload";
 import type { ProductImage } from "@/features/products/types";
 import { useT } from "@/i18n/react";
@@ -93,7 +93,7 @@ export function ProductImageUploader({ images, disabled, onAdd, onRemove, onReor
         <p className="text-sm font-semibold text-foreground">{uploading ? common("image.uploading") : dragging ? common("image.drop_images") : common("image.pick_images")}</p>
         <p className="mt-1 text-xs text-muted-foreground">{common("image.formats", { mb: MAX_UPLOAD_MB })}</p>
       </div>
-      <input ref={inputRef} type="file" accept={ACCEPTED_IMAGE_TYPES.join(",")} multiple className="hidden" onChange={(event) => event.currentTarget.files && void handleFiles(event.currentTarget.files)} disabled={disabled || uploading} />
+      <input ref={inputRef} type="file" accept={IMAGE_ACCEPT} multiple className="hidden" onChange={(event) => event.currentTarget.files && void handleFiles(event.currentTarget.files)} disabled={disabled || uploading} />
     </div>
   </div>;
 }
